@@ -1,6 +1,6 @@
 # Clash-of-steel
 
-Version 0.8 adds a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. The settings/profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
+Version 0.85 adds a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. The settings/profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
 
 ## Run locally
 
@@ -11,7 +11,7 @@ npm start
 
 Open `http://localhost:3000`. The main menu opens settings, local operator statistics, or the deployment lobby. The lobby offers public matches with bots, code-protected private rooms where the host can toggle bots on or off, and offline bot-only matches. Private room codes can be copied, and current room members and connection state are displayed. Socket.IO reconnects automatically and attempts to rejoin the prior room; a room that expired while disconnected must be recreated or joined again.
 
-Both teams receive synchronized APC, helicopter, tank, and SAM fleets, including in human-only private rooms. The battlefield surface blends grass, dry soil, and exposed stone, with low rocky rises for varied cover. Bot-driven ground vehicles route around battlefield obstacles; bots use imperfect aim and ballistic rounds, and vehicle boarding shows a 2-second countdown. Helicopter guided missiles lock onto enemy aircraft and ground units, and each team base has fortified perimeter walls, gated approaches, watchtowers, and sandbag cover. Phones and tablets get a virtual movement stick, touch-to-look area, and combat/action buttons. Operator callsigns and armor finishes are saved in the browser and appear on in-world name tags.
+Both teams receive synchronized APC, helicopter, tank, and SAM fleets, including in human-only private rooms. Destroyed vehicles return to their original base with restored health and ammunition. Bots continuously seek available vehicles across the battlefield; when none are free, they fight as infantry and patrol spaced routes across the map. The battlefield surface blends grass, dry soil, and exposed stone, with low rocky rises, additional roads, and abandoned buildings for varied cover. Bot-driven ground vehicles route around battlefield obstacles; bots use imperfect aim and ballistic rounds, and vehicle boarding shows a 2-second countdown. Helicopter guided missiles lock onto enemy aircraft and ground units, and each team base has fortified perimeter walls, gated approaches, watchtowers, and sandbag cover. Phones and tablets get a larger virtual movement stick, touch-to-look area, and larger thumb-friendly combat/action buttons. Operator callsigns and armor finishes are saved in the browser and appear on in-world name tags.
 
 ## Deploy on Render
 

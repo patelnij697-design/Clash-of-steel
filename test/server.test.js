@@ -77,7 +77,8 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="settings-keyboard-reference"/);
   assert.match(html, /id="room-player-list"/);
   assert.match(html, /id="active-player-count">—/);
-  assert.match(html, /v\.08/);
+  assert.match(html, /Game version 0\.85/);
+  assert.match(html, /v\.85/);
   assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
 

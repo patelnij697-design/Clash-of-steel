@@ -996,8 +996,8 @@
       z-index:12;
       left:18px;
       bottom:24px;
-      width:132px;
-      height:132px;
+      width:140px;
+      height:140px;
       border:1px solid rgba(226,232,240,.42);
       border-radius:50%;
       background:rgba(8,18,30,.48);
@@ -1031,19 +1031,19 @@
       right:14px;
       bottom:20px;
       display:grid;
-      grid-template-columns:repeat(3,minmax(56px,68px));
+      grid-template-columns:repeat(2,minmax(60px,72px));
       gap:8px;
       touch-action:none;
     }
     .mobile-action {
-      min-height:54px;
-      padding:6px;
+      min-height:60px;
+      padding:8px;
       border:1px solid rgba(148,163,184,.48);
       border-radius:13px;
       background:rgba(10,18,30,.82);
       color:#e2e8f0;
-      font:700 9px "JetBrains Mono",monospace;
-      letter-spacing:.4px;
+      font:700 10px "JetBrains Mono",monospace;
+      letter-spacing:.5px;
       box-shadow:0 6px 16px rgba(0,0,0,.35);
       touch-action:none;
       -webkit-tap-highlight-color:transparent;
@@ -1115,14 +1115,24 @@
       #ammo-counter small { font-size:12px; }
       #weapon-sec-info { font-size:8px; letter-spacing:0; }
       #weapon-slots { display:none; }
-      #mobile-stick { width:108px; height:108px; bottom:calc(14px + env(safe-area-inset-bottom)); left:calc(10px + env(safe-area-inset-left)); }
-      #mobile-action-pad { right:calc(8px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom)); grid-template-columns:repeat(3,minmax(56px,68px)); gap:5px; }
-      .mobile-action { min-height:48px; padding:4px; font-size:8px; }
+      #mobile-stick { width:clamp(120px,34vw,148px); height:clamp(120px,34vw,148px); bottom:calc(16px + env(safe-area-inset-bottom)); left:calc(12px + env(safe-area-inset-left)); }
+      #mobile-stick-knob { width:58px; height:58px; }
+      #mobile-action-pad { right:calc(12px + env(safe-area-inset-right)); bottom:calc(12px + env(safe-area-inset-bottom)); grid-template-columns:repeat(3,minmax(60px,68px)); gap:6px; }
+      .mobile-action { min-height:60px; padding:8px; font-size:9px; border-radius:15px; }
       #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); min-width:56px; min-height:44px; padding:7px 8px; font-size:8px; }
       #chat-toggle { min-height:44px; }
       #weather-badge { min-height:36px; }
       #chat-panel { right:8px; bottom:calc(270px + env(safe-area-inset-bottom)); width:min(280px,calc(100vw - 16px)); }
       #chat-messages { max-height:110px; }
+    }
+    @media (max-width:360px) and (orientation:portrait) {
+      #mobile-action-pad { grid-template-columns:repeat(2,minmax(60px,72px)); gap:8px; }
+    }
+    @media (pointer:coarse) and (orientation:landscape) and (max-height:520px) {
+      #mobile-stick { width:112px; height:112px; }
+      #mobile-stick-knob { width:50px; height:50px; }
+      #mobile-action-pad { grid-template-columns:repeat(5,minmax(54px,64px)); gap:6px; }
+      .mobile-action { min-height:48px; padding:5px; font-size:8px; }
     }
     @media (max-width:420px) {
       #top-hud { width:calc(100vw - 150px); }
@@ -1209,7 +1219,7 @@
   <div class="menu-modal" id="main-menu-modal">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 0.8</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 0.85</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -1314,7 +1324,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.8">v.08</div>
+    <div id="game-version" aria-label="Game version 0.85">v.85</div>
   </div>
 
   <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -2129,12 +2139,17 @@
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
 
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(36, 680), mats.asphalt);
-    road.rotation.x = -Math.PI / 2;
-    road.rotation.z = Math.PI / 4;
-    road.position.set(0, 0.03, 0);
-    road.receiveShadow = true;
-    scene.add(road);
+    function mkRoad(width, length, x, z, rotation = 0) {
+      const road = new THREE.Mesh(new THREE.PlaneGeometry(width, length), mats.asphalt);
+      road.rotation.x = -Math.PI / 2;
+      road.rotation.z = rotation;
+      road.position.set(x, 0.03, z);
+      road.receiveShadow = true;
+      scene.add(road);
+    }
+    mkRoad(36, 680, 0, 0, Math.PI / 4);
+    [-125, 125].forEach(z => mkRoad(16, 620, 0, z));
+    [-125, 125].forEach(x => mkRoad(16, 620, x, 0, Math.PI / 2));
 
     function mkTree(x, z, scale = 1) {
       const g = new THREE.Group();
@@ -2214,6 +2229,16 @@
       body.addShape(new CANNON.Box(new CANNON.Vec3(hw, 1.6, hd)));
       body.position.set(x, 1.6, z);
       world.addBody(body);
+    }
+
+    function mkAbandonedBuilding(x, z) {
+      addObstacle(12, 2.8, 1.2, mats.concrete, x, z - 6, 1.4);
+      addObstacle(1.2, 3.4, 11, mats.concrete, x - 6, z, 1.7);
+      addObstacle(1.2, 2.2, 11, mats.concrete, x + 6, z, 1.1);
+      addObstacle(4, 2.6, 1.2, mats.concrete, x - 4, z + 6, 1.3);
+      addObstacle(4, 1.8, 1.2, mats.concrete, x + 4, z + 6, 0.9);
+      addObstacle(7, 0.7, 5, mats.steelDark, x + 1.5, z - 1.5, 3.2);
+      addObstacle(3, 0.8, 2.5, mats.rockGrey, x - 2, z + 2, 0.4);
     }
 
     function mkWatchtower(x, z) {
@@ -2356,6 +2381,9 @@
       if (Math.hypot(cx, cz) < 24 || Math.hypot(cx + 215, cz + 215) < 60 || Math.hypot(cx - 215, cz - 215) < 60) continue;
       mkContainer(cx, cz, rnd(0, Math.PI), i);
     }
+    [
+      [-145, -105], [105, -145], [-105, 145], [145, 105]
+    ].forEach(([x, z]) => mkAbandonedBuilding(x, z));
 
     /* -------------------------------------------------------------------------
        REMODELED UNITS & VEHICLES
@@ -2843,6 +2871,9 @@
         m: mesh,
         p: new V3(x, y, z),
         sp: new V3(x, y, z),
+        homeTeam: tm,
+        homeOwner: team,
+        homeYaw: 0,
         hp,
         mhp: hp,
         team,
@@ -2860,6 +2891,8 @@
         stuckDir: 1,
         lastPos: new V3(x, y, z),
         aiState: 'patrol',
+        patrolSlot: E.length,
+        patrolVisit: 0,
         coverPt: null,
         underFireTimer: 0,
         boardTimer: 0,
@@ -3312,6 +3345,15 @@
         target.rs = target.type === 'inf' ? 5 : target.team ? 16 : 22;
         spawnExplosion(target.p, target.type === 'inf' ? 2 : 7, 0xf97316, 0.7);
         onKill(target, attacker);
+        if (target.targetVeh?.boardingBot === target) target.targetVeh.boardingBot = null;
+        target.targetVeh = null;
+        target.boardTimer = 0;
+        if (target.boardingBot?.targetVeh === target) {
+          target.boardingBot.targetVeh = null;
+          target.boardingBot.boardTimer = 0;
+          target.boardingBot.aiState = 'patrol';
+        }
+        target.boardingBot = null;
         if (target.driver) {
           target.driver.drivingVeh = null;
           target.driver.dead = 1;
@@ -4019,6 +4061,34 @@
     /* -------------------------------------------------------------------------
        30-SECOND UNUSED VEHICLE RESPAWN SYSTEM
        ------------------------------------------------------------------------- */
+    const isVehicleEntity = entity => ['car', 'heli', 'tank', 'sam'].includes(entity.type);
+
+    function restoreVehicleAtBase(v) {
+      if (v.driver?.drivingVeh === v) v.driver.drivingVeh = null;
+      if (v.boardingBot?.targetVeh === v) {
+        v.boardingBot.targetVeh = null;
+        v.boardingBot.boardTimer = 0;
+        v.boardingBot.aiState = 'patrol';
+      }
+
+      v.driver = null;
+      v.boardingBot = null;
+      v.tm = v.homeTeam;
+      v.team = v.homeOwner;
+      v.p.copy(v.sp);
+      v.hp = v.mhp;
+      v.v = 0;
+      v.yaw = v.homeYaw;
+      v.idleTimer = 0;
+      v.dead = 0;
+      v.rs = 0;
+      v.m.visible = true;
+      v.m.position.copy(v.p);
+      if (Number.isFinite(v.mag)) { v.ammo = v.mag; v.reloading = 0; v.cd = 0; }
+      if (Number.isFinite(v.mgMag)) { v.mgAmmo = v.mgMag; v.mgReloading = 0; v.mgCd = 0; }
+      if (Number.isFinite(v.mMag)) { v.mAmmo = v.mMag; v.mReloading = 0; }
+    }
+
     function checkVehicleInactivity(v, dt) {
       const isOccupied = P.veh === v || v.driver != null;
       if (isOccupied) {
@@ -4032,19 +4102,7 @@
       if (isDisplaced) {
         v.idleTimer += dt;
         if (v.idleTimer >= 30) {
-          v.p.copy(v.sp);
-          v.hp = v.mhp;
-          v.v = 0;
-          v.yaw = 0;
-          v.idleTimer = 0;
-          v.dead = 0;
-          v.m.visible = true;
-
-          v.ammo = v.mag;
-          v.reloading = 0;
-          if (v.mgMag) { v.mgAmmo = v.mgMag; v.mgReloading = 0; }
-          if (v.mMag) { v.mAmmo = v.mMag; v.mReloading = 0; }
-
+          restoreVehicleAtBase(v);
           spawnExplosion(v.p, 5, 0x38bdf8, 0.5);
           if (P.p.distanceTo(v.sp) < 80) {
             bannerMsg(`ABANDONED ${v.type.toUpperCase()} RETURNED TO BASE`);
@@ -4100,6 +4158,40 @@
     const BOT_NAV_SIZE = 93;
     const BOT_BOARDING_DELAY = 2;
     const botNavGrids = new Map();
+    const BOT_PATROL_COORDINATES = [-240, -144, -48, 48, 144, 240];
+
+    function getBotPatrolWaypoint(e) {
+      const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
+      const visit = e.patrolVisit || 0;
+      let x, z;
+
+      if (currentMode === 'ffa' || e.tm > 1) {
+        const index = (slot + visit * 11) % (BOT_PATROL_COORDINATES.length ** 2);
+        x = BOT_PATROL_COORDINATES[index % BOT_PATROL_COORDINATES.length];
+        z = BOT_PATROL_COORDINATES[Math.floor(index / BOT_PATROL_COORDINATES.length)];
+      } else {
+        const progressSteps = [0.18, 0.42, 0.62, 0.82];
+        const progress = progressSteps[(visit + slot % progressSteps.length) % progressSteps.length];
+        const directedProgress = e.tm === 0 ? progress : 1 - progress;
+        const lane = (slot % 7 - 3) * 28;
+        x = -220 + directedProgress * 440 - lane * Math.SQRT1_2;
+        z = -220 + directedProgress * 440 + lane * Math.SQRT1_2;
+      }
+
+      e.patrolVisit = visit + 1;
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const angle = attempt * 2.4;
+        const radius = attempt * 5;
+        const candidateX = THREE.MathUtils.clamp(x + Math.cos(angle) * radius, -260, 260);
+        const candidateZ = THREE.MathUtils.clamp(z + Math.sin(angle) * radius, -260, 260);
+        if (!OB.some(o => o.h > 0
+          && Math.abs(candidateX - o.x) < o.hw + 5
+          && Math.abs(candidateZ - o.z) < o.hd + 5)) {
+          return [candidateX, candidateZ];
+        }
+      }
+      return [x, z];
+    }
 
     function getBotNavGrid(radius) {
       if (botNavGrids.has(radius)) return botNavGrids.get(radius);
@@ -4339,25 +4431,25 @@
           if (e.aiState === 'board_veh' && e.targetVeh && !e.targetVeh.dead && !e.targetVeh.driver && P.veh !== e.targetVeh) {
             // Stay committed to boarding vehicle!
           } else {
+            if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
+            e.targetVeh = null;
+            e.boardTimer = 0;
             // Actively search for available uncrewed vehicles (tanks, APCs, SAM trucks, helicopters)
             let bestVeh = null, bestScore = -1e9;
             E.forEach(veh => {
               if ((veh.type === 'car' || veh.type === 'heli' || veh.type === 'tank' || veh.type === 'sam')
-                  && !veh.dead && !veh.driver && P.veh !== veh
-                  && (veh.team === 0 || veh.tm === e.tm)) {
+                  && !veh.dead && !veh.driver && P.veh !== veh) {
                 // If another bot is already claiming this vehicle, skip so bots distribute across all vehicles!
                 if (veh.boardingBot && veh.boardingBot !== e && veh.boardingBot.hp > 0 && !veh.boardingBot.dead) {
                   return;
                 }
                 const dist = e.p.distanceTo(veh.p);
-                if (dist < 190) {
-                  // High weight for heavy armor and APCs so bots do not ignore ground vehicles
-                  const typeBonus = veh.type === 'tank' ? 45 : veh.type === 'car' ? 40 : veh.type === 'sam' ? 35 : 30;
-                  const score = typeBonus - dist * 0.3;
-                  if (score > bestScore) {
-                    bestScore = score;
-                    bestVeh = veh;
-                  }
+                // Prefer useful armor, but keep searching across the whole battlefield.
+                const typeBonus = veh.type === 'tank' ? 45 : veh.type === 'car' ? 40 : veh.type === 'sam' ? 35 : 30;
+                const score = typeBonus - dist * 0.3;
+                if (score > bestScore) {
+                  bestScore = score;
+                  bestVeh = veh;
                 }
               }
             });
@@ -4434,6 +4526,8 @@
                 e.targetVeh.tm = e.tm;
                 e.targetVeh.driver = e;
                 e.drivingVeh = e.targetVeh;
+                e.targetVeh.patrolSlot = e.patrolSlot;
+                e.targetVeh.patrolVisit = e.patrolVisit;
                 e.targetVeh.boardingBot = null;
                 e.aiState = 'patrol';
                 bannerMsg(`${e.tm === P.tm ? 'ALLY' : 'ENEMY'} BOT MANNED THE ${e.targetVeh.type.toUpperCase()}`);
@@ -4560,8 +4654,7 @@
         targetZ = tp.z;
       } else {
         if (!e.wp || Math.hypot(e.wp[0] - e.p.x, e.wp[1] - e.p.z) < 6) {
-          const baseTarget = (currentMode === 'tdm' && B[e.tm]) ? B[1 - e.tm] : [rnd(-200, 200), rnd(-200, 200)];
-          e.wp = [baseTarget[0] + rnd(-50, 50), baseTarget[1] + rnd(-50, 50)];
+          e.wp = getBotPatrolWaypoint(e);
         }
         targetX = e.wp[0];
         targetZ = e.wp[1];
@@ -4637,6 +4730,20 @@
         }
         mx += (-dz / len) * e.sd * 0.9;
         mz += (dx / len) * e.sd * 0.9;
+      }
+
+      if (isInf && e.aiState !== 'board_veh') {
+        E.forEach(other => {
+          if (other === e || other.type !== 'inf' || other.dead || other.drivingVeh
+            || other.tm !== e.tm || !other.team) return;
+          const dx = e.p.x - other.p.x, dz = e.p.z - other.p.z;
+          const distance = Math.hypot(dx, dz);
+          if (distance > 0.01 && distance < 14) {
+            const separation = (14 - distance) / 14;
+            mx += (dx / distance) * separation * 1.6;
+            mz += (dz / distance) * separation * 1.6;
+          }
+        });
       }
 
       // Obstacle Feelers & Wall Avoidance
@@ -4759,14 +4866,29 @@
     }
 
     function respawnEntity(e) {
+      if (isVehicleEntity(e)) {
+        restoreVehicleAtBase(e);
+        if (e.lastPos) e.lastPos.copy(e.p);
+        spawnExplosion(e.p, 5, 0x38bdf8, 0.5);
+        if (P.p.distanceTo(e.sp) < 80) {
+          bannerMsg(`${e.type.toUpperCase()} RETURNED TO BASE`);
+        }
+        return;
+      }
+
       e.dead = 0;
       e.hp = e.mhp;
       e.m.visible = true;
       e.v = 0;
       e.driver = null;
       e.drivingVeh = null;
+      e.targetVeh = null;
+      e.tg = null;
+      e.wp = null;
+      e.coverPt = null;
+      e.aiState = 'patrol';
       e.boardTimer = 0;
-      e.boardingBot = null;
+      e.boardingVeh = null;
       e.stuckTimer = 0;
       e.navPath = null;
       e.navGoal = null;
@@ -4774,7 +4896,6 @@
       e.navTimer = 0;
       if (e.type === 'inf' && e.team) {
         e.baseStayTimer = 1.0;
-        e.aiState = 'patrol';
         const pt = getSpawnPoint(e.tm);
         e.p.set(pt[0], 0, pt[1]);
       } else {
@@ -5528,6 +5649,7 @@
           const s = getSpawnPoint(tm);
           const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm]), s[0], s[1], 65, tm);
           bot.role = i % 2;
+          bot.patrolSlot = isFFA ? i : i % 7;
           bot.nm = BOT_NAMES[i % BOT_NAMES.length];
         }
       }
@@ -6715,7 +6837,7 @@
         // Entities & Bots
         E.forEach(e => {
           // 30s inactivity auto-respawn
-          if (!e.team && (e.type === 'car' || e.type === 'tank' || e.type === 'heli' || e.type === 'sam')) {
+          if (!e.team && isVehicleEntity(e)) {
             checkVehicleInactivity(e, dt);
           }
 
