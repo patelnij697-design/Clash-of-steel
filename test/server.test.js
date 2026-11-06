@@ -69,7 +69,16 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="btn-private-bots"/);
   assert.match(html, /id="btn-join-public"/);
   assert.match(html, /id="mobile-controls"/);
-  assert.match(html, /v\.05/);
+  assert.match(html, /id="main-menu-modal"/);
+  assert.match(html, /id="settings-modal"/);
+  assert.match(html, /id="profile-modal"/);
+  assert.match(html, /id="room-details"/);
+  assert.match(html, /id="binding-list"/);
+  assert.match(html, /id="settings-keyboard-reference"/);
+  assert.match(html, /id="room-player-list"/);
+  assert.match(html, /id="active-player-count">—/);
+  assert.match(html, /v\.08/);
+  assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
@@ -111,6 +120,7 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
     const guestRoom = await join(guest, { kind: 'public', name: '<Guest>' });
     assert.equal(guestRoom.hostId, host.id);
     assert.equal(guestRoom.player.team, 1);
+    assert.equal(guestRoom.player.name, 'Guest');
     assert.equal(guestRoom.players.length, 2);
     assert.equal(guestRoom.activePlayers, 2);
 
@@ -177,8 +187,14 @@ test('private rooms use codes and reject unknown codes', async () => {
     host.emit('match:start', { mode: 'tdm', difficulty: 2, botsEnabled: true });
     assert.deepEqual(await matchStart, { mode: 'tdm', difficulty: 2, botsEnabled: false });
 
+    const malformed = await join(stranger, { kind: 'private', action: 'join', roomCode: '12ab56' });
+    assert.match(malformed.error, /six-digit/i);
+
     const invalid = await join(stranger, { kind: 'private', action: 'join', roomCode: '000000' });
     assert.match(invalid.error, /not found/i);
+
+    const invalidAction = await join(stranger, { kind: 'private', action: 'unexpected', roomCode: created.roomCode });
+    assert.match(invalidAction.error, /create or join/i);
 
     host.disconnect();
     const rebalanced = await join(stranger, { kind: 'private', action: 'join', roomCode: created.roomCode });

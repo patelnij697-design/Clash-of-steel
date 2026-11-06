@@ -63,8 +63,12 @@ function sendPresence(room) {
 }
 
 function cleanName(value) {
-  const name = typeof value === 'string' ? value.replace(/[<>]/g, '').trim().slice(0, 20) : '';
-  return name || `Operator-${randomInt(1000, 10000)}`;
+  const name = typeof value === 'string'
+    ? value.replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 20)
+    : '';
+  return /^[\p{L}\p{N}][\p{L}\p{N} _.-]{1,19}$/u.test(name)
+    ? name
+    : `Operator-${randomInt(1000, 10000)}`;
 }
 
 function cleanAppearance(value) {
@@ -102,16 +106,20 @@ io.on('connection', socket => {
 
     let room;
     if (kind === 'public') {
+      if (request.action && request.action !== 'join') return acknowledge({ error: 'Public rooms can only be joined.' });
       room = rooms.get('public') || makeRoom('public', 'public');
     } else if (request.action === 'create') {
       let code;
       do { code = randomInt(100000, 1000000).toString(); } while (rooms.has(code));
       room = makeRoom(code, 'private');
       room.botsEnabled = request.botsEnabled !== false;
-    } else {
-      const code = typeof request.roomCode === 'string' ? request.roomCode.trim().toUpperCase() : '';
+    } else if (request.action === 'join') {
+      const code = typeof request.roomCode === 'string' ? request.roomCode.trim() : '';
+      if (!/^\d{6}$/.test(code)) return acknowledge({ error: 'Enter a valid six-digit private room code.' });
       room = rooms.get(code);
       if (!room || room.kind !== 'private') return acknowledge({ error: 'That private room code was not found.' });
+    } else {
+      return acknowledge({ error: 'Choose whether to create or join a private room.' });
     }
 
     if (room.players.size >= MAX_PLAYERS_PER_ROOM) return acknowledge({ error: 'This room is full.' });
@@ -159,7 +167,7 @@ io.on('connection', socket => {
   socket.on('player:profile', profile => {
     const room = rooms.get(socket.data.roomId);
     const player = room && room.players.get(socket.id);
-    if (!player || !profile || typeof profile !== 'object') return;
+    if (!player || !profile || typeof profile !== 'object' || !rateAllowed(socket, 'lastProfileUpdate', 200)) return;
     player.name = cleanName(profile.name);
     player.appearance = cleanAppearance(profile.appearance);
     socket.to(room.id).emit('player:profile', { id: socket.id, name: player.name, appearance: player.appearance });

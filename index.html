@@ -45,6 +45,21 @@
       pointer-events: none;
       z-index: 5;
     }
+    body:not(.in-mission) #top-hud,
+    body:not(.in-mission) #players-online,
+    body:not(.in-mission) #radar-container,
+    body:not(.in-mission) #vitals-card,
+    body:not(.in-mission) #weapon-card,
+    body:not(.in-mission) #kf,
+    body:not(.in-mission) #center-banner,
+    body:not(.in-mission) #lock-alert,
+    body:not(.in-mission) #crosshair,
+    body:not(.in-mission) #hit-marker,
+    body:not(.in-mission) #sniper-scope,
+    body:not(.in-mission) #damage-flash,
+    body:not(.in-mission) #damage-direction,
+    body:not(.in-mission) #controls-dock,
+    body:not(.in-mission) #hud-world-canvas { visibility:hidden; }
     
     .tactical-panel {
       background: var(--bg-glass);
@@ -525,6 +540,7 @@
     }
     #server-status.connected { color:#34d399; }
     #server-status.unavailable { color:#fb7185; }
+    #server-status.connecting, #server-status.reconnecting { color:#fbbf24; }
     .multiplayer-section .mode-grid { margin:10px 0; }
     .mode-grid[data-selector="session"] .tactical-card { min-height:96px; }
     .operator-customizer {
@@ -636,6 +652,21 @@
       text-transform: uppercase;
     }
     #room-status { min-height: 18px; color: #a7f3d0; font-size: 12px; }
+    #room-details {
+      display:none;
+      margin:12px auto 0;
+      padding:12px;
+      border:1px solid rgba(56,189,248,.2);
+      border-radius:7px;
+      background:rgba(4,12,22,.55);
+      text-align:left;
+    }
+    .room-code-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    #room-code-display { color:#fbbf24; font:700 18px var(--font-mono); letter-spacing:3px; }
+    #room-copy { margin:0; padding:7px 10px; font-size:11px; }
+    #room-player-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+    .room-player-chip { padding:5px 8px; border:1px solid rgba(148,163,184,.22); border-radius:4px; color:#cbd5e1; font-size:10px; }
+    .room-player-chip.host { border-color:rgba(245,158,11,.5); color:#fbbf24; }
     #chat-panel {
       position: fixed;
       right: 16px;
@@ -850,6 +881,105 @@
       .modal-box { max-height:calc(100vh - 16px); overflow-y:auto; overscroll-behavior:contain; }
       @supports (height: 100dvh) { .modal-box { max-height:calc(100dvh - 16px); } }
     }
+    #lobby-modal, #settings-modal, #profile-modal { display:none; }
+    #main-menu-modal { display:flex; }
+    .menu-home {
+      max-width:760px;
+      border-left:3px solid var(--color-primary);
+      text-align:left;
+    }
+    .menu-home .modal-title { margin-top:4px; }
+    .menu-home-actions {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:24px;
+    }
+    .menu-home-actions button { margin:0; width:100%; }
+    .menu-home-status {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid rgba(148,163,184,.2);
+      border-radius:6px;
+      background:rgba(5,10,17,.62);
+      color:#94a3b8;
+      font-size:11px;
+    }
+    .settings-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin:16px 0;
+      text-align:left;
+    }
+    .setting-field {
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      padding:12px;
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:7px;
+      background:rgba(5,10,17,.55);
+      color:#cbd5e1;
+      font-size:11px;
+    }
+    .setting-field select, .setting-field input[type="range"] {
+      width:100%;
+      min-height:36px;
+      color:#f8fafc;
+      accent-color:var(--color-primary);
+    }
+    .setting-field select {
+      padding:7px 9px;
+      border:1px solid rgba(148,163,184,.28);
+      border-radius:4px;
+      background:#101a28;
+    }
+    .setting-field input[type="checkbox"] { accent-color:var(--color-primary); }
+    .setting-field small { color:#94a3b8; line-height:1.45; }
+    .binding-list, .stats-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+      text-align:left;
+    }
+    .binding-row, .stat-card {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:9px 10px;
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:5px;
+      background:rgba(5,10,17,.55);
+      color:#cbd5e1;
+      font-size:11px;
+    }
+    .binding-row button { min-width:90px; padding:7px 9px; font-size:11px; }
+    .stat-card strong { color:#fbbf24; font:700 19px var(--font-display); }
+    .menu-back-row { display:flex; justify-content:space-between; gap:10px; margin-bottom:16px; }
+    .menu-back-row .btn-secondary { margin:0; padding:8px 14px; font-size:12px; }
+    body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after {
+      animation-duration:0.01ms !important;
+      animation-iteration-count:1 !important;
+      scroll-behavior:auto !important;
+      transition-duration:0.01ms !important;
+    }
+    body.high-contrast {
+      --bg-glass:rgba(3,7,12,.98);
+      --border-glass:rgba(255,255,255,.55);
+    }
+    body.high-contrast .modal-subtitle, body.high-contrast .tactical-card p,
+    body.high-contrast .setting-field small { color:#d5deeb; }
+    @media (max-width:620px) {
+      .menu-home-actions, .settings-grid, .binding-list, .stats-grid { grid-template-columns:1fr; }
+      .menu-home { text-align:center; }
+      .menu-home-status { justify-content:center; }
+    }
     #mobile-controls { display:none; }
     #mobile-controls.active { display:block; }
     #mobile-look-zone {
@@ -1031,7 +1161,7 @@
     <div class="score-badge score-red" id="score-red">0 RED</div>
     <div id="weather-badge" title="Click to cycle weather">☀ CLEAR</div>
   </div>
-  <div class="hud-layer" id="players-online">ROOM PLAYERS: <span id="room-player-count">0</span></div>
+  <div class="hud-layer" id="players-online">ROOM PLAYERS: <span id="room-player-count">—</span></div>
 
   <div class="hud-layer" id="radar-container">
     <canvas id="radar-canvas" width="140" height="140"></canvas>
@@ -1066,20 +1196,47 @@
   <div class="hud-layer" id="damage-direction" aria-hidden="true"></div>
 
   <div class="hud-layer tactical-panel" id="controls-dock">
-    <span><b>WASD</b> Move</span>
-    <span><b>LMB</b> Main Fire</span>
-    <span><b>RMB</b> Tank MG / Scope</span>
-    <span><b>C / CTRL</b> Slide</span>
-    <span><b>R</b> Reload</span>
-    <span><b>E</b> Enter/Exit</span>
-    <span><b>F</b> Heli Missile</span>
-    <span><b>TAB</b> Armory</span>
+    <span><b>WASD</b> Move / drive</span>
+    <span><b>Mouse</b> Aim · LMB fire · RMB aim / secondary fire</span>
+    <span><b id="dock-slide-key">C</b> Slide</span>
+    <span><b id="dock-sprint-key">SHIFT</b> Sprint</span>
+    <span><b id="dock-jump-key">SPACE</b> Jump</span>
+    <span><b id="dock-reload-key">R</b> Reload</span>
+    <span><b id="dock-interact-key">E</b> Interact / vehicle</span>
+    <span><b id="dock-pause-key">ESC</b> Tactical pause</span>
+  </div>
+
+  <div class="menu-modal" id="main-menu-modal">
+    <div class="modal-box menu-home">
+      <div class="menu-home-status">
+        <span>CLASH OF STEEL <b>·</b> VERSION 0.8</span>
+        <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
+      </div>
+      <h1 class="modal-title">CLASH OF STEEL</h1>
+      <div class="modal-subtitle">COMBINED ARMS · TACTICAL MULTIPLAYER</div>
+      <p style="max-width:560px;color:#cbd5e1;font-size:13px;line-height:1.7;">
+        Deploy as an infantry operator or take command of armored and air-defense vehicles. Join the public battlefield, host a private room, or train offline.
+      </p>
+      <div class="menu-home-actions">
+        <button class="btn-action" id="btn-main-play">PLAY</button>
+        <button class="btn-secondary" id="btn-main-settings">SETTINGS</button>
+        <button class="btn-secondary" id="btn-main-customize">CUSTOMIZATION</button>
+        <button class="btn-secondary" id="btn-main-stats">PLAYER STATISTICS</button>
+      </div>
+      <div class="menu-subtitle" style="margin-top:18px;color:#64748b;font-size:10px;">
+        Local profile and progression are stored on this device. Multiplayer rooms are hosted in memory and reset when the service restarts.
+      </div>
+    </div>
   </div>
 
   <!-- Pause / Deployment Lobby Modal -->
   <div class="menu-modal" id="lobby-modal">
     <div class="modal-box">
-      <h1 class="modal-title">CLASH OF STEEL</h1>
+      <div class="menu-back-row">
+        <button type="button" class="btn-secondary" id="btn-lobby-back">MAIN MENU</button>
+        <button type="button" class="btn-secondary" id="btn-lobby-settings">SETTINGS</button>
+      </div>
+      <h1 class="modal-title">DEPLOYMENT LOBBY</h1>
       <div class="modal-subtitle">CHOOSE YOUR BATTLE. DEPLOY WITH YOUR SQUAD.</div>
       <section class="menu-guide" aria-label="How to get started">
         <h2>QUICK START</h2>
@@ -1089,14 +1246,15 @@
           <li>Tap DEPLOY, then use E / USE near a vehicle to drive it.</li>
         </ol>
         <p class="menu-guide-mobile"><b>Mobile:</b> Left joystick moves; drag the right side of the screen to aim; use the buttons at bottom-right to fire, reload, exit vehicles, or use special weapons.</p>
-        <p class="menu-guide-mobile"><b>Keyboard:</b> WASD move/drive · mouse aim/fire · E enter/exit · R reload · F helicopter missile · Esc pause.</p>
+        <p class="menu-guide-mobile" id="keyboard-guide"></p>
       </section>
       <div id="match-result" style="font-family:var(--font-display);font-size:28px;font-weight:700;color:#f59e0b;min-height:36px;margin-bottom:12px"></div>
-      <div class="online-counter">REAL PLAYERS ONLINE: <span id="active-player-count">0</span></div>
+      <div id="match-result-detail" style="min-height:16px;margin:-8px 0 12px;color:#94a3b8;font-size:11px;"></div>
+      <div class="online-counter">REAL PLAYERS IN ROOMS: <span id="active-player-count">—</span></div>
       <section class="multiplayer-section" aria-label="Multiplayer lobby">
         <div class="multiplayer-heading">
           <span>PLAY ONLINE</span>
-          <span id="server-status" role="status" aria-live="polite">CHECKING SERVER</span>
+          <span id="server-status" role="status" aria-live="polite">Connecting</span>
         </div>
         <div class="mode-grid" id="session-selector" data-selector="session">
           <div class="tactical-card selected" data-session="public" role="button" tabindex="0">
@@ -1113,7 +1271,7 @@
           </div>
         </div>
         <div class="lobby-tools" id="private-room-tools">
-          <input id="room-code-input" maxlength="6" placeholder="ROOM CODE" aria-label="Private room code">
+          <input id="room-code-input" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="off" placeholder="ROOM CODE" aria-label="Private room code">
           <button class="btn-secondary" id="btn-join-public">JOIN PUBLIC LOBBY</button>
           <button class="btn-secondary" id="btn-private-bots" type="button" aria-pressed="true" style="display:none;">BOTS: ON</button>
           <button class="btn-secondary" id="btn-create-room">CREATE PRIVATE ROOM</button>
@@ -1121,13 +1279,20 @@
           <button class="btn-secondary" id="btn-leave-room" style="display:none;">LEAVE ROOM</button>
         </div>
         <div id="room-status" role="status" aria-live="polite">Connecting to multiplayer service…</div>
+        <div id="room-details" aria-label="Current room information">
+          <div class="room-code-row">
+            <div><div style="font-size:9px;color:#94a3b8;letter-spacing:1px;">ROOM CODE</div><code id="room-code-display">PUBLIC</code></div>
+            <button type="button" class="btn-secondary" id="room-copy">COPY CODE</button>
+          </div>
+          <div id="room-player-list" aria-label="Players in room"></div>
+        </div>
       </section>
       <section class="operator-customizer" aria-label="Operator customization">
         <div class="operator-identity">
           <div id="operator-preview" aria-hidden="true">C</div>
           <div style="min-width:0;flex:1;">
             <label for="player-name">OPERATOR CALLSIGN</label>
-            <input id="player-name" maxlength="20" placeholder="ENTER CALLSIGN" aria-label="Player callsign">
+            <input id="player-name" maxlength="20" autocomplete="nickname" autocapitalize="words" placeholder="ENTER CALLSIGN" aria-label="Player callsign">
           </div>
         </div>
         <div>
@@ -1149,7 +1314,87 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.5">v.05</div>
+    <div id="game-version" aria-label="Game version 0.8">v.08</div>
+  </div>
+
+  <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal-box" style="max-width:760px;">
+      <div class="menu-back-row">
+        <h2 class="modal-title" id="settings-title" style="font-size:30px;margin:0;">FIELD SETTINGS</h2>
+        <button type="button" class="btn-secondary" id="btn-settings-close">CLOSE</button>
+      </div>
+      <div class="settings-grid">
+        <label class="setting-field">GRAPHICS QUALITY
+          <select id="setting-graphics">
+            <option value="low">LOW · prioritize performance</option>
+            <option value="balanced">BALANCED</option>
+            <option value="high">HIGH · enhanced detail</option>
+          </select>
+          <small>Controls render scale and real-time shadows.</small>
+        </label>
+        <label class="setting-field">RENDER RESOLUTION
+          <select id="setting-resolution">
+            <option value="native">DISPLAY NATIVE</option>
+            <option value="1920x1080">1920 × 1080</option>
+            <option value="1280x720">1280 × 720</option>
+          </select>
+          <small>Render target is scaled to fit your current display.</small>
+        </label>
+        <label class="setting-field">MASTER EFFECTS VOLUME <span id="setting-volume-value">70%</span>
+          <input id="setting-volume" type="range" min="0" max="100" step="1">
+        </label>
+        <label class="setting-field">MOUSE SENSITIVITY <span id="setting-sensitivity-value">1.0×</span>
+          <input id="setting-sensitivity" type="range" min="0.5" max="2" step="0.1">
+        </label>
+        <label class="setting-field"><span><input id="setting-fullscreen" type="checkbox"> FULLSCREEN</span>
+          <small>Uses the browser fullscreen API; press Escape to exit.</small>
+        </label>
+        <label class="setting-field"><span><input id="setting-reduced-motion" type="checkbox"> REDUCE MOTION</span>
+          <small>Reduces interface animation and transition effects.</small>
+        </label>
+        <label class="setting-field"><span><input id="setting-high-contrast" type="checkbox"> HIGH CONTRAST UI</span>
+          <small>Strengthens panel borders and secondary text.</small>
+        </label>
+      </div>
+      <h3 style="text-align:left;color:#38bdf8;font:700 12px var(--font-mono);letter-spacing:1.2px;">KEYBOARD BINDINGS</h3>
+      <div id="binding-list" class="binding-list"></div>
+      <div class="settings-grid">
+        <div class="setting-field">KEYBOARD REFERENCE
+          <small id="settings-keyboard-reference"></small>
+        </div>
+        <div class="setting-field">MOBILE REFERENCE
+          <small>Left stick: move/drive · drag right side: aim · FIRE: shoot · AIM: scope or vehicle secondary fire · SLIDE: tactical slide · USE: enter/exit · JUMP: jump or helicopter climb · DESCEND: sprint or helicopter descent · RELOAD: reload · MISSILE: helicopter guided missile · SWAP: weapon slot · ARMORY: loadout · PAUSE: tactical pause. Context-specific actions hide when unavailable.</small>
+        </div>
+      </div>
+      <p id="settings-status" role="status" aria-live="polite" style="min-height:18px;color:#94a3b8;font-size:11px;"></p>
+      <div>
+        <button type="button" class="btn-secondary" id="btn-settings-reset">RESTORE DEFAULTS</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-modal" id="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+    <div class="modal-box" style="max-width:620px;">
+      <div class="menu-back-row">
+        <h2 class="modal-title" id="profile-title" style="font-size:30px;margin:0;">OPERATOR RECORD</h2>
+        <button type="button" class="btn-secondary" id="btn-profile-close">CLOSE</button>
+      </div>
+      <div class="modal-subtitle" id="profile-callsign"></div>
+      <div class="stats-grid">
+        <div class="stat-card">LEVEL <strong id="profile-level">1</strong></div>
+        <div class="stat-card">XP <strong id="profile-xp">0</strong></div>
+        <div class="stat-card">KILLS <strong id="profile-kills">0</strong></div>
+        <div class="stat-card">DEATHS <strong id="profile-deaths">0</strong></div>
+        <div class="stat-card">MATCHES <strong id="profile-matches">0</strong></div>
+        <div class="stat-card">WINS <strong id="profile-wins">0</strong></div>
+        <div class="stat-card">PLAYTIME <strong id="profile-playtime">0m</strong></div>
+      </div>
+      <h3 style="margin:18px 0 8px;text-align:left;color:#38bdf8;font:700 12px var(--font-mono);">RECENT MATCHES</h3>
+      <div id="profile-history" style="max-height:180px;overflow:auto;text-align:left;color:#cbd5e1;font-size:11px;line-height:1.8;"></div>
+      <p style="margin:14px 0 0;color:#94a3b8;text-align:left;font-size:10px;line-height:1.5;">
+        These statistics and XP are local to this browser and are not validated or synchronized by the multiplayer server.
+      </p>
+    </div>
   </div>
 
   <!-- In-game Pause Modal -->
@@ -1157,11 +1402,11 @@
     <div class="modal-box" style="max-width: 620px;">
       <h2 class="modal-title" style="font-size: 32px;">TACTICAL PAUSE</h2>
       <p style="color:#94a3b8; line-height:1.6; margin: 14px 0 18px; font-size: 13px;">
-        WASD move · Shift sprint · Space jump · LMB main fire · RMB scope / secondary · R reload.<br>
-        1 / 2 or Q swaps soldier weapon slots · E enters or exits vehicles.<br>
+        WASD move/drive · <span id="pause-sprint-key">SHIFT</span> sprint · <span id="pause-jump-key">SPACE</span> jump · <span id="pause-slide-key">C</span> slide · LMB main fire · RMB aim / secondary fire · <span id="pause-reload-key">R</span> reload.<br>
+        1 / 2 or <span id="pause-swap-key">Q</span> swaps soldier weapon slots · <span id="pause-interact-key">E</span> enters or exits vehicles.<br>
         <b>M901 SAM Truck:</b> LMB radar-guided surface-to-air missiles · RMB twin 20mm CIWS vulcan.<br>
         <b>M1A2 Tank:</b> LMB 120mm Cannon · RMB Coaxial MG.<br>
-        <b>AH-64 Heli:</b> W/S pitch, A/D turn, Space/Shift climb/descend, LMB chain gun, F guided missiles (air/ground lock).<br>
+        <b>AH-64 Heli:</b> W/S pitch, A/D turn, jump/sprint bindings climb/descend, LMB chain gun, <span id="pause-missile-key">F</span> guided missiles (air/ground lock).<br>
         <b>Air Reticles:</b> Dedicated high-tech flight and air-defense reticles for every vehicle!
       </p>
 
@@ -1176,6 +1421,7 @@
 
       <div>
         <button class="btn-action" id="btn-resume">RESUME BATTLE</button>
+        <button class="btn-secondary" id="btn-pause-settings">SETTINGS</button>
         <button class="btn-secondary" id="btn-quit-lobby">ABORT TO LOBBY</button>
       </div>
     </div>
@@ -1223,14 +1469,14 @@
     <button id="mobile-pause" type="button">PAUSE</button>
   </div>
 
-  <!-- Cannon.js Real Physics Engine & Three.js from CDN -->
+  <!-- Legacy Cannon.js map bodies and Three.js renderer from CDN -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     /* =========================================================================
        CLASH OF STEEL - ADVANCED WARFARE SIMULATION
-       - Cannon.js Real Physics Engine (Rigid bodies, Explosive impulse shockwaves)
+       - Legacy Cannon.js static map bodies; gameplay movement/collision stays in the existing game logic
        - High-Detail Animated Weapon Models (Recoil kick, sway, reload animations, muzzle flash)
        - In-World 3D Floating Vehicle Health Bars & Telemetry
        - Smart Combat Bot AI with 2-Second Vehicle Boarding Window
@@ -1241,13 +1487,305 @@
     const $ = id => document.getElementById(id);
     const V3 = THREE.Vector3;
     const rnd = (min, max) => min + Math.random() * (max - min);
+    const SETTINGS_STORAGE_KEY = 'clash-of-steel-settings';
+    const PROFILE_STORAGE_KEY = 'clash-of-steel-profile';
+    const DEFAULT_BINDINGS = {
+      reload: 'KeyR',
+      interact: 'KeyE',
+      sprint: 'ShiftLeft',
+      slide: 'KeyC',
+      jump: 'Space',
+      armory: 'Tab',
+      swap: 'KeyQ',
+      pause: 'Escape',
+      missile: 'KeyF'
+    };
+    const ALLOWED_BINDING_CODES = /^(Key[A-Z]|Digit[0-9]|Space|ShiftLeft|ControlLeft|Tab|Escape|AltLeft|Backquote|Arrow(Up|Down|Left|Right))$/;
+    const RESERVED_BINDING_CODES = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Digit1', 'Digit2']);
+    let pendingBinding = null;
+    let matchStartedAt = 0;
+    let statsSaveTimer = 0;
+    const settingDefaults = {
+      graphics: 'balanced',
+      resolution: 'native',
+      audioVolume: 0.7,
+      mouseSensitivity: 1,
+      fullscreen: false,
+      reducedMotion: false,
+      highContrast: false
+    };
+    let gameSettings = { ...settingDefaults };
+    let keyBindings = { ...DEFAULT_BINDINGS };
+    let operatorStats = { xp: 0, kills: 0, deaths: 0, matches: 0, wins: 0, losses: 0, playtimeSeconds: 0, history: [] };
+    try {
+      const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || 'null');
+      if (savedSettings && typeof savedSettings === 'object') {
+        if (['low', 'balanced', 'high'].includes(savedSettings.graphics)) gameSettings.graphics = savedSettings.graphics;
+        if (['native', '1920x1080', '1280x720'].includes(savedSettings.resolution)) gameSettings.resolution = savedSettings.resolution;
+        if (Number.isFinite(savedSettings.audioVolume)) gameSettings.audioVolume = Math.max(0, Math.min(1, savedSettings.audioVolume));
+        if (Number.isFinite(savedSettings.mouseSensitivity)) gameSettings.mouseSensitivity = Math.max(0.5, Math.min(2, savedSettings.mouseSensitivity));
+        for (const key of ['fullscreen', 'reducedMotion', 'highContrast']) {
+          if (typeof savedSettings[key] === 'boolean') gameSettings[key] = savedSettings[key];
+        }
+        if (savedSettings.keyBindings && typeof savedSettings.keyBindings === 'object') {
+          const candidateBindings = { ...DEFAULT_BINDINGS };
+          for (const action of Object.keys(DEFAULT_BINDINGS)) {
+            const code = savedSettings.keyBindings[action];
+            if (typeof code === 'string' && ALLOWED_BINDING_CODES.test(code)
+              && !RESERVED_BINDING_CODES.has(code)) candidateBindings[action] = code;
+          }
+          if (new Set(Object.values(candidateBindings)).size === Object.keys(candidateBindings).length) {
+            keyBindings = candidateBindings;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Saved game settings could not be loaded.', error);
+    }
+    try {
+      const savedStats = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
+      if (savedStats && typeof savedStats === 'object') {
+        for (const key of ['xp', 'kills', 'deaths', 'matches', 'wins', 'losses', 'playtimeSeconds']) {
+          if (Number.isFinite(savedStats[key]) && savedStats[key] >= 0) operatorStats[key] = Math.floor(savedStats[key]);
+        }
+        if (Array.isArray(savedStats.history)) {
+          operatorStats.history = savedStats.history
+            .filter(entry => entry && typeof entry.when === 'string' && typeof entry.mode === 'string' && typeof entry.result === 'string')
+            .slice(0, 10);
+        }
+      }
+    } catch (error) {
+      console.warn('Saved operator statistics could not be loaded.', error);
+    }
+
+    function saveSettings() {
+      try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...gameSettings, keyBindings }));
+        $('settings-status').textContent = 'SETTINGS SAVED ON THIS DEVICE.';
+      } catch (error) {
+        $('settings-status').textContent = 'SETTINGS ACTIVE FOR THIS SESSION ONLY; LOCAL STORAGE IS UNAVAILABLE.';
+        console.warn('Game settings could not be saved.', error);
+      }
+    }
+    function saveOperatorStats() {
+      try {
+        localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(operatorStats));
+      } catch (error) {
+        console.warn('Operator statistics could not be saved.', error);
+      }
+    }
+
+    const BINDING_NAMES = {
+        reload: 'Reload weapon',
+        interact: 'Interact / enter vehicle',
+        sprint: 'Sprint',
+        slide: 'Slide',
+        jump: 'Jump / climb',
+        armory: 'Open armory',
+        swap: 'Swap weapon',
+        pause: 'Tactical pause',
+        missile: 'Helicopter missile'
+      };
+      function keyLabel(code) {
+        return ({
+          ShiftLeft: 'Left Shift',
+          ControlLeft: 'Left Ctrl',
+          Space: 'Space',
+          Tab: 'Tab',
+          Escape: 'Esc',
+          Backquote: '`',
+          ArrowUp: '↑',
+          ArrowDown: '↓',
+          ArrowLeft: '←',
+          ArrowRight: '→'
+        })[code] || code.replace(/^Key/, '').replace(/^Digit/, '');
+      }
+      function renderKeyBindings() {
+        $('binding-list').innerHTML = Object.entries(BINDING_NAMES).map(([action, label]) => `
+          <div class="binding-row">
+            <span>${label}</span>
+            <button type="button" class="btn-secondary" data-bind="${action}">${pendingBinding === action ? 'PRESS A KEY…' : keyLabel(keyBindings[action])}</button>
+          </div>
+        `).join('');
+      }
+      function updateControlReferences() {
+        const setLabel = (id, action) => { if ($(id)) $(id).textContent = keyLabel(keyBindings[action]); };
+        setLabel('dock-slide-key', 'slide');
+        setLabel('dock-sprint-key', 'sprint');
+        setLabel('dock-jump-key', 'jump');
+        setLabel('dock-reload-key', 'reload');
+        setLabel('dock-interact-key', 'interact');
+        setLabel('dock-pause-key', 'pause');
+        setLabel('pause-slide-key', 'slide');
+        setLabel('pause-sprint-key', 'sprint');
+        setLabel('pause-jump-key', 'jump');
+        setLabel('pause-reload-key', 'reload');
+        setLabel('pause-interact-key', 'interact');
+        setLabel('pause-swap-key', 'swap');
+        setLabel('pause-missile-key', 'missile');
+        $('keyboard-guide').textContent =
+          `Keyboard: WASD move/drive · mouse aim · LMB fire · ${keyLabel(keyBindings.interact)} use · ${keyLabel(keyBindings.reload)} reload · ${keyLabel(keyBindings.sprint)} sprint · ${keyLabel(keyBindings.slide)} slide · ${keyLabel(keyBindings.jump)} jump · ${keyLabel(keyBindings.pause)} pause.`;
+        $('settings-keyboard-reference').textContent =
+          `WASD move/drive · mouse aim · LMB fire · RMB scope/secondary fire · ${keyLabel(keyBindings.interact)} interact · ${keyLabel(keyBindings.reload)} reload · ${keyLabel(keyBindings.sprint)} sprint · ${keyLabel(keyBindings.slide)} slide · ${keyLabel(keyBindings.jump)} jump/climb · ${keyLabel(keyBindings.swap)} swap (also 1/2) · ${keyLabel(keyBindings.armory)} armory · ${keyLabel(keyBindings.missile)} helicopter missile · ${keyLabel(keyBindings.pause)} tactical pause.`;
+        if (!$('controls-dock').dataset.vehicle) return;
+        updateHUD();
+      }
+      function renderSettings() {
+        $('setting-graphics').value = gameSettings.graphics;
+        $('setting-resolution').value = gameSettings.resolution;
+        $('setting-volume').value = Math.round(gameSettings.audioVolume * 100);
+        $('setting-volume-value').textContent = `${Math.round(gameSettings.audioVolume * 100)}%`;
+        $('setting-sensitivity').value = gameSettings.mouseSensitivity;
+        $('setting-sensitivity-value').textContent = `${gameSettings.mouseSensitivity.toFixed(1)}×`;
+        $('setting-fullscreen').checked = document.fullscreenElement != null;
+        $('setting-reduced-motion').checked = gameSettings.reducedMotion;
+        $('setting-high-contrast').checked = gameSettings.highContrast;
+        renderKeyBindings();
+      }
+      function openSettings() {
+        pendingBinding = null;
+        renderSettings();
+        $('settings-modal').style.display = 'flex';
+        $('settings-status').textContent = '';
+      }
+      function updateProfileDisplay() {
+        $('profile-callsign').textContent = `${operatorProfile.name} · ${getAppearance(operatorProfile.appearance).name} FINISH`;
+        $('profile-level').textContent = String(1 + Math.floor(operatorStats.xp / 100));
+        for (const key of ['xp', 'kills', 'deaths', 'matches', 'wins']) {
+          $(`profile-${key}`).textContent = String(operatorStats[key]);
+        }
+        const totalMinutes = Math.floor(operatorStats.playtimeSeconds / 60);
+        $('profile-playtime').textContent = totalMinutes < 60
+          ? `${totalMinutes}m`
+          : `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+        const history = $('profile-history');
+        history.replaceChildren();
+        if (!operatorStats.history.length) {
+          history.textContent = 'No completed matches recorded on this device.';
+          return;
+        }
+        operatorStats.history.forEach(entry => {
+          const row = document.createElement('div');
+          row.textContent = `${entry.when} · ${entry.mode} · ${entry.result}${Number.isFinite(entry.duration) ? ` · ${entry.duration}m` : ''}`;
+          history.appendChild(row);
+        });
+      }
+
+      $('btn-main-play').onclick = () => {
+        $('main-menu-modal').style.display = 'none';
+        $('lobby-modal').style.display = 'flex';
+        $('chat-panel').style.display = networked ? 'block' : 'none';
+        buildLobbyUI();
+      };
+      $('btn-main-settings').onclick = openSettings;
+      $('btn-main-customize').onclick = () => {
+        $('main-menu-modal').style.display = 'none';
+        $('lobby-modal').style.display = 'flex';
+        $('chat-panel').style.display = networked ? 'block' : 'none';
+        buildLobbyUI();
+        $('player-name').focus();
+      };
+      $('btn-main-stats').onclick = () => {
+        updateProfileDisplay();
+        $('profile-modal').style.display = 'flex';
+      };
+      $('btn-lobby-back').onclick = () => {
+        $('lobby-modal').style.display = 'none';
+        $('chat-panel').style.display = 'none';
+        $('main-menu-modal').style.display = 'flex';
+      };
+      $('btn-lobby-settings').onclick = openSettings;
+      $('btn-pause-settings').onclick = openSettings;
+      $('btn-settings-close').onclick = () => {
+        pendingBinding = null;
+        $('settings-modal').style.display = 'none';
+      };
+      $('btn-profile-close').onclick = () => { $('profile-modal').style.display = 'none'; };
+      $('settings-modal').addEventListener('click', event => {
+        const button = event.target.closest('[data-bind]');
+        if (!button) return;
+        pendingBinding = button.dataset.bind;
+        $('settings-status').textContent = `Press a key for ${BINDING_NAMES[pendingBinding].toLowerCase()}. Movement and 1/2 weapon-slot keys are reserved.`;
+        renderKeyBindings();
+      });
+      $('setting-graphics').addEventListener('change', event => {
+        gameSettings.graphics = event.target.value;
+        applyDisplaySettings();
+        saveSettings();
+      });
+      $('setting-resolution').addEventListener('change', event => {
+        gameSettings.resolution = event.target.value;
+        applyDisplaySettings();
+        saveSettings();
+      });
+      $('setting-volume').addEventListener('input', event => {
+        gameSettings.audioVolume = Number(event.target.value) / 100;
+        $('setting-volume-value').textContent = `${event.target.value}%`;
+      });
+      $('setting-volume').addEventListener('change', saveSettings);
+      $('setting-sensitivity').addEventListener('input', event => {
+        gameSettings.mouseSensitivity = Number(event.target.value);
+        $('setting-sensitivity-value').textContent = `${gameSettings.mouseSensitivity.toFixed(1)}×`;
+      });
+      $('setting-sensitivity').addEventListener('change', saveSettings);
+      $('setting-reduced-motion').addEventListener('change', event => {
+        gameSettings.reducedMotion = event.target.checked;
+        applyDisplaySettings();
+        saveSettings();
+      });
+      $('setting-high-contrast').addEventListener('change', event => {
+        gameSettings.highContrast = event.target.checked;
+        applyDisplaySettings();
+        saveSettings();
+      });
+      $('setting-fullscreen').addEventListener('change', async event => {
+        try {
+          if (event.target.checked) await document.documentElement.requestFullscreen();
+          else if (document.fullscreenElement) await document.exitFullscreen();
+          gameSettings.fullscreen = document.fullscreenElement != null;
+          saveSettings();
+        } catch (error) {
+          event.target.checked = document.fullscreenElement != null;
+          $('settings-status').textContent = 'Fullscreen could not be changed by this browser.';
+          console.warn('Fullscreen setting could not be applied.', error);
+        }
+      });
+      document.addEventListener('fullscreenchange', () => {
+        gameSettings.fullscreen = document.fullscreenElement != null;
+        $('setting-fullscreen').checked = gameSettings.fullscreen;
+      });
+      $('btn-settings-reset').onclick = () => {
+        gameSettings = { ...settingDefaults };
+        keyBindings = { ...DEFAULT_BINDINGS };
+        pendingBinding = null;
+        renderSettings();
+        applyDisplaySettings();
+        saveSettings();
+      };
+      $('room-code-input').addEventListener('input', event => {
+        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 6);
+      });
 
     // Renderer & 3D Canvas
     const canvas = $('webgl');
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
+    function applyDisplaySettings() {
+      let dimensions = [innerWidth, innerHeight];
+      if (gameSettings.resolution !== 'native') {
+        const [maxWidth, maxHeight] = gameSettings.resolution === '1920x1080' ? [1920, 1080] : [1280, 720];
+        const scale = Math.min(1, maxWidth / innerWidth, maxHeight / innerHeight);
+        dimensions = [Math.max(1, Math.round(innerWidth * scale)), Math.max(1, Math.round(innerHeight * scale))];
+      }
+      const pixelRatioLimit = gameSettings.graphics === 'low' ? 1
+        : gameSettings.graphics === 'balanced' ? 1.5 : 2;
+      renderer.setPixelRatio(Math.min(devicePixelRatio || 1, pixelRatioLimit));
+      renderer.setSize(dimensions[0], dimensions[1], false);
+      renderer.shadowMap.enabled = gameSettings.graphics !== 'low';
+      renderer.shadowMap.needsUpdate = true;
+      document.body.classList.toggle('reduce-motion', gameSettings.reducedMotion);
+      document.body.classList.toggle('high-contrast', gameSettings.highContrast);
+    }
+    applyDisplaySettings();
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // 2D In-World HUD Canvas for Vehicle Health Bars & Boarding Timers
@@ -1265,14 +1803,14 @@
     scene.add(camera);
 
     window.addEventListener('resize', () => {
-      renderer.setSize(innerWidth, innerHeight);
+      applyDisplaySettings();
       resizeHudCanvas();
       camera.aspect = innerWidth / innerHeight;
       camera.updateProjectionMatrix();
     });
 
     /* -------------------------------------------------------------------------
-       CANNON.JS REAL PHYSICS ENGINE INITIALIZATION
+       LEGACY CANNON.JS STATIC MAP-BODY SETUP
        ------------------------------------------------------------------------- */
     const world = new CANNON.World();
     world.gravity.set(0, -25, 0);
@@ -1304,7 +1842,7 @@
         osc.type = type;
         osc.frequency.setValueAtTime(freq, now);
         osc.frequency.exponentialRampToValueAtTime(decayFreq, now + dur);
-        gain.gain.setValueAtTime(vol, now);
+        gain.gain.setValueAtTime(vol * gameSettings.audioVolume, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -1328,7 +1866,7 @@
         filter.frequency.setValueAtTime(220, ctx.currentTime);
         filter.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 1.8);
         const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.setValueAtTime(0.4 * gameSettings.audioVolume, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2.0);
         noise.connect(filter);
         filter.connect(gain);
@@ -1551,7 +2089,7 @@
     }
 
     /* -------------------------------------------------------------------------
-       ENVIRONMENT & CANNON.JS RIGID BODY PHYSICS OBSTACLES
+       ENVIRONMENT & LEGACY CANNON.JS STATIC MAP BODIES
        ------------------------------------------------------------------------- */
     const OB = [], OM = [];
     function addObstacle(w, h, d, mat, x, z, y = h / 2) {
@@ -2205,7 +2743,7 @@
       hp: 100,
       sh: 0,
       sp: 0,
-      xp: 0,
+      xp: operatorStats.xp,
       veh: null,
       w: L[0],
       sl: 0,
@@ -2236,7 +2774,7 @@
       P.sliding = 1;
       P.slideTimer = 0.75;
       P.slideCd = 0.35;
-      P.slideSpeed = (K.ShiftLeft ? 17.5 : 14.5) * (P.sp > 0 ? 1.3 : 1);
+      P.slideSpeed = (K[keyBindings.sprint] ? 17.5 : 14.5) * (P.sp > 0 ? 1.3 : 1);
       P.slideDir.copy(dir);
       playSnd(160, 0.35, 0.15, 'triangle');
     }
@@ -2511,12 +3049,12 @@
       mobileLookY = event.clientY;
       if (P.veh) {
         P.ay = P.veh.type === 'heli'
-          ? Math.max(-1.4, Math.min(1.4, P.ay - dx * 0.006))
-          : P.ay - dx * 0.006;
-        P.ap = Math.max(-0.55, Math.min(0.65, P.ap - dy * 0.006));
+          ? Math.max(-1.4, Math.min(1.4, P.ay - dx * 0.006 * gameSettings.mouseSensitivity))
+          : P.ay - dx * 0.006 * gameSettings.mouseSensitivity;
+        P.ap = Math.max(-0.55, Math.min(0.65, P.ap - dy * 0.006 * gameSettings.mouseSensitivity));
       } else {
-        P.yaw -= dx * 0.006;
-        P.pit = Math.max(-1.5, Math.min(1.5, P.pit - dy * 0.006));
+        P.yaw -= dx * 0.006 * gameSettings.mouseSensitivity;
+        P.pit = Math.max(-1.5, Math.min(1.5, P.pit - dy * 0.006 * gameSettings.mouseSensitivity));
       }
     });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
@@ -2531,8 +3069,8 @@
       button.classList.add('pressed');
       if (button.dataset.hold === 'fire') { lm = 1; lc = 1; }
       if (button.dataset.hold === 'aim') rm = 1;
-      if (button.dataset.hold === 'jump') K.Space = 1;
-      if (button.dataset.hold === 'descend') K.ShiftLeft = 1;
+      if (button.dataset.hold === 'jump') K[keyBindings.jump] = 1;
+      if (button.dataset.hold === 'descend') K[keyBindings.sprint] = 1;
       if (button.dataset.tap === 'slide' && !P.veh) triggerSlide();
       if (button.dataset.tap === 'use') useVehicle();
       if (button.dataset.tap === 'reload') reloadActiveWeapon();
@@ -2546,8 +3084,8 @@
       button.classList.remove('pressed');
       if (button.dataset.hold === 'fire') lm = 0;
       if (button.dataset.hold === 'aim') rm = 0;
-      if (button.dataset.hold === 'jump') K.Space = 0;
-      if (button.dataset.hold === 'descend') K.ShiftLeft = 0;
+      if (button.dataset.hold === 'jump') K[keyBindings.jump] = 0;
+      if (button.dataset.hold === 'descend') K[keyBindings.sprint] = 0;
     };
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
       $('mobile-action-pad').addEventListener(type, releaseMobileAction);
@@ -2558,7 +3096,30 @@
     });
 
     window.addEventListener('keydown', e => {
+      if (pendingBinding) {
+        e.preventDefault();
+        const action = pendingBinding;
+        const duplicate = Object.entries(keyBindings).some(([otherAction, code]) => otherAction !== action && code === e.code);
+        if (!ALLOWED_BINDING_CODES.test(e.code) || RESERVED_BINDING_CODES.has(e.code) || duplicate) {
+          $('settings-status').textContent = 'That key is reserved or already assigned. Choose another key.';
+          return;
+        }
+        keyBindings[action] = e.code;
+        pendingBinding = null;
+        renderKeyBindings();
+        updateControlReferences();
+        saveSettings();
+        return;
+      }
+      if ($('settings-modal').style.display === 'flex') {
+        if (e.code === keyBindings.pause) {
+          e.preventDefault();
+          $('settings-modal').style.display = 'none';
+        }
+        return;
+      }
       K[e.code] = 1;
+      const bindingAction = Object.keys(keyBindings).find(action => keyBindings[action] === e.code);
       if (e.code === 'Enter' && networked && !inLobby && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         e.preventDefault();
         document.exitPointerLock();
@@ -2566,14 +3127,19 @@
         return;
       }
       if (!isLocked) return;
-      if ((e.code === 'KeyC' || e.code === 'ControlLeft') && !P.veh) triggerSlide();
-      if (e.code === 'Tab') { e.preventDefault(); openLoadout(); }
-      if (e.code === 'KeyE') useVehicle();
-      if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') reloadActiveWeapon();
-      if (e.code === 'KeyF' && P.veh && P.veh.type === 'heli') fireHeliMissile();
+      if (bindingAction === 'pause') {
+        e.preventDefault();
+        leaveGameplayControls();
+        $('pause-modal').style.display = 'flex';
+      }
+      if (bindingAction === 'slide' && !P.veh) triggerSlide();
+      if (bindingAction === 'armory') { e.preventDefault(); openLoadout(); }
+      if (bindingAction === 'interact') useVehicle();
+      if (bindingAction === 'reload') reloadActiveWeapon();
+      if (bindingAction === 'missile' && P.veh && P.veh.type === 'heli') fireHeliMissile();
       if (e.key === '1') selectSlot(0);
       if (e.key === '2') selectSlot(1);
-      if (e.code === 'KeyQ') selectSlot(1 - P.sl);
+      if (bindingAction === 'swap') selectSlot(1 - P.sl);
     });
     window.addEventListener('keyup', e => { K[e.code] = 0; });
 
@@ -2593,12 +3159,12 @@
       mouseDeltaX = e.movementX;
       mouseDeltaY = e.movementY;
       if (P.veh) {
-        P.ay -= e.movementX * 0.0022;
+        P.ay -= e.movementX * 0.0022 * gameSettings.mouseSensitivity;
         if (P.veh.type === 'heli') P.ay = Math.max(-1.4, Math.min(1.4, P.ay));
-        P.ap = Math.max(-0.55, Math.min(0.65, P.ap - e.movementY * 0.0022));
+        P.ap = Math.max(-0.55, Math.min(0.65, P.ap - e.movementY * 0.0022 * gameSettings.mouseSensitivity));
         return;
       }
-      const s = 0.0022 / (scoped() ? W[P.w].zoom : 1);
+      const s = 0.0022 * gameSettings.mouseSensitivity / (scoped() ? W[P.w].zoom : 1);
       P.yaw -= e.movementX * s;
       P.pit = Math.max(-1.5, Math.min(1.5, P.pit - e.movementY * s));
     });
@@ -2608,9 +3174,6 @@
       $('pause-modal').style.display = (!isLocked && !inLobby && $('loadout-modal').style.display !== 'flex') ? 'flex' : 'none';
       if (!isLocked) lm = rm = 0;
     });
-
-    $('btn-resume').onclick = () => { enterGameplayControls(); };
-    $('btn-quit-lobby').onclick = () => { quitToLobby(); };
 
     function selectSlot(idx) {
       if (P.veh) return;
@@ -2673,6 +3236,7 @@
     function gainXP(amt) {
       const oldLvl = lvl();
       P.xp += amt;
+      operatorStats.xp = P.xp;
       if (lvl() > oldLvl) {
         bannerMsg('PROMOTED TO LEVEL ' + lvl() + '!');
         playSnd(520, 0.3, 0.3, 'sine');
@@ -2680,7 +3244,7 @@
     }
 
     /* -------------------------------------------------------------------------
-       PROJECTILES, DAMAGE & CANNON.JS SHOCKWAVE PHYSICS
+       PROJECTILES, DAMAGE & EXPLOSION EFFECTS
        ------------------------------------------------------------------------- */
     const FX = [];
     function spawnExplosion(pos, size, color, life = 0.6) {
@@ -3115,8 +3679,8 @@
         P.ap = best.type === 'heli' ? -0.1 : 0.05;
         const msg = best.type === 'tank' ? ' · [LMB] 120MM CANNON · [RMB] COAXIAL MG'
                   : best.type === 'sam' ? ' · [LMB] SAM MISSILES · [RMB] 20MM CIWS'
-                  : best.type === 'heli' ? ' · [LMB] CHAIN GUN · [F] MISSILES'
-                  : ' · [LMB] AUTOCANNON · [E] TO EXIT';
+                  : best.type === 'heli' ? ` · [LMB] CHAIN GUN · [${keyLabel(keyBindings.missile)}] MISSILES`
+                  : ` · [LMB] AUTOCANNON · [${keyLabel(keyBindings.interact)}] TO EXIT`;
         bannerMsg('ENTERED ' + best.type.toUpperCase() + msg);
       }
     }
@@ -3136,7 +3700,7 @@
     function updatePlayerFoot(dt) {
       if (P.slideCd > 0) P.slideCd -= dt;
 
-      const isSprinting = K.ShiftLeft;
+      const isSprinting = K[keyBindings.sprint];
       const fwd = new V3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
       const right = new V3(Math.cos(P.yaw), 0, -Math.sin(P.yaw));
       const move = new V3();
@@ -3165,7 +3729,7 @@
         if (P.vy < -22) P.hp -= (-P.vy - 22) * 4;
         P.p.y = 0;
         P.vy = 0;
-        if (K.Space) {
+        if (K[keyBindings.jump]) {
           if (P.sliding) {
             P.vy = 11;
             P.sliding = 0;
@@ -3277,7 +3841,7 @@
         v.v += accel * 32 * dt;
         v.v *= (1 - 0.9 * dt);
         v.p.addScaledVector(fwd, v.v * dt);
-        const climb = (K.Space ? 1 : 0) - (K.ShiftLeft ? 1 : 0);
+        const climb = (K[keyBindings.jump] ? 1 : 0) - (K[keyBindings.sprint] ? 1 : 0);
         v.p.y = Math.max(0.6, Math.min(85, v.p.y + climb * 16 * dt));
         if (checkCollisionPush(v.p, 2.8)) v.v *= 0.3;
 
@@ -4655,12 +5219,20 @@
       { id: 'violet', name: 'VIOLET', color: '#c084fc' },
       { id: 'arctic', name: 'ARCTIC', color: '#e2e8f0' }
     ];
+    function sanitizeCallsign(value) {
+      return typeof value === 'string'
+        ? value.replace(/[<>\u0000-\u001f\u007f]/g, '').slice(0, 20)
+        : '';
+    }
+    function validCallsign(value) {
+      return /^[\p{L}\p{N}][\p{L}\p{N} _.-]{1,19}$/u.test(sanitizeCallsign(value).trim());
+    }
     const defaultOperatorName = `Operator-${Math.floor(1000 + Math.random() * 9000)}`;
     let operatorProfile = { name: defaultOperatorName, appearance: 'cobalt' };
     try {
       const savedProfile = JSON.parse(localStorage.getItem('clash-of-steel-operator') || 'null');
-      if (savedProfile && typeof savedProfile.name === 'string') {
-        operatorProfile.name = savedProfile.name.slice(0, 20);
+      if (savedProfile && validCallsign(sanitizeCallsign(savedProfile.name))) {
+        operatorProfile.name = sanitizeCallsign(savedProfile.name).trim();
       }
       if (savedProfile && PLAYER_APPEARANCES.some(item => item.id === savedProfile.appearance)) {
         operatorProfile.appearance = savedProfile.appearance;
@@ -4687,11 +5259,13 @@
     let scores = {};
     let FLAGS = null;
     let sessionMode = 'public';
-    let networked = false, networkHost = false, networkRoomId = null, networkRoomKind = null, networkTeam = 0;
+    let networked = false, networkHost = false, networkHostId = null, networkRoomId = null, networkRoomKind = null, networkTeam = 0;
     let networkMatchConfig = null, networkGameState = null, networkWorldInitialized = false;
     let privateRoomBotsEnabled = true, matchBotsEnabled = true;
     let networkPlayerId = null, networkSendTimer = 0, networkSnapshotTimer = 0, networkMissileSequence = 0;
     let profileUpdateTimer = 0;
+    let hasConnectedOnce = false;
+    let reconnectingRoom = null;
     let networkRoster = new Map();
     const networkPickupRequests = new Map();
     const remotePlayers = new Map();
@@ -4710,8 +5284,9 @@
       }
     };
     if (!hasSocketClient) {
-      $('server-status').textContent = 'MULTIPLAYER UNAVAILABLE';
+      $('server-status').textContent = 'Server unavailable';
       $('server-status').className = 'unavailable';
+      $('main-menu-connection').textContent = 'Server unavailable';
       $('room-status').textContent = 'Open this game from its Render Web Service URL to use online rooms.';
     }
 
@@ -4771,8 +5346,22 @@
       $('roster-preview').innerHTML = sessionMode === 'private' && !privateRoomBotsEnabled
         ? '<b>PRIVATE ROOM:</b> Bots disabled — play with human operators only.'
         : currentMode === 'ffa'
-        ? `<b>OPERATORS:</b> You, ${BOT_NAMES.slice(0, 9).join(', ')}`
-        : `<span style="color:var(--color-blue)">BLUE SQUAD:</span> You, ${BOT_NAMES.slice(0, 5).join(', ')}<br><span style="color:var(--color-red)">RED SQUAD:</span> ${BOT_NAMES.slice(5, 11).join(', ')}`;
+        ? `<b>12 BOT OPERATORS:</b> ${BOT_NAMES.join(', ')}`
+        : `<span style="color:var(--color-blue)">BLUE SQUAD:</span> You + 7 bots (${BOT_NAMES.slice(0, 7).join(', ')})<br><span style="color:var(--color-red)">RED SQUAD:</span> 7 bots (${[...BOT_NAMES.slice(7), ...BOT_NAMES.slice(0, 2)].join(', ')})`;
+    }
+    function renderRoomDetails() {
+      $('room-details').style.display = networked ? 'block' : 'none';
+      $('room-code-display').textContent = networkRoomKind === 'private' ? networkRoomId : 'PUBLIC';
+      $('room-copy').style.display = networkRoomKind === 'private' ? 'inline-block' : 'none';
+      const list = $('room-player-list');
+      list.replaceChildren();
+      if (!networked) return;
+      [...networkRoster.values()].forEach(player => {
+        const chip = document.createElement('span');
+        chip.className = `room-player-chip${player.id === networkHostId ? ' host' : ''}`;
+        chip.textContent = `${player.name || 'Operator'} · ${player.team === 0 ? 'BLUE' : player.team === 1 ? 'RED' : 'FREE'}${player.id === networkHostId ? ' · HOST' : ''}`;
+        list.appendChild(chip);
+      });
     }
 
     $('lobby-modal').onclick = e => {
@@ -4818,18 +5407,49 @@
     $('btn-create-room').onclick = () => joinOnlineRoom('private', 'create');
     $('btn-join-room').onclick = () => joinOnlineRoom('private', 'join', $('room-code-input').value);
     $('btn-leave-room').onclick = leaveOnlineRoom;
+    $('room-copy').onclick = async () => {
+      if (!networked || networkRoomKind !== 'private') return;
+      if (!navigator.clipboard?.writeText) {
+        $('room-status').textContent = `Room code ${networkRoomId} is ready; select it to copy on this browser.`;
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(networkRoomId);
+        $('room-status').textContent = `Private room code ${networkRoomId} copied.`;
+      } catch (error) {
+        $('room-status').textContent = 'Could not copy the room code. Select the code and copy it manually.';
+        console.warn('Private room code could not be copied.', error);
+      }
+    };
     $('btn-deploy').onclick = deployFromLobby;
     $('player-name').addEventListener('input', () => {
-      operatorProfile.name = $('player-name').value.slice(0, 20);
+      operatorProfile.name = sanitizeCallsign($('player-name').value);
       $('operator-preview').textContent = operatorProfile.name.trim().charAt(0).toUpperCase() || 'C';
+      if (!validCallsign(operatorProfile.name)) {
+        $('room-status').textContent = 'CALLSIGN MUST BE 2–20 LETTERS, NUMBERS, SPACES, DOTS, DASHES, OR UNDERSCORES.';
+        return;
+      }
       saveOperatorProfile();
-      if (networked) {
+      if (networked && netSocket.connected) {
         clearTimeout(profileUpdateTimer);
         profileUpdateTimer = setTimeout(() => netSocket.emit('player:profile', operatorProfile), 250);
       }
     });
+    $('player-name').addEventListener('blur', () => {
+      operatorProfile.name = sanitizeCallsign(operatorProfile.name).trim();
+      $('player-name').value = operatorProfile.name;
+      if (validCallsign(operatorProfile.name)) {
+        saveOperatorProfile();
+        if (networked && netSocket.connected) netSocket.emit('player:profile', operatorProfile);
+      }
+    });
+    $('btn-resume').onclick = () => { enterGameplayControls(); };
+    $('btn-quit-lobby').onclick = () => { quitToLobby(); };
 
     function startMatch() {
+      matchStartedAt = Date.now();
+      operatorStats.matches++;
+      saveOperatorStats();
       matchBotsEnabled = !networked || networkRoomKind !== 'private'
         ? true
         : networkHost ? privateRoomBotsEnabled : networkMatchConfig?.botsEnabled !== false;
@@ -4861,6 +5481,8 @@
       scores = {};
       matchEnded = 0;
       inLobby = 0;
+      document.body.classList.add('in-mission');
+      $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'none';
       W.forEach(w => { w.a = w.mag; w.rl = 0; });
 
@@ -5067,31 +5689,53 @@
 
     function joinOnlineRoom(kind, action, roomCode = '') {
       if (!hasSocketClient) {
-        $('room-status').textContent = 'MULTIPLAYER SERVICE UNAVAILABLE. OPEN THE GAME FROM ITS RENDER WEB SERVICE URL.';
+        $('room-status').textContent = 'Server unavailable. Open the game from its Render Web Service URL.';
+        return Promise.resolve(null);
+      }
+      if (!netSocket.connected) {
+        $('room-status').textContent = 'Disconnected from the multiplayer service. Wait for reconnection, then retry.';
         return Promise.resolve(null);
       }
       if (networked) {
         $('room-status').textContent = 'Leave the current room before joining another.';
         return Promise.resolve(null);
       }
-      $('room-status').textContent = 'CONNECTING TO ROOM...';
+      if (!validCallsign(operatorProfile.name)) {
+        $('room-status').textContent = 'Enter a valid callsign before joining a room.';
+        $('player-name').focus();
+        return Promise.resolve(null);
+      }
+      if (kind === 'private' && action === 'join' && !/^\d{6}$/.test(roomCode.trim())) {
+        $('room-status').textContent = 'Enter a valid six-digit private room code.';
+        $('room-code-input').focus();
+        return Promise.resolve(null);
+      }
+      $('room-status').textContent = 'Connecting to room…';
       return new Promise(resolve => {
         netSocket.timeout(6000).emit('room:join', {
           kind,
           action,
-          roomCode,
+          roomCode: roomCode.trim(),
           botsEnabled: privateRoomBotsEnabled,
-          name: operatorProfile.name.trim(),
+          name: operatorProfile.name,
           appearance: operatorProfile.appearance
         }, (error, result) => {
           if (error || !result || result.error) {
-            $('room-status').textContent = result?.error || 'Could not connect to the room server. Check your connection and retry.';
+            $('room-status').textContent = result?.error || (netSocket.connected
+              ? 'The room request timed out. Check the room code and try again.'
+              : 'Disconnected before the room request completed. Reconnect and retry.');
+            resolve(null);
+            return;
+          }
+          if (!Array.isArray(result.players) || !result.player || typeof result.hostId !== 'string') {
+            $('room-status').textContent = 'The server returned an invalid room response. Please retry.';
             resolve(null);
             return;
           }
           networked = true;
           networkPlayerId = netSocket.id;
           networkHost = result.hostId === networkPlayerId;
+          networkHostId = result.hostId;
           networkRoomId = result.roomCode || 'public';
           networkRoomKind = result.roomKind;
           networkTeam = result.player.team;
@@ -5099,10 +5743,12 @@
           networkGameState = result.gameState;
           if (result.roomKind === 'private') privateRoomBotsEnabled = result.botsEnabled !== false;
           networkRoster = new Map((result.players || []).map(player => [player.id, player]));
+          renderRoomDetails();
           setRoomChatCollapsed(supportsTouchControls);
           $('chat-panel').style.display = 'block';
           $('btn-leave-room').style.display = 'inline-block';
           $('room-player-count').textContent = result.players.length;
+          $('active-player-count').textContent = Number.isFinite(result.activePlayers) ? result.activePlayers : '—';
           $('room-status').textContent = `${result.roomKind === 'private' ? `PRIVATE ROOM ${result.roomCode}` : 'PUBLIC ROOM'} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${result.players.length} REAL PLAYERS`;
           if (result.gameState) applyNetworkGameState(result.gameState);
           if (result.matchConfig && !networkHost) {
@@ -5116,9 +5762,11 @@
 
     function leaveOnlineRoom() {
       if (networked) netSocket.emit('room:leave');
+      reconnectingRoom = null;
       if (!inLobby) quitToLobby();
       networked = false;
       networkHost = false;
+      networkHostId = null;
       networkRoomId = null;
       networkRoomKind = null;
       networkPlayerId = null;
@@ -5135,6 +5783,8 @@
       setRoomChatCollapsed(true);
       $('room-status').textContent = 'LEFT ROOM.';
       $('btn-leave-room').style.display = 'none';
+      $('room-player-count').textContent = '—';
+      renderRoomDetails();
     }
 
     async function deployFromLobby() {
@@ -5330,25 +5980,59 @@
       });
     }
 
+    function setConnectionState(state) {
+      $('server-status').textContent = state;
+      $('server-status').className = state === 'Connected' ? 'connected'
+        : state === 'Server unavailable' || state === 'Disconnected' ? 'unavailable'
+        : state === 'Connecting' ? 'connecting' : 'reconnecting';
+      $('main-menu-connection').textContent = state;
+      $('main-menu-connection').style.color = state === 'Connected' ? '#34d399'
+        : state === 'Server unavailable' || state === 'Disconnected' ? '#fb7185' : '#fbbf24';
+    }
     netSocket.on('presence', data => {
-      $('active-player-count').textContent = data.activePlayers;
+      if (Number.isInteger(data?.activePlayers) && data.activePlayers >= 0) {
+        $('active-player-count').textContent = data.activePlayers;
+      }
     });
     netSocket.on('connect', () => {
-      $('server-status').textContent = 'MULTIPLAYER CONNECTED';
-      $('server-status').className = 'connected';
-      if (!networked) $('room-status').textContent = 'Server ready — choose a public lobby or create/join a private room.';
+      setConnectionState('Connected');
+      hasConnectedOnce = true;
+      $('active-player-count').textContent = '—';
+      if (reconnectingRoom) {
+        const room = reconnectingRoom;
+        reconnectingRoom = null;
+        joinOnlineRoom(room.kind, 'join', room.code).then(result => {
+          if (result) {
+            $('room-status').textContent = 'Connection restored and room rejoined. Press DEPLOY to return to the match.';
+          } else {
+            $('room-status').textContent = room.kind === 'private'
+              ? 'Connection restored, but the private room expired or is no longer available. Create or join another room.'
+              : 'Connection restored, but the public room could not be rejoined. Retry from the lobby.';
+          }
+        });
+        return;
+      }
+      if (!networked) $('room-status').textContent = 'Connected — choose a public lobby or create/join a private room.';
     });
-    netSocket.on('connect_error', () => {
-      $('server-status').textContent = 'SERVER UNAVAILABLE';
-      $('server-status').className = 'unavailable';
-      if (!networked) $('room-status').textContent = 'Could not reach multiplayer. Check the Render Web Service deployment and refresh.';
+    netSocket.on('connect_error', error => {
+      setConnectionState(hasConnectedOnce ? 'Reconnecting' : 'Server unavailable');
+      if (!networked) $('room-status').textContent = hasConnectedOnce
+        ? 'Reconnecting to multiplayer service…'
+        : 'Could not reach multiplayer. Check the Render Web Service deployment and connection.';
+      if (error) console.warn('Multiplayer connection attempt failed.', error.message);
     });
-    netSocket.on('disconnect', () => {
-      $('server-status').textContent = 'RECONNECTING…';
-      $('server-status').className = 'unavailable';
+    netSocket.on('disconnect', reason => {
+      setConnectionState(reason === 'io server disconnect' ? 'Disconnected' : 'Reconnecting');
+      $('active-player-count').textContent = '—';
+      $('room-player-count').textContent = '—';
       if (!networked) return;
+      reconnectingRoom = {
+        kind: networkRoomKind,
+        code: networkRoomKind === 'private' ? networkRoomId : ''
+      };
       networked = false;
       networkHost = false;
+      networkHostId = null;
       networkPlayerId = null;
       networkRoomId = null;
       networkRoomKind = null;
@@ -5358,14 +6042,27 @@
       $('chat-panel').style.display = 'none';
       setRoomChatCollapsed(true);
       $('btn-leave-room').style.display = 'none';
-      $('room-status').textContent = 'Connection lost. Rejoin the room when the server reconnects.';
+      renderRoomDetails();
+      $('room-status').textContent = reason === 'io server disconnect'
+        ? 'Disconnected from the room. Attempting to restore the connection…'
+        : 'Connection lost. Reconnecting, then attempting to rejoin the room…';
+      if (reason === 'io server disconnect' && hasSocketClient) netSocket.connect();
     });
+    if (hasSocketClient && netSocket.io?.on) {
+      netSocket.io.on('reconnect_attempt', () => setConnectionState('Reconnecting'));
+      netSocket.io.on('reconnect_failed', () => {
+        setConnectionState('Server unavailable');
+        if (reconnectingRoom) $('room-status').textContent = 'Server unavailable. Your room could not be restored; reconnect and rejoin.';
+      });
+    }
     netSocket.on('room:presence', data => {
+      if (!Number.isInteger(data?.activePlayers) || data.activePlayers < 0) return;
       $('room-player-count').textContent = data.activePlayers;
       if (networked) $('room-status').textContent = `${networkRoomKind === 'private' ? `PRIVATE ROOM ${networkRoomId}` : 'PUBLIC ROOM'} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${data.activePlayers} REAL PLAYERS`;
     });
     netSocket.on('player:joined', player => {
       networkRoster.set(player.id, player);
+      renderRoomDetails();
       if (!inLobby) upsertNetworkPlayer(player);
     });
     netSocket.on('player:state', state => {
@@ -5405,11 +6102,14 @@
       if (!player) return;
       player.name = profile.name;
       player.appearance = profile.appearance;
+      renderRoomDetails();
       if (!inLobby) upsertNetworkPlayer(player);
     });
     netSocket.on('player:left', data => {
       removeNetworkPlayer(data.id);
+      networkHostId = data.hostId;
       networkHost = data.hostId === networkPlayerId;
+      renderRoomDetails();
     });
     netSocket.on('match:start', config => {
       if (networkHost) return;
@@ -5427,6 +6127,7 @@
     });
     netSocket.on('host:changed', data => {
       networkHost = true;
+      networkHostId = networkPlayerId;
       networkMatchConfig = data.matchConfig;
       networkGameState = data.gameState;
       privateRoomBotsEnabled = data.botsEnabled !== false;
@@ -5438,6 +6139,7 @@
       }
       if (data.gameState) applyNetworkGameState(data.gameState);
       $('room-status').textContent = 'ROOM HOST TRANSFERRED TO YOU.';
+      renderRoomDetails();
       buildLobbyUI();
     });
     netSocket.on('room:settings', settings => {
@@ -5530,6 +6232,8 @@
     function onKill(victim, attacker) {
       if (!victim.team && victim.type !== 'pl') return;
       const isPlayer = attacker === 1 || attacker === 'P';
+      if (isPlayer) operatorStats.kills++;
+      if (victim.type === 'pl') operatorStats.deaths++;
       const killerName = isPlayer ? 'YOU' : (attacker && attacker.nm) || (attacker && attacker.type ? attacker.type.toUpperCase() : 'BOT');
       const victimName = victim.nm || (victim.type === 'pl' ? 'YOU' : victim.type.toUpperCase());
 
@@ -5540,6 +6244,7 @@
         gainXP(xpGain);
         bannerMsg(`ENEMY DOWN +${xpGain} XP`);
       }
+      saveOperatorStats();
 
       if (currentMode !== 'ctf') {
         const scoredTeam = isPlayer ? P.tm : (attacker ? attacker.tm : null);
@@ -5562,13 +6267,30 @@
     }
 
     function endMatch(winnerTeam) {
+      if (matchEnded) return;
       matchEnded = 1;
       inLobby = 1;
       leaveGameplayControls();
       if (networked && networkHost) netSocket.emit('match:end', { winnerTeam });
+      const won = winnerTeam === P.tm;
+      if (won) operatorStats.wins++;
+      else operatorStats.losses++;
+      operatorStats.history.unshift({
+        when: new Date().toLocaleString(),
+        mode: MODES[currentMode].name,
+        result: won ? 'VICTORY' : 'DEFEAT',
+        duration: Math.max(0, Math.floor((Date.now() - matchStartedAt) / 60000))
+      });
+      operatorStats.history = operatorStats.history.slice(0, 10);
+      saveOperatorStats();
       $('match-result').textContent = winnerTeam === P.tm ? 'VICTORY — MISSION ACCOMPLISHED' : 'DEFEAT — MISSION FAILED';
       $('match-result').style.color = winnerTeam === P.tm ? 'var(--color-primary)' : 'var(--color-red)';
+      $('match-result-detail').textContent = currentMode === 'ffa'
+        ? `${MODES[currentMode].name} · WINNING SCORE ${scores[winnerTeam] || 0}`
+        : `${MODES[currentMode].name} · BLUE ${scores[0] || 0} — RED ${scores[1] || 0}`;
+      $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'flex';
+      document.body.classList.remove('in-mission');
     }
 
     function quitToLobby() {
@@ -5577,7 +6299,11 @@
       leaveGameplayControls();
       $('pause-modal').style.display = 'none';
       $('match-result').textContent = '';
+      $('match-result-detail').textContent = '';
+      $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'flex';
+      document.body.classList.remove('in-mission');
+      saveOperatorStats();
       buildLobbyUI();
     }
 
@@ -5830,12 +6556,12 @@
         $('sh-bar').style.width = '0%';
         $('veh-hint').style.display = 'block';
         $('veh-hint').innerHTML = v.type === 'tank'
-          ? `M1A2 · [WASD] DRIVE · [LMB] 120MM · [RMB] COAX · [E] EXIT`
+          ? `M1A2 · [WASD] DRIVE · [LMB] 120MM · [RMB] COAX · [${keyLabel(keyBindings.interact)}] EXIT`
           : v.type === 'heli'
-          ? `AH-64 · [WASD] FLY · [SPACE/SHIFT] ALTITUDE · [F] AIR/GROUND AGM · [E] EXIT`
+          ? `AH-64 · [WASD] FLY · [${keyLabel(keyBindings.jump)}/${keyLabel(keyBindings.sprint)}] ALTITUDE · [${keyLabel(keyBindings.missile)}] AIR/GROUND AGM · [${keyLabel(keyBindings.interact)}] EXIT`
           : v.type === 'sam'
-          ? `M901 · [WASD] DRIVE · [LMB] SAM · [RMB] CIWS · [E] EXIT`
-          : `COMMAND APC · [WASD] DRIVE · [LMB] 25MM · [R] RELOAD · [E] EXIT`;
+          ? `M901 · [WASD] DRIVE · [LMB] SAM · [RMB] CIWS · [${keyLabel(keyBindings.interact)}] EXIT`
+          : `COMMAND APC · [WASD] DRIVE · [LMB] 25MM · [${keyLabel(keyBindings.reload)}] RELOAD · [${keyLabel(keyBindings.interact)}] EXIT`;
       } else {
         $('health-label').textContent = 'VITAL INTEGRITY';
         $('health-val').textContent = `${Math.max(0, Math.round(P.hp))}`;
@@ -5869,8 +6595,8 @@
           $('ammo-cur').textContent = v.reloading > 0 ? 'RELOAD' : v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = v.mReloading > 0
-            ? `[F] MISSILE POD RELOADING (${v.mReloading.toFixed(1)}s)`
-            : `[F] GUIDED AIR/GROUND MISSILES: ${v.mAmmo} / ${v.mMag}`;
+            ? `[${keyLabel(keyBindings.missile)}] MISSILE POD RELOADING (${v.mReloading.toFixed(1)}s)`
+            : `[${keyLabel(keyBindings.missile)}] GUIDED AIR/GROUND MISSILES: ${v.mAmmo} / ${v.mMag}`;
         } else {
           $('weapon-name').textContent = 'COMMAND APC';
           $('weapon-class').textContent = 'GROUND · ARMORED CARRIER';
@@ -5888,16 +6614,21 @@
 
       const dock = $('controls-dock');
       if (dock) {
-        if (!v) {
-          dock.innerHTML = '<span><b>WASD</b> Move</span><span><b>Shift</b> Sprint</span><span><b>Space</b> Jump</span><span><b>LMB</b> Fire</span><span><b>RMB</b> Scope</span><span><b>R</b> Reload</span><span><b>E</b> Enter Vehicle</span><span><b>1/2</b> Slots</span><span><b>TAB</b> Armory</span>';
-        } else if (v.type === 'sam') {
-          dock.innerHTML = '<span><b>WASD</b> Drive & Steer</span><span><b>Mouse</b> Aim Turret</span><span><b>LMB</b> SAM Missiles</span><span><b>RMB</b> 20mm CIWS</span><span><b>R</b> Reload Pod</span><span><b>E</b> Exit</span>';
-        } else if (v.type === 'tank') {
-          dock.innerHTML = '<span><b>WASD</b> Drive & Pivot</span><span><b>Mouse</b> Aim Turret</span><span><b>LMB</b> 120mm Cannon</span><span><b>RMB</b> Coaxial MG</span><span><b>R</b> Reload MG</span><span><b>E</b> Exit</span>';
-        } else if (v.type === 'heli') {
-          dock.innerHTML = '<span><b>W/S</b> Pitch & Fly</span><span><b>A/D</b> Turn</span><span><b>Space/Shift</b> Altitude</span><span><b>LMB</b> Chain Gun</span><span><b>F</b> Guided Air/Ground Missile</span><span><b>R</b> Reload Gun</span><span><b>E</b> Exit</span>';
-        } else {
-          dock.innerHTML = '<span><b>WASD</b> Drive & Steer</span><span><b>Mouse</b> Aim Autocannon</span><span><b>LMB</b> 25mm Autocannon</span><span><b>R</b> Reload</span><span><b>E</b> Exit</span>';
+        dock.dataset.vehicle = v ? v.type : 'inf';
+        const reloadKey = keyLabel(keyBindings.reload);
+        const interactKey = keyLabel(keyBindings.interact);
+        const markup = !v
+          ? `<span><b>WASD</b> Move</span><span><b>${keyLabel(keyBindings.sprint)}</b> Sprint</span><span><b>${keyLabel(keyBindings.jump)}</b> Jump</span><span><b>${keyLabel(keyBindings.slide)}</b> Slide</span><span><b>LMB</b> Fire</span><span><b>RMB</b> Aim / secondary</span><span><b>${reloadKey}</b> Reload</span><span><b>${interactKey}</b> Use</span><span><b>${keyLabel(keyBindings.swap)} / 1 / 2</b> Slots</span><span><b>${keyLabel(keyBindings.armory)}</b> Armory</span><span><b>${keyLabel(keyBindings.pause)}</b> Pause</span>`
+          : v.type === 'sam'
+          ? `<span><b>WASD</b> Drive & steer</span><span><b>Mouse</b> Aim launcher</span><span><b>LMB</b> SAM missiles</span><span><b>RMB</b> 20mm CIWS</span><span><b>${reloadKey}</b> Reload</span><span><b>${interactKey}</b> Exit</span><span><b>${keyLabel(keyBindings.pause)}</b> Pause</span>`
+          : v.type === 'tank'
+          ? `<span><b>WASD</b> Drive & pivot</span><span><b>Mouse</b> Aim turret</span><span><b>LMB</b> 120mm cannon</span><span><b>RMB</b> Coaxial MG</span><span><b>${reloadKey}</b> Reload MG</span><span><b>${interactKey}</b> Exit</span><span><b>${keyLabel(keyBindings.pause)}</b> Pause</span>`
+          : v.type === 'heli'
+          ? `<span><b>W/S</b> Pitch & fly</span><span><b>A/D</b> Turn</span><span><b>${keyLabel(keyBindings.jump)}/${keyLabel(keyBindings.sprint)}</b> Altitude</span><span><b>LMB</b> Chain gun</span><span><b>${keyLabel(keyBindings.missile)}</b> Guided missile</span><span><b>${reloadKey}</b> Reload</span><span><b>${interactKey}</b> Exit</span><span><b>${keyLabel(keyBindings.pause)}</b> Pause</span>`
+          : `<span><b>WASD</b> Drive & steer</span><span><b>Mouse</b> Aim autocannon</span><span><b>LMB</b> 25mm autocannon</span><span><b>${reloadKey}</b> Reload</span><span><b>${interactKey}</b> Exit</span><span><b>${keyLabel(keyBindings.pause)}</b> Pause</span>`;
+        if (dock.dataset.markup !== markup) {
+          dock.innerHTML = markup;
+          dock.dataset.markup = markup;
         }
       }
 
@@ -5929,17 +6660,29 @@
     }
 
     /* -------------------------------------------------------------------------
-       MAIN ENGINE GAME LOOP WITH CANNON PHYSICS & 3D BILLBOARD HEALTH BARS
+       MAIN ENGINE GAME LOOP WITH 3D BILLBOARD HEALTH BARS
        ------------------------------------------------------------------------- */
     let lastTime = performance.now();
+    let lastMenuRenderAt = 0;
 
     function gameLoop(now) {
       requestAnimationFrame(gameLoop);
+      if (document.hidden) {
+        lastTime = now;
+        return;
+      }
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
-
-      // Cannon.js Real Physics Step
-      world.step(1 / 60, dt, 3);
+      if (inLobby && now - lastMenuRenderAt < 250) return;
+      lastMenuRenderAt = now;
+      if (!inLobby && !matchEnded) {
+        operatorStats.playtimeSeconds += dt;
+        statsSaveTimer += dt;
+        if (statsSaveTimer >= 30) {
+          statsSaveTimer = 0;
+          saveOperatorStats();
+        }
+      }
 
       updateWeather(dt, camera.position);
 
@@ -6121,12 +6864,15 @@
 
       updateHUD();
       renderer.render(scene, camera);
-      drawTacticalRadar();
-      drawWorldVehicleHealthBars();
+      if (!inLobby) {
+        drawTacticalRadar();
+        drawWorldVehicleHealthBars();
+      }
     }
 
     buildLobbyUI();
     renderLoadoutUI();
+    updateControlReferences();
     requestAnimationFrame(gameLoop);
   </script>
 </body>
