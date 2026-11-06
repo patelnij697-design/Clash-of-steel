@@ -888,6 +888,30 @@
       border-left:3px solid var(--color-primary);
       text-align:left;
     }
+    #main-menu-modal {
+      align-items:center;
+      justify-content:flex-start;
+      padding-left:clamp(20px,7vw,100px);
+      background:linear-gradient(90deg,rgba(5,9,15,.42),rgba(5,9,15,.08));
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+    }
+    #main-menu-modal .menu-home {
+      width:min(720px,60vw);
+      background:linear-gradient(145deg,rgba(20,32,52,.84),rgba(8,14,24,.78));
+      backdrop-filter:blur(7px);
+      -webkit-backdrop-filter:blur(7px);
+    }
+    #menu-vehicle-caption {
+      position:fixed;
+      right:clamp(18px,7vw,100px);
+      bottom:clamp(18px,6vh,60px);
+      color:#e2e8f0;
+      font:700 12px var(--font-mono);
+      letter-spacing:2px;
+      text-shadow:0 2px 12px #000;
+      pointer-events:none;
+    }
     .menu-home .modal-title { margin-top:4px; }
     .menu-home-actions {
       display:grid;
@@ -979,6 +1003,9 @@
       .menu-home-actions, .settings-grid, .binding-list, .stats-grid { grid-template-columns:1fr; }
       .menu-home { text-align:center; }
       .menu-home-status { justify-content:center; }
+      #main-menu-modal { padding-left:8px; }
+      #main-menu-modal .menu-home { width:100%; }
+      #menu-vehicle-caption { right:16px; bottom:16px; font-size:10px; }
     }
     #mobile-controls { display:none; }
     #mobile-controls.active { display:block; }
@@ -1216,10 +1243,10 @@
     <span><b id="dock-pause-key">ESC</b> Tactical pause</span>
   </div>
 
-  <div class="menu-modal" id="main-menu-modal">
+  <div class="menu-modal" id="main-menu-modal" style="display:flex;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 0.9</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 0.9.00.1</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -1237,6 +1264,7 @@
         Local profile and progression are stored on this device. Multiplayer rooms are hosted in memory and reset when the service restarts.
       </div>
     </div>
+    <div id="menu-vehicle-caption" aria-hidden="true">AH-64 APACHE</div>
   </div>
 
   <!-- Pause / Deployment Lobby Modal -->
@@ -1779,6 +1807,10 @@
     // Renderer & 3D Canvas
     const canvas = $('webgl');
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    let applyShadowQuality = () => {};
     function applyDisplaySettings() {
       let dimensions = [innerWidth, innerHeight];
       if (gameSettings.resolution !== 'native') {
@@ -1792,6 +1824,7 @@
       renderer.setSize(dimensions[0], dimensions[1], false);
       renderer.shadowMap.enabled = gameSettings.graphics !== 'low';
       renderer.shadowMap.needsUpdate = true;
+      applyShadowQuality();
       document.body.classList.toggle('reduce-motion', gameSettings.reducedMotion);
       document.body.classList.toggle('high-contrast', gameSettings.highContrast);
     }
@@ -1817,6 +1850,8 @@
       resizeHudCanvas();
       camera.aspect = innerWidth / innerHeight;
       camera.updateProjectionMatrix();
+      menuCamera.aspect = innerWidth / innerHeight;
+      menuCamera.updateProjectionMatrix();
     });
 
     /* -------------------------------------------------------------------------
@@ -2000,6 +2035,16 @@
     sunLight.shadow.camera.top = d;
     sunLight.shadow.camera.bottom = -d;
     scene.add(sunLight);
+    applyShadowQuality = () => {
+      const size = gameSettings.graphics === 'high' ? 2048 : gameSettings.graphics === 'balanced' ? 1024 : 512;
+      sunLight.shadow.mapSize.set(size, size);
+      sunLight.shadow.needsUpdate = true;
+    };
+    applyShadowQuality();
+
+    const fillLight = new THREE.DirectionalLight(0xb9d3ef, 0.32);
+    fillLight.position.set(-100, 70, -120);
+    scene.add(fillLight);
 
     scene.fog = new THREE.Fog(WEATHER.CLEAR.fogColor, WEATHER.CLEAR.fogNear, WEATHER.CLEAR.fogFar);
     scene.background = currentSky;
@@ -2624,13 +2669,28 @@
       // 8. M230 30MM CHAIN GUN (Chin Turret)
       const chinGun = new THREE.Group();
       chinGun.position.set(0, -0.85, 2.35);
-      box(0.42, 0.38, 0.65, trimMat, 0, 0, 0, chinGun);
-      cyl(0.06, 0.06, 0.5, 6, mats.steelLight, -0.12, 0.08, 0.1, chinGun).rotation.x = Math.PI / 2;
-      cyl(0.06, 0.06, 0.5, 6, mats.steelLight, 0.12, 0.08, 0.1, chinGun).rotation.x = Math.PI / 2;
-      const barrel = cyl(0.065, 0.065, 1.9, 8, mats.steelLight, 0, -0.06, 1.05, chinGun);
+      chinGun.rotation.order = 'YXZ';
+      box(0.48, 0.34, 0.58, trimMat, 0, 0, 0, chinGun);
+      cyl(0.18, 0.18, 0.34, 12, mats.steelLight, 0, -0.02, 0.36, chinGun).rotation.x = Math.PI / 2;
+      box(0.12, 0.08, 0.42, mats.steelLight, 0, 0.16, -0.12, chinGun);
+      const barrelAssembly = new THREE.Group();
+      const barrel = cyl(0.072, 0.078, 1.9, 12, mats.steelLight, 0, -0.06, 1.05, barrelAssembly);
       barrel.rotation.x = Math.PI / 2;
-      const brake = cyl(0.09, 0.09, 0.28, 8, trimMat, 0, -0.06, 2.05, chinGun);
+      cyl(0.12, 0.12, 0.18, 10, trimMat, 0, -0.06, 1.85, barrelAssembly).rotation.x = Math.PI / 2;
+      const brake = cyl(0.095, 0.095, 0.28, 10, trimMat, 0, -0.06, 2.05, barrelAssembly);
       brake.rotation.x = Math.PI / 2;
+      const muzzleFlash = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.2, 1),
+        new THREE.MeshBasicMaterial({ color: 0xffc857, transparent: true, opacity: 0 })
+      );
+      muzzleFlash.position.set(0, -0.06, 2.22);
+      barrelAssembly.add(muzzleFlash);
+      barrelAssembly.flash = muzzleFlash;
+      barrelAssembly.position.z = 0;
+      chinGun.add(barrelAssembly);
+      chinGun.barrelAssembly = barrelAssembly;
+      chinGun.recoil = 0;
+      chinGun.flashTimer = 0;
       const chute = box(0.14, 0.28, 0.45, mats.hazardStripe, 0.22, 0.15, -0.15, chinGun);
       chute.rotation.z = -0.3;
       g.add(chinGun);
@@ -2741,6 +2801,82 @@
       return g;
     }
 
+    const menuScene = new THREE.Scene();
+    menuScene.background = new THREE.Color(0x0b121b);
+    menuScene.fog = new THREE.Fog(0x0b121b, 22, 52);
+    const menuCamera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+    menuCamera.position.set(0, 4.2, 19);
+    menuCamera.lookAt(0, 1.35, 0);
+    menuScene.add(new THREE.HemisphereLight(0xc5ddf6, 0x222b2c, 1.35));
+    const menuKeyLight = new THREE.DirectionalLight(0xffe2b3, 2.0);
+    menuKeyLight.position.set(-7, 12, 9);
+    menuKeyLight.castShadow = true;
+    menuKeyLight.shadow.mapSize.set(1024, 1024);
+    menuKeyLight.shadow.camera.left = -14;
+    menuKeyLight.shadow.camera.right = 14;
+    menuKeyLight.shadow.camera.top = 14;
+    menuKeyLight.shadow.camera.bottom = -14;
+    menuScene.add(menuKeyLight);
+    const menuRimLight = new THREE.DirectionalLight(0x5daaff, 1.1);
+    menuRimLight.position.set(8, 6, -8);
+    menuScene.add(menuRimLight);
+
+    const menuPlatform = new THREE.Mesh(
+      new THREE.CylinderGeometry(5.2, 5.2, 0.42, 48),
+      new THREE.MeshStandardMaterial({ color: 0x202a35, metalness: 0.66, roughness: 0.38 })
+    );
+    menuPlatform.position.y = -0.22;
+    menuPlatform.position.x = 3.2;
+    menuPlatform.receiveShadow = true;
+    menuScene.add(menuPlatform);
+    const menuPlatformRing = new THREE.Mesh(
+      new THREE.TorusGeometry(4.85, 0.035, 8, 64),
+      new THREE.MeshStandardMaterial({ color: 0xd88735, metalness: 0.55, roughness: 0.32, emissive: 0x321704 })
+    );
+    menuPlatformRing.rotation.x = Math.PI / 2;
+    menuPlatformRing.position.x = 3.2;
+    menuPlatformRing.position.y = 0.01;
+    menuScene.add(menuPlatformRing);
+
+    const menuVehicles = [
+      { name: 'AH-64 APACHE', model: mkHeli(0x59644c), scale: 0.66, y: 0.9 },
+      { name: 'M1A2 ABRAMS', model: mkTank(0x59644c), scale: 1.05, y: 0 },
+      { name: 'COMMAND APC', model: mkAPC(0x59644c), scale: 1.15, y: 0 },
+      { name: 'M901 SAM TRUCK', model: mkSAMTruck(0x59644c), scale: 0.78, y: 0 }
+    ];
+    menuVehicles.forEach(vehicle => {
+      vehicle.model.scale.multiplyScalar(vehicle.scale);
+      vehicle.model.position.x = 3.2;
+      vehicle.model.position.y = vehicle.y;
+      vehicle.model.rotation.y = -0.35;
+      vehicle.model.visible = false;
+      menuScene.add(vehicle.model);
+    });
+    let menuVehicleIndex = 0;
+    let menuVehicleTimer = 0;
+    menuVehicles[menuVehicleIndex].model.visible = true;
+
+    function updateMenuShowcase(dt) {
+      const activeVehicle = menuVehicles[menuVehicleIndex];
+      menuVehicleTimer += dt;
+      if (menuVehicleTimer >= 8) {
+        menuVehicleTimer = 0;
+        activeVehicle.model.visible = false;
+        menuVehicleIndex = (menuVehicleIndex + 1) % menuVehicles.length;
+        menuVehicles[menuVehicleIndex].model.visible = true;
+        $('menu-vehicle-caption').textContent = menuVehicles[menuVehicleIndex].name;
+      }
+
+      const vehicle = menuVehicles[menuVehicleIndex];
+      vehicle.model.rotation.y += dt * 0.24;
+      if (vehicle.model.rot) vehicle.model.rot.rotation.y += dt * 28;
+      if (vehicle.model.tailRot) vehicle.model.tailRot.rotation.x += dt * 35;
+      if (vehicle.model.radarDish) vehicle.model.radarDish.rotation.y += dt * 1.2;
+      if (vehicle.model.tu) {
+        vehicle.model.tu.rotation.y = Math.sin(performance.now() * 0.00045) * 0.28;
+      }
+    }
+
     /* -------------------------------------------------------------------------
        HIGH-DETAIL FIRST-PERSON GUN MODELS & WEAPON ARSENAL
        ------------------------------------------------------------------------- */
@@ -2758,6 +2894,156 @@
       { n: 'M249 SAW', lv: 6, dmg: 22, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' }
     ];
     W.forEach(w => { w.a = w.mag; w.cd = 0; w.rl = 0; });
+
+    const weaponMaterials = {
+      receiver: new THREE.MeshStandardMaterial({ color: 0x202832, metalness: 0.72, roughness: 0.34 }),
+      steel: new THREE.MeshStandardMaterial({ color: 0x667382, metalness: 0.86, roughness: 0.24 }),
+      polymer: new THREE.MeshStandardMaterial({ color: 0x343b3c, metalness: 0.12, roughness: 0.78 }),
+      olive: new THREE.MeshStandardMaterial({ color: 0x555747, metalness: 0.18, roughness: 0.7 }),
+      optic: new THREE.MeshStandardMaterial({ color: 0x173d4d, metalness: 0.32, roughness: 0.16 }),
+      glow: new THREE.MeshBasicMaterial({ color: 0xffb454, transparent: true, opacity: 0 })
+    };
+
+    const fpGunRig = new THREE.Group();
+    camera.add(fpGunRig);
+    fpGunRig.position.set(0.24, -0.24, -0.45);
+
+    function makeWeaponModel(weapon, index) {
+      const model = new THREE.Group();
+      const { receiver, steel, polymer, olive, optic, glow } = weaponMaterials;
+      const addBox = (w, h, d, material, x, y, z) => box(w, h, d, material, x, y, z, model);
+      const addBarrel = (length, radius, z, material = steel, x = 0, y = 0.025) => {
+        const barrel = cyl(radius, radius, length, 10, material, x, y, z, model);
+        barrel.rotation.x = Math.PI / 2;
+        return barrel;
+      };
+      const addRail = (length, z = -0.05) => {
+        addBox(0.055, 0.025, length, steel, 0, 0.105, z);
+        for (let i = 0; i < Math.floor(length / 0.07); i++) {
+          addBox(0.065, 0.018, 0.018, receiver, 0, 0.125, z - length / 2 + i * 0.07);
+        }
+      };
+      const addSight = (height = 0.2, scope = false) => {
+        if (scope) {
+          addBox(0.12, 0.1, 0.24, receiver, 0, 0.15, -0.18);
+          addBarrel(0.36, 0.045, -0.2, steel, 0, height);
+          addBarrel(0.055, 0.06, -0.38, optic, 0, height);
+          addBarrel(0.055, 0.06, -0.02, optic, 0, height);
+          addBox(0.045, 0.13, 0.05, receiver, 0, 0.22, -0.2);
+        } else {
+          addBox(0.1, 0.08, 0.13, receiver, 0, height, -0.12);
+          addBox(0.065, 0.055, 0.025, optic, 0, height + 0.005, -0.19);
+        }
+      };
+
+      if (index === 0 || index === 2 || index === 5) {
+        const revolver = index === 2, micro = index === 5;
+        const length = revolver ? 0.38 : micro ? 0.3 : 0.34;
+        addBox(0.14, 0.15, length, receiver, 0, 0.015, -0.06);
+        addBox(0.13, 0.055, length * 0.72, steel, 0, 0.105, -0.055);
+        addBarrel(revolver ? 0.24 : 0.28, revolver ? 0.032 : 0.022, -length * 0.72);
+        addBox(0.1, 0.2, 0.12, polymer, 0, -0.14, 0.08).rotation.x = -0.16;
+        const magazine = revolver
+          ? cyl(0.075, 0.075, 0.13, 12, steel, 0, -0.005, 0.04, model)
+          : addBox(micro ? 0.08 : 0.09, micro ? 0.2 : 0.25, 0.12, olive, 0, -0.14, -0.055);
+        if (revolver) magazine.rotation.x = Math.PI / 2;
+        model.magMesh = revolver ? null : magazine;
+        if (revolver) {
+          const hammer = addBox(0.06, 0.07, 0.09, steel, 0, 0.12, 0.14);
+          hammer.rotation.x = -0.4;
+          addBox(0.1, 0.07, 0.1, receiver, 0, -0.04, 0.1);
+        } else if (micro) {
+          addBox(0.1, 0.13, 0.13, polymer, 0, -0.22, 0.11);
+          addBox(0.1, 0.12, 0.2, receiver, 0, 0.11, 0.04);
+          addSight(0.18);
+        } else {
+          const guard = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.012, 6, 12), steel);
+          guard.position.set(0, -0.07, 0.04);
+          model.add(guard);
+        }
+      } else if (index === 1) {
+        addBox(0.16, 0.2, 0.42, receiver, 0, 0.025, -0.03);
+        addBox(0.14, 0.11, 0.34, polymer, 0, 0.015, -0.38);
+        addBarrel(0.44, 0.026, -0.78);
+        addRail(0.38, -0.08);
+        addBox(0.13, 0.17, 0.3, polymer, 0, 0.04, 0.36);
+        const smgMagazine = addBox(0.11, 0.3, 0.15, olive, 0, -0.14, -0.22);
+        smgMagazine.rotation.x = -0.12;
+        addBox(0.08, 0.2, 0.12, polymer, 0, -0.14, 0.12);
+        addBox(0.08, 0.13, 0.18, receiver, 0, 0.17, -0.08);
+        addSight(0.23);
+        model.magMesh = smgMagazine;
+      } else if (index === 3) {
+        addBox(0.16, 0.18, 0.46, receiver, 0, 0.015, 0.03);
+        addBox(0.13, 0.1, 0.35, polymer, 0, 0.02, -0.36);
+        addBarrel(0.68, 0.025, -0.79);
+        addBarrel(0.62, 0.038, -0.62, receiver, 0, -0.045);
+        addBox(0.1, 0.1, 0.2, polymer, 0, -0.095, -0.39);
+        addBox(0.11, 0.21, 0.14, polymer, 0, -0.16, 0.19);
+        addBox(0.15, 0.14, 0.34, polymer, 0, 0.015, 0.39);
+        addSight(0.16);
+      } else if (index === 7 || index === 9) {
+        const stinger = index === 9;
+        addBarrel(stinger ? 0.82 : 0.9, stinger ? 0.095 : 0.11, -0.38, receiver, 0, 0.04);
+        addBarrel(0.8, stinger ? 0.068 : 0.078, -0.39, polymer, 0, 0.04);
+        addBox(0.16, 0.18, 0.4, receiver, 0, 0.04, -0.32);
+        addBox(stinger ? 0.13 : 0.18, 0.23, 0.24, polymer, 0, -0.13, 0.04);
+        addBox(0.2, 0.17, 0.18, receiver, 0, -0.15, -0.32);
+        if (stinger) {
+          addBox(0.23, 0.17, 0.3, olive, 0, 0.22, -0.15);
+          addBarrel(0.14, 0.055, -0.2, optic, 0, 0.27);
+          addBox(0.1, 0.1, 0.2, steel, 0.14, 0.04, -0.25);
+        } else {
+          addSight(0.2, true);
+          addBox(0.16, 0.12, 0.35, olive, 0, 0.14, 0.21);
+        }
+        addBarrel(0.08, 0.12, -0.85, steel, 0, 0.04);
+      } else {
+        const heavy = index === 8, dmr = index === 6, lmg = index === 10;
+        const barrelLength = heavy ? 0.95 : dmr ? 0.76 : lmg ? 0.72 : 0.55;
+        addBox(heavy ? 0.2 : 0.15, 0.18, heavy ? 0.48 : 0.4, receiver, 0, 0.015, 0.015);
+        addBox(0.12, 0.11, heavy ? 0.46 : 0.34, polymer, 0, 0.01, -0.36);
+        addBarrel(barrelLength, heavy ? 0.035 : lmg ? 0.03 : 0.024, -0.65 - barrelLength / 2);
+        addRail(heavy ? 0.66 : 0.45, -0.1);
+        addBox(0.11, 0.23, 0.14, polymer, 0, -0.14, 0.15);
+        addBox(0.16, 0.14, 0.34, polymer, 0, 0.015, 0.38);
+        if (lmg) {
+          addBox(0.25, 0.22, 0.28, olive, -0.15, -0.13, 0.015);
+          addBox(0.12, 0.1, 0.25, steel, -0.02, -0.2, 0.02);
+          addBox(0.025, 0.21, 0.025, steel, -0.12, -0.3, -0.32).rotation.x = -0.35;
+          addBox(0.025, 0.21, 0.025, steel, 0.12, -0.3, -0.32).rotation.x = -0.35;
+          addSight(0.19);
+        } else if (dmr || heavy) {
+          model.magMesh = addBox(0.1, heavy ? 0.2 : 0.25, 0.14, olive, 0, -0.14, -0.02);
+          addSight(heavy ? 0.27 : 0.24, true);
+          if (heavy) {
+            addBarrel(0.11, 0.085, -1.6);
+            addBox(0.12, 0.15, 0.1, steel, 0, 0.03, -1.5);
+          } else {
+            addBox(0.025, 0.2, 0.025, steel, -0.1, -0.21, -0.43);
+            addBox(0.025, 0.2, 0.025, steel, 0.1, -0.21, -0.43);
+          }
+        } else {
+          model.magMesh = addBox(0.1, 0.27, 0.14, olive, 0, -0.14, -0.03);
+          addSight(0.2);
+          addBox(0.055, 0.07, 0.12, optic, 0.11, 0.04, -0.31);
+        }
+      }
+
+      if (index === 0) addSight(0.16);
+      const muzzleZ = [-0.42, -1.02, -0.4, -1.16, -1.22, -0.48, -1.45, -0.92, -1.7, -0.92, -1.42][index];
+      const flash = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 1), glow.clone());
+      flash.position.set(0, 0.03, muzzleZ);
+      model.add(flash);
+      model.flash = flash;
+      model.magHomeY = model.magMesh ? model.magMesh.position.y : 0;
+      model.visible = false;
+      fpGunRig.add(model);
+      return model;
+    }
+
+    const weaponModels = W.map(makeWeaponModel);
+    weaponModels[1].visible = true;
 
     const PRI_WEAPONS = [1, 4, 10, 6, 8, 3];
     const SEC_WEAPONS = [0, 2, 5, 7, 9];
@@ -2806,44 +3092,6 @@
       P.slideDir.copy(dir);
       playSnd(160, 0.35, 0.15, 'triangle');
     }
-
-    // Build Super-Detailed First-Person Gun Rig
-    const fpGunRig = new THREE.Group();
-    camera.add(fpGunRig);
-
-    // M4A1 Tactical Rifle Model
-    const rifleModel = new THREE.Group();
-    // Receiver & Picatinny Rail
-    box(0.08, 0.14, 0.45, mats.steelDark, 0, 0, 0, rifleModel);
-    box(0.07, 0.03, 0.42, mats.steelLight, 0, 0.085, 0, rifleModel); // Top rail
-    // Quad-rail Handguard & Barrel
-    box(0.07, 0.09, 0.35, mats.steelDark, 0, 0.02, -0.4, rifleModel);
-    cyl(0.025, 0.025, 0.3, 8, mats.steelLight, 0, 0.02, -0.7, rifleModel).rotation.x = Math.PI / 2;
-    box(0.04, 0.04, 0.06, mats.steelDark, 0, 0.02, -0.86, rifleModel); // Flash hider
-    // EOTech Holographic Sight
-    const sightGroup = new THREE.Group();
-    sightGroup.position.set(0, 0.14, -0.05);
-    box(0.06, 0.08, 0.14, mats.steelDark, 0, 0, 0, sightGroup);
-    box(0.045, 0.05, 0.02, mats.visor, 0, 0.01, -0.06, sightGroup); // Lens
-    const reticleDot = box(0.008, 0.008, 0.002, mats.reticleGlow, 0, 0.01, -0.05, sightGroup);
-    rifleModel.add(sightGroup);
-    // PEQ-15 Laser Module on Side
-    box(0.04, 0.04, 0.12, mats.camoTan, 0.055, 0.05, -0.3, rifleModel);
-    // Detachable Magazine (Animates during reload!)
-    const rifleMag = box(0.06, 0.28, 0.12, mats.camoTan, 0, -0.16, -0.08, rifleModel);
-    rifleModel.magMesh = rifleMag;
-    // Pistol Grip & Crane Stock
-    const grip = box(0.06, 0.22, 0.08, mats.steelDark, 0, -0.14, 0.15, rifleModel);
-    grip.rotation.x = -0.3;
-    box(0.07, 0.12, 0.32, mats.steelDark, 0, 0.02, 0.34, rifleModel); // Stock
-    // Muzzle Flash
-    const muzzleFlash = new THREE.Mesh(new THREE.DodecahedronGeometry(0.12), mats.muzzleFire);
-    muzzleFlash.position.set(0, 0.02, -0.92);
-    rifleModel.add(muzzleFlash);
-    rifleModel.flash = muzzleFlash;
-
-    fpGunRig.add(rifleModel);
-    fpGunRig.position.set(0.24, -0.24, -0.45);
 
     // Animation Springs & Procedural Kinematics
     const gunAnim = {
@@ -3633,11 +3881,12 @@
       playSnd(w.m ? 110 : w.dmg > 40 ? 190 : 340, 0.12, 0.2);
 
       // Trigger Weapon Recoil Animation & Muzzle Flash
-      gunAnim.recoilZ = 0.08;
-      gunAnim.recoilRotX = 0.14;
+      gunAnim.recoilZ = w.m ? 0.055 : w.pel ? 0.16 : w.dmg > 60 ? 0.19 : w.type === 'lmg' ? 0.06 : 0.09;
+      gunAnim.recoilRotX = w.m ? 0.08 : w.pel ? 0.2 : w.dmg > 60 ? 0.24 : 0.12;
       gunAnim.recoilRotY = (Math.random() - 0.5) * 0.04;
       gunAnim.muzzleTimer = 0.05;
-      if (rifleModel.flash) rifleModel.flash.material.opacity = 0.9;
+      const weaponModel = weaponModels[P.w];
+      if (weaponModel.flash) weaponModel.flash.material.opacity = 0.9;
 
       const o = camera.position.clone();
       const d = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -3678,6 +3927,26 @@
       const lock = lockTarget(o, f, 420, 0.48, v.tm);
       const missileType = lock ? (lock.type === 'heli' || lock.displayType === 'heli' ? 'aa' : 'agm') : 'at';
       launchMissile(missileType, o.addScaledVector(f, 4), f, lock);
+    }
+
+    function updateHeliChinGun(gun, position, yaw, target, dt) {
+      const dx = target.x - position.x;
+      const dy = target.y - (position.y + 0.8);
+      const dz = target.z - position.z;
+      const horizontalDistance = Math.hypot(dx, dz) || 1;
+      const yawError = Math.atan2(Math.sin(Math.atan2(dx, dz) - yaw), Math.cos(Math.atan2(dx, dz) - yaw));
+      const desiredYaw = THREE.MathUtils.clamp(yawError, -0.7, 0.7);
+      const desiredPitch = THREE.MathUtils.clamp(
+        Math.atan2(-dy, horizontalDistance),
+        -0.45,
+        0.25
+      );
+      gun.rotation.y = THREE.MathUtils.damp(gun.rotation.y, desiredYaw, 12, dt);
+      gun.rotation.x = THREE.MathUtils.damp(gun.rotation.x, desiredPitch, 12, dt);
+      gun.recoil = THREE.MathUtils.damp(gun.recoil, 0, 24, dt);
+      gun.barrelAssembly.position.z = -gun.recoil;
+      gun.flashTimer = Math.max(0, gun.flashTimer - dt);
+      gun.barrelAssembly.flash.material.opacity = gun.flashTimer > 0 ? 0.9 : 0;
     }
 
     /* -------------------------------------------------------------------------
@@ -3787,6 +4056,8 @@
 
       // Weapon Sway, Recoil & Bobbing Animations
       const w = W[P.w];
+      const weaponModel = weaponModels[P.w];
+      weaponModels.forEach((model, index) => { model.visible = index === P.w; });
       gunAnim.swayX = THREE.MathUtils.damp(gunAnim.swayX, -mouseDeltaX * 0.0008, 12, dt);
       gunAnim.swayY = THREE.MathUtils.damp(gunAnim.swayY, -mouseDeltaY * 0.0008, 12, dt);
       mouseDeltaX = mouseDeltaY = 0;
@@ -3804,7 +4075,7 @@
 
       // Multi-stage Tactical Reload Animation
       let reloadOffsetY = 0, reloadRotZ = 0;
-      if (w.rl > 0 && rifleModel.magMesh) {
+      if (w.rl > 0 && weaponModel.magMesh) {
         const prog = 1 - (w.rl / w.rel);
         if (prog < 0.4) {
           reloadOffsetY = -(prog / 0.4) * 0.25;
@@ -3817,16 +4088,16 @@
           reloadOffsetY = 0;
           reloadRotZ = 0;
         }
-        rifleModel.magMesh.position.y = -0.16 + reloadOffsetY;
-      } else if (rifleModel.magMesh) {
-        rifleModel.magMesh.position.y = -0.16;
+        weaponModel.magMesh.position.y = weaponModel.magHomeY + reloadOffsetY;
+      } else if (weaponModel.magMesh) {
+        weaponModel.magMesh.position.y = weaponModel.magHomeY;
       }
 
       // Flash decay
       if (gunAnim.muzzleTimer > 0) {
         gunAnim.muzzleTimer -= dt;
-        if (gunAnim.muzzleTimer <= 0 && rifleModel.flash) {
-          rifleModel.flash.material.opacity = 0;
+        if (gunAnim.muzzleTimer <= 0 && weaponModel.flash) {
+          weaponModel.flash.material.opacity = 0;
         }
       }
 
@@ -3899,10 +4170,7 @@
         v.m.rotation.z = v.mRoll;
 
         if (v.m.chinGun) {
-          const aimDir = getVehicleAimDir(v, v.p);
-          const localYaw = Math.atan2(aimDir.x, aimDir.z) - v.yaw;
-          v.m.chinGun.rotation.y = Math.max(-0.6, Math.min(0.6, localYaw));
-          v.m.chinGun.rotation.x = Math.max(-0.45, Math.min(0.25, aimDir.y));
+          updateHeliChinGun(v.m.chinGun, v.p, v.yaw, getAimPoint(), dt);
         }
 
         // Heli chain gun firing (LMB)
@@ -3911,6 +4179,8 @@
             v.ammo--;
             v.cd = 0.07;
             fireVehicleMG(v, 15, 0.02);
+            v.m.chinGun.recoil = 0.14;
+            v.m.chinGun.flashTimer = 0.065;
             if (v.ammo <= 0) v.reloading = v.reloadTime;
           } else {
             v.reloading = v.reloadTime;
@@ -4434,19 +4704,18 @@
             if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
             e.targetVeh = null;
             e.boardTimer = 0;
-            // Actively search for available uncrewed vehicles (tanks, APCs, SAM trucks, helicopters)
-            let bestVeh = null, bestScore = -1e9;
+            // Secure an available ground vehicle before considering combat or patrol behavior.
+            let bestVeh = null, bestScore = -Infinity;
             E.forEach(veh => {
-              if ((veh.type === 'car' || veh.type === 'heli' || veh.type === 'tank' || veh.type === 'sam')
+              if ((veh.type === 'car' || veh.type === 'tank' || veh.type === 'sam')
                   && !veh.dead && !veh.driver && P.veh !== veh) {
                 // If another bot is already claiming this vehicle, skip so bots distribute across all vehicles!
                 if (veh.boardingBot && veh.boardingBot !== e && veh.boardingBot.hp > 0 && !veh.boardingBot.dead) {
                   return;
                 }
                 const dist = e.p.distanceTo(veh.p);
-                // Prefer useful armor, but keep searching across the whole battlefield.
-                const typeBonus = veh.type === 'tank' ? 75 : veh.type === 'car' ? 65 : veh.type === 'sam' ? 55 : 20;
-                const score = typeBonus - dist * 0.3;
+                const typeBonus = veh.type === 'tank' ? 12 : veh.type === 'car' ? 6 : 0;
+                const score = typeBonus - dist;
                 if (score > bestScore) {
                   bestScore = score;
                   bestVeh = veh;
@@ -4807,11 +5076,9 @@
       }
 
       if (isHeli) {
-        if (e.m.chinGun && tp) {
-          const dir = tp.clone().sub(e.p).normalize();
-          const localYaw = Math.atan2(dir.x, dir.z) - e.yaw;
-          e.m.chinGun.rotation.y = Math.max(-0.6, Math.min(0.6, localYaw));
-          e.m.chinGun.rotation.x = Math.max(-0.45, Math.min(0.25, dir.y));
+        if (e.m.chinGun) {
+          const aimTarget = tp || e.p.clone().add(new V3(Math.sin(e.yaw) * 50, 0, Math.cos(e.yaw) * 50));
+          updateHeliChinGun(e.m.chinGun, e.p, e.yaw, aimTarget, dt);
         }
       } else if (e.type === 'sam' && e.m.radarDish) {
         e.m.radarDish.rotation.y += dt * 3.5;
@@ -4832,6 +5099,10 @@
       // Smart Bot Weapons Firing
       if (canEngage && e.aimWarmup <= 0 && e.t <= 0) {
         e.t = (isInf ? rnd(0.9, 1.5) : isTank ? 4.5 : e.type === 'sam' ? 3.5 : e.type === 'car' ? 0.35 : 0.4) * diff.rate;
+        if (isHeli && e.m.chinGun) {
+          e.m.chinGun.recoil = 0.14;
+          e.m.chinGun.flashTimer = 0.065;
+        }
         const muzzleY = isHeli ? e.p.y : (isTank ? 2.5 : e.type === 'sam' ? 2.8 : e.type === 'car' ? 2.2 : 1.6);
         const origin = new V3(e.p.x, muzzleY, e.p.z);
         const spread = diff.spread * (0.65 + dist / 100);
@@ -6797,8 +7068,10 @@
       }
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
-      if (inLobby && now - lastMenuRenderAt < 250) return;
+      const showMainMenu = $('main-menu-modal').style.display === 'flex';
+      if (inLobby && !showMainMenu && now - lastMenuRenderAt < 250) return;
       lastMenuRenderAt = now;
+      if (showMainMenu) updateMenuShowcase(dt);
       if (!inLobby && !matchEnded) {
         operatorStats.playtimeSeconds += dt;
         statsSaveTimer += dt;
@@ -6987,7 +7260,7 @@
       }
 
       updateHUD();
-      renderer.render(scene, camera);
+      renderer.render(showMainMenu ? menuScene : scene, showMainMenu ? menuCamera : camera);
       if (!inLobby) {
         drawTacticalRadar();
         drawWorldVehicleHealthBars();

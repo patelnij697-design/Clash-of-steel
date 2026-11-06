@@ -70,6 +70,15 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="btn-join-public"/);
   assert.match(html, /id="mobile-controls"/);
   assert.match(html, /id="main-menu-modal"/);
+  assert.match(html, /const weaponModels = W\.map\(makeWeaponModel\)/);
+  assert.match(html, /function updateHeliChinGun/);
+  assert.match(html, /barrelAssembly\.flash/);
+  assert.match(html, /const menuVehicles = \[/);
+  for (const showcaseVehicle of ['AH-64 APACHE', 'M1A2 ABRAMS', 'COMMAND APC', 'M901 SAM TRUCK']) {
+    assert.ok(html.includes(showcaseVehicle), `Missing menu showcase vehicle: ${showcaseVehicle}`);
+  }
+  assert.match(html, /menuVehicleTimer >= 8/);
+  assert.match(html, /renderer\.toneMapping = THREE\.ACESFilmicToneMapping/);
   assert.match(html, /id="settings-modal"/);
   assert.match(html, /id="profile-modal"/);
   assert.match(html, /id="room-details"/);
@@ -77,10 +86,16 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="settings-keyboard-reference"/);
   assert.match(html, /id="room-player-list"/);
   assert.match(html, /id="active-player-count">—/);
+  assert.match(html, /VERSION 0\.9\.00\.1/);
   assert.match(html, /Game version 0\.9\.00\.1/);
   assert.match(html, /v0\.9\.00\.1/);
+  assert.match(html, /veh\.type === 'car' \|\| veh\.type === 'tank' \|\| veh\.type === 'sam'/);
+  assert.doesNotMatch(html, /veh\.type === 'car' \|\| veh\.type === 'heli' \|\| veh\.type === 'tank'/);
   assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
+
+  const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(packageInfo.version, '0.9.0+00.1');
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
   assert.equal(sourcePath.status, 200);
