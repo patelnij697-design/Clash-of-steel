@@ -566,6 +566,24 @@
       pointer-events: auto;
       display: none;
     }
+    #chat-panel.collapsed { width:auto; padding:7px; }
+    #chat-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+    }
+    #chat-toggle {
+      padding:5px 8px;
+      border:1px solid rgba(148,163,184,.35);
+      border-radius:5px;
+      background:rgba(255,255,255,.07);
+      color:#e2e8f0;
+      font:700 9px "JetBrains Mono",monospace;
+    }
+    #chat-panel.collapsed #chat-messages,
+    #chat-panel.collapsed #chat-form { display:none; }
     #chat-messages {
       max-height: 150px;
       overflow-y: auto;
@@ -822,11 +840,74 @@
       font:700 10px "JetBrains Mono",monospace;
       touch-action:manipulation;
     }
-    @media (pointer:coarse) {
+    @media (pointer:coarse), (max-width:700px) {
       #controls-dock { display:none; }
-      #mobile-stick { width:120px; height:120px; bottom:18px; left:12px; }
-      #mobile-action-pad { right:10px; bottom:14px; grid-template-columns:repeat(2,68px); gap:6px; }
-      .mobile-action { min-height:48px; font-size:8px; }
+      #top-hud {
+        top:8px;
+        left:50%;
+        width:calc(100vw - 150px);
+        justify-content:center;
+        gap:5px;
+        padding:5px 7px;
+      }
+      .score-badge { gap:3px; font-size:clamp(11px,3.2vw,15px); letter-spacing:0; }
+      .match-target { display:none; }
+      #weather-badge { padding:2px 4px; font-size:9px; letter-spacing:0; }
+      #radar-container { top:48px; left:8px; width:76px; height:76px; }
+      #radar-canvas { width:76px; height:76px; }
+      #players-online { top:49px; right:8px; padding:5px 6px; font-size:8px; }
+      #vitals-card {
+        top:132px;
+        bottom:auto;
+        left:8px;
+        width:42vw;
+        min-width:0;
+        padding:7px 8px;
+      }
+      .vital-title { gap:4px; font-size:9px; letter-spacing:.5px; }
+      .bar-track { height:7px; margin-bottom:5px; }
+      #veh-hint { font-size:8px; }
+      #weapon-card {
+        top:132px;
+        right:8px;
+        bottom:auto;
+        width:44vw;
+        min-width:0;
+        padding:7px 8px;
+      }
+      #weapon-name { font-size:12px; letter-spacing:.4px; }
+      #weapon-class { font-size:8px; letter-spacing:.4px; }
+      #ammo-counter { font-size:24px; }
+      #ammo-counter small { font-size:12px; }
+      #weapon-sec-info { font-size:8px; letter-spacing:0; }
+      #weapon-slots { display:none; }
+      #mobile-stick { width:108px; height:108px; bottom:14px; left:10px; }
+      #mobile-action-pad { right:8px; bottom:10px; grid-template-columns:repeat(2,62px); gap:5px; }
+      .mobile-action { min-height:42px; padding:4px; font-size:8px; }
+      #mobile-pause { top:8px; right:8px; min-width:56px; padding:7px 8px; font-size:8px; }
+      #chat-panel { right:8px; bottom:205px; width:min(280px,calc(100vw - 16px)); }
+    }
+    @media (max-width:420px) {
+      #top-hud { width:calc(100vw - 150px); }
+      #weather-badge { display:none; }
+      #vitals-card { top:126px; }
+      #weapon-card { top:126px; }
+      #mobile-stick { width:96px; height:96px; }
+      #mobile-action-pad { grid-template-columns:repeat(2,56px); }
+      .mobile-action { min-height:38px; font-size:7px; }
+      #chat-panel { bottom:184px; }
+    }
+    @media (max-width:900px) and (max-height:480px) {
+      #radar-container, #players-online { display:none; }
+      #vitals-card, #weapon-card { top:52px; }
+      #vitals-card { width:30vw; }
+      #weapon-card { width:34vw; }
+      #mobile-stick { width:84px; height:84px; bottom:8px; left:8px; }
+      #mobile-stick-knob { width:38px; height:38px; }
+      #mobile-action-pad { right:8px; bottom:6px; grid-template-columns:repeat(4,54px); gap:4px; }
+      .mobile-action { min-height:38px; font-size:7px; }
+      #mobile-pause { top:8px; right:8px; }
+      #chat-panel { bottom:50px; }
     }
   </style>
 </head>
@@ -990,8 +1071,11 @@
     </div>
   </div>
 
-  <div id="chat-panel">
-    <div style="font:700 11px 'JetBrains Mono',monospace;color:#38bdf8;margin-bottom:6px;">ROOM CHAT</div>
+  <div id="chat-panel" class="collapsed">
+    <div id="chat-header">
+      <div style="font:700 11px 'JetBrains Mono',monospace;color:#38bdf8;">ROOM CHAT</div>
+      <button id="chat-toggle" type="button" aria-expanded="false" aria-controls="chat-messages chat-form">OPEN</button>
+    </div>
     <div id="chat-messages" aria-live="polite"></div>
     <form id="chat-form">
       <input id="chat-input" maxlength="240" autocomplete="off" placeholder="Message room..." aria-label="Chat message">
@@ -1893,23 +1977,6 @@
         boardingVeh: null
       };
 
-      // Real Cannon.js Physics Body for Vehicles
-      if (type === 'car' || type === 'tank' || type === 'heli' || type === 'sam') {
-        const mass = type === 'tank' ? 3500 : type === 'sam' ? 2800 : type === 'car' ? 2200 : 1800;
-        const hx = type === 'tank' ? 1.9 : type === 'sam' ? 1.6 : 1.4;
-        const hy = type === 'tank' ? 1.2 : type === 'sam' ? 1.4 : 1.0;
-        const hz = type === 'tank' ? 3.6 : type === 'sam' ? 3.6 : 3.0;
-        const pBody = new CANNON.Body({
-          mass,
-          shape: new CANNON.Box(new CANNON.Vec3(hx, hy, hz)),
-          linearDamping: 0.8,
-          angularDamping: 0.85
-        });
-        pBody.position.set(x, y + hy, z);
-        world.addBody(pBody);
-        e.physBody = pBody;
-      }
-
       // Vehicle Magazine Specifications
       if (type === 'car') {
         e.mag = 45;
@@ -2032,6 +2099,14 @@
       $('mobile-controls').classList.remove('active');
       if (document.pointerLockElement) document.exitPointerLock();
     }
+    function setRoomChatCollapsed(collapsed) {
+      $('chat-panel').classList.toggle('collapsed', collapsed);
+      $('chat-toggle').setAttribute('aria-expanded', String(!collapsed));
+      $('chat-toggle').textContent = collapsed ? 'OPEN' : 'MINIMIZE';
+    }
+    $('chat-toggle').addEventListener('click', () => {
+      setRoomChatCollapsed(!$('chat-panel').classList.contains('collapsed'));
+    });
 
     function updateMobileStick(event) {
       const bounds = $('mobile-stick').getBoundingClientRect();
@@ -2377,20 +2452,19 @@
       playSnd(80, 0.8, 0.45, 'sawtooth', 20);
       spawnExplosion(pos, type === 'sam' ? 12 : 9, type === 'sam' ? 0x10b981 : 0xf97316, 0.8);
 
-      // Cannon.js Real Physics Shockwave Impulse
+      // Apply a stable arcade-style impulse to driven vehicles; their movement is not physics-body driven.
       const blastRadius = type === 'sam' ? 22 : 18;
-      const blastForce = type === 'sam' ? 56000 : 48000;
-      world.bodies.forEach(b => {
-        if (b.mass > 0) {
-          const dPos = new CANNON.Vec3(b.position.x - pos.x, b.position.y - pos.y, b.position.z - pos.z);
-          const dist = dPos.length();
-          if (dist < blastRadius && dist > 0.1) {
-            const impulse = (1 - dist / blastRadius) * blastForce;
-            dPos.normalize();
-            dPos.y += 0.45;
-            b.applyImpulse(new CANNON.Vec3(dPos.x * impulse, dPos.y * impulse, dPos.z * impulse), b.position);
-          }
-        }
+      E.forEach(entity => {
+        if (!['car', 'tank', 'heli', 'sam'].includes(entity.type) || entity.dead) return;
+        const away = entity.p.clone().sub(pos);
+        const distance = away.length();
+        if (distance <= 0.1 || distance >= blastRadius) return;
+        away.normalize();
+        const impulse = (1 - distance / blastRadius) * (type === 'sam' ? 12 : 9);
+        const forward = new V3(Math.sin(entity.yaw), 0, Math.cos(entity.yaw));
+        entity.v += away.dot(forward) * impulse;
+        entity.p.addScaledVector(away, Math.min(1.2, impulse * 0.08));
+        checkCollisionPush(entity.p, entity.type === 'sam' ? 2.5 : 2.2);
       });
       // Damage entities
       E.forEach(e => {
@@ -2645,7 +2719,7 @@
 
       const fwd = new V3(Math.sin(v.yaw), 0, Math.cos(v.yaw));
       const accel = (K.KeyW ? 1 : 0) - (K.KeyS ? 1 : 0);
-      const steer = (K.KeyA ? 1 : 0) - (K.KeyD ? 1 : 0);
+      const steer = (K.KeyD ? 1 : 0) - (K.KeyA ? 1 : 0);
 
       if (v.type !== 'heli') {
         v.v += accel * (v.type === 'tank' ? 15 : v.type === 'sam' ? 16 : 18) * dt;
@@ -2654,10 +2728,6 @@
         v.yaw += steer * steerSpeed * dt * (v.type === 'tank' ? 1 : Math.min(1, Math.abs(v.v) / 5) * Math.sign(v.v || 1));
         v.p.addScaledVector(fwd, v.v * dt);
         if (checkCollisionPush(v.p, v.type === 'sam' ? 2.5 : 2.2)) v.v *= 0.4;
-
-        if (v.physBody) {
-          v.physBody.position.set(v.p.x, v.p.y + 1.2, v.p.z);
-        }
 
         E.forEach(inf => {
           if (inf.type === 'inf' && inf.team && !inf.dead && inf.tm !== P.tm && Math.abs(v.v) > 6 && inf.p.distanceTo(v.p) < 2.8) {
@@ -2676,10 +2746,6 @@
         // Helicopter Banking & Pitch Flight Animations
         v.m.rotation.z = -steer * 0.28;
         v.m.rotation.x = accel * 0.22;
-
-        if (v.physBody) {
-          v.physBody.position.set(v.p.x, v.p.y + 1.0, v.p.z);
-        }
 
         // Heli chain gun firing (LMB)
         if (lm && v.cd <= 0 && v.reloading <= 0) {
@@ -2859,12 +2925,6 @@
           v.reloading = 0;
           if (v.mgMag) { v.mgAmmo = v.mgMag; v.mgReloading = 0; }
           if (v.mMag) { v.mAmmo = v.mMag; v.mReloading = 0; }
-
-          if (v.physBody) {
-            v.physBody.position.set(v.sp.x, v.sp.y + 1.2, v.sp.z);
-            v.physBody.velocity.set(0, 0, 0);
-            v.physBody.angularVelocity.set(0, 0, 0);
-          }
 
           spawnExplosion(v.p, 5, 0x38bdf8, 0.5);
           if (P.p.distanceTo(v.sp) < 80) {
@@ -3826,7 +3886,6 @@
     function startMatch() {
       E.forEach(e => {
         scene.remove(e.m);
-        if (e.physBody) world.remove(e.physBody);
       });
       E.length = 0;
       remotePlayers.clear();
@@ -4069,6 +4128,7 @@
           networkMatchConfig = result.matchConfig;
           networkGameState = result.gameState;
           networkRoster = new Map((result.players || []).map(player => [player.id, player]));
+          setRoomChatCollapsed(supportsTouchControls);
           $('chat-panel').style.display = 'block';
           $('btn-leave-room').style.display = 'inline-block';
           $('room-player-count').textContent = result.players.length;
@@ -4101,6 +4161,7 @@
         if (E[index].remote) E.splice(index, 1);
       }
       $('chat-panel').style.display = 'none';
+      setRoomChatCollapsed(true);
       $('room-status').textContent = 'LEFT ROOM.';
       $('btn-leave-room').style.display = 'none';
     }
@@ -4150,7 +4211,7 @@
       if (!networked || !state) return;
       (state.entities || []).forEach(item => {
         const entity = E.find(candidate => candidate.nid === item.id);
-        if (!entity || entity.remote) return;
+        if (!entity || entity.remote || entity === P.veh) return;
         entity.p.set(item.x, item.y, item.z);
         entity.yaw = item.yaw;
         entity.hp = item.hp;
@@ -4159,10 +4220,6 @@
         if (Number.isInteger(item.tm)) entity.tm = item.tm;
         entity.m.visible = !item.dead;
         entity.v = item.v || 0;
-        if (entity.physBody) {
-          entity.physBody.position.set(item.x, item.y + 1.2, item.z);
-          entity.physBody.velocity.set(0, 0, 0);
-        }
       });
       if (state.scores) scores = state.scores;
       if (Array.isArray(state.pickups)) {
@@ -4295,6 +4352,7 @@
       networkPickupRequests.clear();
       if (!inLobby) quitToLobby();
       $('chat-panel').style.display = 'none';
+      setRoomChatCollapsed(true);
       $('btn-leave-room').style.display = 'none';
       $('room-status').textContent = 'Connection lost. Rejoin the room when the server reconnects.';
     });
@@ -4866,18 +4924,11 @@
           }
 
           if (e.team) {
-            if (!networked || networkHost) updateBotAI(e, dt);
+            const playerDriven = P.veh === e || e.driver === P || e.driver?.playerProxy || e.driver?.remote;
+            if ((!networked || networkHost) && !playerDriven) updateBotAI(e, dt);
           } else if (P.veh !== e && !e.driver) {
             e.v = 0;
             if (e.type === 'heli') e.p.y = Math.max(0.5, e.p.y - 8 * dt);
-          }
-
-          // Sync Cannon physics position for vehicles if physics impulse applied
-          if (e.physBody && (e.type === 'car' || e.type === 'tank')) {
-            if (Math.abs(e.physBody.velocity.x) > 0.5 || Math.abs(e.physBody.velocity.z) > 0.5) {
-              e.p.x = e.physBody.position.x;
-              e.p.z = e.physBody.position.z;
-            }
           }
 
           e.m.position.copy(e.p);
