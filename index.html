@@ -969,7 +969,8 @@
       #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); min-width:56px; min-height:44px; padding:7px 8px; font-size:8px; }
       #chat-toggle { min-height:44px; }
       #weather-badge { min-height:36px; }
-      #chat-panel { right:8px; bottom:205px; width:min(280px,calc(100vw - 16px)); }
+      #chat-panel { right:8px; bottom:calc(270px + env(safe-area-inset-bottom)); width:min(280px,calc(100vw - 16px)); }
+      #chat-messages { max-height:110px; }
     }
     @media (max-width:420px) {
       #top-hud { width:calc(100vw - 150px); }
@@ -979,7 +980,8 @@
       #mobile-stick { width:96px; height:96px; }
       #mobile-action-pad { grid-template-columns:repeat(2,minmax(56px,62px)); }
       .mobile-action { min-height:44px; font-size:7px; }
-      #chat-panel { bottom:184px; }
+      #chat-panel { bottom:calc(265px + env(safe-area-inset-bottom)); width:min(260px,calc(100vw - 16px)); }
+      #chat-messages { max-height:95px; }
     }
     @media (max-width:900px) and (max-height:480px) {
       #radar-container, #players-online { display:none; }
@@ -991,7 +993,8 @@
       #mobile-action-pad { right:8px; bottom:calc(6px + env(safe-area-inset-bottom)); grid-template-columns:repeat(4,minmax(54px,64px)); gap:4px; }
       .mobile-action { min-height:44px; font-size:7px; }
       #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:8px; }
-      #chat-panel { bottom:50px; }
+      #chat-panel { top:calc(48px + env(safe-area-inset-top)); bottom:auto; right:8px; width:min(230px, 38vw); }
+      #chat-messages { max-height:80px; }
     }
   </style>
 </head>
@@ -1043,6 +1046,7 @@
     <span><b>WASD</b> Move</span>
     <span><b>LMB</b> Main Fire</span>
     <span><b>RMB</b> Tank MG / Scope</span>
+    <span><b>C / CTRL</b> Slide</span>
     <span><b>R</b> Reload</span>
     <span><b>E</b> Enter/Exit</span>
     <span><b>F</b> Heli Missile</span>
@@ -1121,7 +1125,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.2">v0.2</div>
+    <div id="game-version" aria-label="Game version 0.25">v0.25</div>
   </div>
 
   <!-- In-game Pause Modal -->
@@ -1183,6 +1187,7 @@
     <div id="mobile-action-pad">
       <button class="mobile-action primary" data-mobile-action="fire" data-hold="fire" aria-label="Fire weapon">FIRE</button>
       <button class="mobile-action" data-mobile-action="aim" data-hold="aim" aria-label="Aim or secondary fire">AIM</button>
+      <button class="mobile-action" data-mobile-action="slide" data-tap="slide" aria-label="Tactical slide">SLIDE</button>
       <button class="mobile-action" data-mobile-action="use" data-tap="use" aria-label="Enter or exit vehicle">USE</button>
       <button class="mobile-action" data-mobile-action="jump" data-hold="jump" aria-label="Jump or climb">JUMP</button>
       <button class="mobile-action" data-mobile-action="descend" data-hold="descend" aria-label="Descend or sprint">DESCEND</button>
@@ -1834,6 +1839,7 @@
 
     function mkHeli(teamColor) {
       const g = new THREE.Group();
+      g.rotation.order = 'YXZ';
       const hullMat = teamColor ? new THREE.MeshLambertMaterial({ color: teamColor }) : mats.camoGreen;
       const trimMat = mats.steelDark;
       const canopyMat = mats.glassCanopy;
@@ -2135,9 +2141,35 @@
       sl: 0,
       tm: 0,
       ay: 0,
-      ap: 0
+      ap: 0,
+      sliding: 0,
+      slideTimer: 0,
+      slideCd: 0,
+      slideDir: new V3(),
+      slideSpeed: 0,
+      slideEyeHeight: 1.7
     };
     const lvl = () => 1 + Math.floor(P.xp / 100);
+
+    function triggerSlide() {
+      if (P.veh || P.hp <= 0 || P.p.y > 0.4 || P.slideCd > 0) return;
+      const fwd = new V3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
+      const right = new V3(Math.cos(P.yaw), 0, -Math.sin(P.yaw));
+      const dir = new V3();
+      if (K.KeyW) dir.add(fwd);
+      if (K.KeyS) dir.sub(fwd);
+      if (K.KeyD) dir.add(right);
+      if (K.KeyA) dir.sub(right);
+      if (dir.lengthSq() < 0.1) dir.copy(fwd);
+      dir.normalize();
+
+      P.sliding = 1;
+      P.slideTimer = 0.75;
+      P.slideCd = 0.35;
+      P.slideSpeed = (K.ShiftLeft ? 17.5 : 14.5) * (P.sp > 0 ? 1.3 : 1);
+      P.slideDir.copy(dir);
+      playSnd(160, 0.35, 0.15, 'triangle');
+    }
 
     // Build Super-Detailed First-Person Gun Rig
     const fpGunRig = new THREE.Group();
@@ -2431,6 +2463,7 @@
       if (button.dataset.hold === 'aim') rm = 1;
       if (button.dataset.hold === 'jump') K.Space = 1;
       if (button.dataset.hold === 'descend') K.ShiftLeft = 1;
+      if (button.dataset.tap === 'slide' && !P.veh) triggerSlide();
       if (button.dataset.tap === 'use') useVehicle();
       if (button.dataset.tap === 'reload') reloadActiveWeapon();
       if (button.dataset.tap === 'missile' && P.veh?.type === 'heli') fireHeliMissile();
@@ -2463,6 +2496,7 @@
         return;
       }
       if (!isLocked) return;
+      if ((e.code === 'KeyC' || e.code === 'ControlLeft') && !P.veh) triggerSlide();
       if (e.code === 'Tab') { e.preventDefault(); openLoadout(); }
       if (e.code === 'KeyE') useVehicle();
       if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') reloadActiveWeapon();
@@ -2626,6 +2660,12 @@
         target.rs = target.type === 'inf' ? 5 : target.team ? 16 : 22;
         spawnExplosion(target.p, target.type === 'inf' ? 2 : 7, 0xf97316, 0.7);
         onKill(target, attacker);
+        if (target.driver) {
+          target.driver.drivingVeh = null;
+          target.driver.dead = 1;
+          target.driver.rs = 5;
+          target.driver = null;
+        }
         if (P.veh === target) {
           exitVehicle();
           P.hp -= 35;
@@ -2753,6 +2793,47 @@
       return best;
     }
 
+    function applyMinorAimAssist(origin, dir, maxAngle = 0.055, maxDist = 220) {
+      let best = null, bestAngle = maxAngle;
+      const team = P.tm;
+      for (let i = 0; i < E.length; i++) {
+        const e = E[i];
+        if (!e.team || e.dead || e.tm === team || e === P.veh) continue;
+        const targetPt = missileTargetPoint(e);
+        const toTarget = targetPt.clone().sub(origin);
+        const dist = toTarget.length();
+        if (dist > maxDist) continue;
+        const angle = toTarget.angleTo(dir);
+        if (angle < bestAngle) {
+          bestAngle = angle;
+          best = { ent: e, point: targetPt, dir: toTarget.normalize() };
+        }
+      }
+      if (best) {
+        return dir.clone().lerp(best.dir, 0.42).normalize();
+      }
+      return dir;
+    }
+
+    function getAimFrictionAndPull(camPos, viewDir) {
+      let best = null, bestAngle = 0.095;
+      const team = P.tm;
+      for (let i = 0; i < E.length; i++) {
+        const e = E[i];
+        if (!e.team || e.dead || e.tm === team || e === P.veh) continue;
+        const targetPt = missileTargetPoint(e);
+        const toTarget = targetPt.clone().sub(camPos);
+        const dist = toTarget.length();
+        if (dist > 170 || dist < 2) continue;
+        const angle = toTarget.angleTo(viewDir);
+        if (angle < bestAngle) {
+          bestAngle = angle;
+          best = { ent: e, point: targetPt, toTarget, dist, angle };
+        }
+      }
+      return best;
+    }
+
     function firePlayerWeapon() {
       const w = W[P.w];
       if (w.rl > 0 || w.cd > 0) return;
@@ -2776,10 +2857,12 @@
         return;
       }
 
+      // Minor Aim Assist trajectory assist (cone magnet towards enemy hitbox)
+      const aimDir = applyMinorAimAssist(o, d, rm ? 0.065 : 0.048);
       const spread = w.spr * (rm ? 0.25 : 1);
       const pellets = w.pel || 1;
       for (let i = 0; i < pellets; i++) {
-        const q = d.clone();
+        const q = aimDir.clone();
         q.x += rnd(-spread, spread);
         q.y += rnd(-spread, spread);
         q.z += rnd(-spread, spread);
@@ -2867,8 +2950,9 @@
     }
 
     function updatePlayerFoot(dt) {
+      if (P.slideCd > 0) P.slideCd -= dt;
+
       const isSprinting = K.ShiftLeft;
-      const speed = (isSprinting ? 13 : 8.5) * (P.sp > 0 ? 1.4 : 1) * (scoped() ? 0.45 : 1);
       const fwd = new V3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
       const right = new V3(Math.cos(P.yaw), 0, -Math.sin(P.yaw));
       const move = new V3();
@@ -2879,19 +2963,37 @@
       const isMoving = move.lengthSq() > 0;
       if (isMoving) move.normalize();
 
-      P.p.addScaledVector(move, speed * dt);
+      if (P.sliding) {
+        P.slideTimer -= dt;
+        P.slideSpeed = Math.max(6.5, P.slideSpeed - 13.5 * dt);
+        P.p.addScaledVector(P.slideDir, P.slideSpeed * dt);
+        P.slideEyeHeight = THREE.MathUtils.damp(P.slideEyeHeight, 0.82, 14, dt);
+        if (P.slideTimer <= 0) P.sliding = 0;
+      } else {
+        const speed = (isSprinting ? 13 : 8.5) * (P.sp > 0 ? 1.4 : 1) * (scoped() ? 0.45 : 1);
+        P.p.addScaledVector(move, speed * dt);
+        P.slideEyeHeight = THREE.MathUtils.damp(P.slideEyeHeight, 1.7, 12, dt);
+      }
+
       P.vy -= 30 * dt;
       P.p.y += P.vy * dt;
       if (P.p.y <= 0) {
         if (P.vy < -22) P.hp -= (-P.vy - 22) * 4;
         P.p.y = 0;
         P.vy = 0;
-        if (K.Space) P.vy = 10;
+        if (K.Space) {
+          if (P.sliding) {
+            P.vy = 11;
+            P.sliding = 0;
+          } else {
+            P.vy = 10;
+          }
+        }
       }
       checkCollisionPush(P.p, 0.5);
 
-      camera.position.set(P.p.x, P.p.y + 1.7, P.p.z);
-      camera.rotation.set(P.pit, P.yaw, 0, 'YXZ');
+      camera.position.set(P.p.x, P.p.y + P.slideEyeHeight, P.p.z);
+      camera.rotation.set(P.pit, P.yaw, P.sliding ? -0.05 : 0, 'YXZ');
 
       // Weapon Sway, Recoil & Bobbing Animations
       const w = W[P.w];
@@ -2899,11 +3001,11 @@
       gunAnim.swayY = THREE.MathUtils.damp(gunAnim.swayY, -mouseDeltaY * 0.0008, 12, dt);
       mouseDeltaX = mouseDeltaY = 0;
 
-      if (isMoving) {
+      if (isMoving && !P.sliding) {
         gunAnim.bobTimer += dt * (isSprinting ? 14 : 9);
       }
-      const bobX = isMoving ? Math.cos(gunAnim.bobTimer) * (isSprinting ? 0.018 : 0.008) : 0;
-      const bobY = isMoving ? Math.abs(Math.sin(gunAnim.bobTimer)) * (isSprinting ? 0.022 : 0.009) : 0;
+      const bobX = (isMoving && !P.sliding) ? Math.cos(gunAnim.bobTimer) * (isSprinting ? 0.018 : 0.008) : 0;
+      const bobY = (isMoving && !P.sliding) ? Math.abs(Math.sin(gunAnim.bobTimer)) * (isSprinting ? 0.022 : 0.009) : 0;
 
       // Recoil Recovery
       gunAnim.recoilZ = THREE.MathUtils.damp(gunAnim.recoilZ, 0, 16, dt);
@@ -2939,8 +3041,9 @@
       }
 
       // Set Rig Transform
-      fpGunRig.position.set(0.24 + bobX + gunAnim.swayX, -0.24 + bobY + gunAnim.swayY, -0.45 + gunAnim.recoilZ);
-      fpGunRig.rotation.set(gunAnim.recoilRotX, gunAnim.swayX + gunAnim.recoilRotY, reloadRotZ);
+      const slideGunTilt = P.sliding ? -0.28 : 0;
+      fpGunRig.position.set(0.24 + bobX + gunAnim.swayX, -0.24 + bobY + gunAnim.swayY - (P.sliding ? 0.08 : 0), -0.45 + gunAnim.recoilZ);
+      fpGunRig.rotation.set(gunAnim.recoilRotX, gunAnim.swayX + gunAnim.recoilRotY, reloadRotZ + slideGunTilt);
     }
 
     function updateVehicle(v, dt) {
@@ -2994,9 +3097,16 @@
         v.p.y = Math.max(0.6, Math.min(85, v.p.y + climb * 16 * dt));
         if (checkCollisionPush(v.p, 2.8)) v.v *= 0.3;
 
-        // Helicopter Banking & Pitch Flight Animations
-        v.m.rotation.z = -steer * 0.28;
-        v.m.rotation.x = accel * 0.22;
+        // Helicopter Banking & Pitch Flight Animations with YXZ rotation order
+        const targetPitch = (v.v / 28) * 0.22;
+        v.mPitch = THREE.MathUtils.damp(v.mPitch || 0, targetPitch, 8, dt);
+        const targetRoll = -steer * 0.25;
+        v.mRoll = THREE.MathUtils.damp(v.mRoll || 0, targetRoll, 8, dt);
+
+        v.m.rotation.order = 'YXZ';
+        v.m.rotation.y = v.yaw;
+        v.m.rotation.x = v.mPitch;
+        v.m.rotation.z = v.mRoll;
 
         if (v.m.chinGun) {
           const aimDir = getVehicleAimDir(v, v.p);
@@ -3130,29 +3240,32 @@
     function fireVehicleMG(v, dmg, spread) {
       playSnd(260, 0.08, 0.18, 'square');
       const o = getMuzzlePos(v);
-      const d = getVehicleAimDir(v, o);
+      let d = getVehicleAimDir(v, o);
+      if (P.veh === v) d = applyMinorAimAssist(o, d, 0.06, 240);
       d.x += rnd(-spread, spread);
       d.y += rnd(-spread, spread);
-      raycastBullet(o, d.normalize(), dmg);
+      raycastBullet(o, d.normalize(), dmg, v);
     }
 
     function fireTankCoaxMG(v) {
       playSnd(320, 0.06, 0.16, 'sawtooth');
       const o = getMuzzlePos(v).add(new V3(0.4, -0.1, 0.5));
-      const d = getVehicleAimDir(v, o);
+      let d = getVehicleAimDir(v, o);
+      if (P.veh === v) d = applyMinorAimAssist(o, d, 0.055, 240);
       d.x += rnd(-0.018, 0.018);
       d.y += rnd(-0.018, 0.018);
-      raycastBullet(o, d.normalize(), 16);
+      raycastBullet(o, d.normalize(), 16, v);
     }
 
     function fireSAMCIWS(v) {
       playSnd(360, 0.045, 0.14, 'sawtooth');
       const o = getMuzzlePos(v);
-      const d = getVehicleAimDir(v, o);
+      let d = getVehicleAimDir(v, o);
+      if (P.veh === v) d = applyMinorAimAssist(o, d, 0.065, 240);
       d.x += rnd(-0.018, 0.018);
       d.y += rnd(-0.018, 0.018);
-      raycastBullet(o.clone().add(new V3(-0.9, 0, 0)), d.normalize(), 20);
-      raycastBullet(o.clone().add(new V3(0.9, 0, 0)), d.normalize(), 20);
+      raycastBullet(o.clone().add(new V3(-0.9, 0, 0)), d.normalize(), 20, v);
+      raycastBullet(o.clone().add(new V3(0.9, 0, 0)), d.normalize(), 20, v);
     }
 
     /* -------------------------------------------------------------------------
@@ -3292,35 +3405,45 @@
         e.los = bestTarget ? (isHeli || bestTarget.type === 'heli' || hasLineOfSight(e.p, bestTarget.p)) : 0;
 
         if (isInf) {
-          // Actively search for available uncrewed vehicles (own team or unclaimed neutral)
-          let bestVeh = null, bestVehDist = 1e9;
-          E.forEach(veh => {
-            if ((veh.type === 'car' || veh.type === 'heli' || veh.type === 'tank' || veh.type === 'sam')
-                && !veh.dead && !veh.driver && P.veh !== veh
-                && (veh.team === 0 || veh.tm === e.tm)) {
-              if (veh.boardingBot && veh.boardingBot !== e && veh.boardingBot.hp > 0 && !veh.boardingBot.dead) {
-                const otherDist = veh.boardingBot.p.distanceTo(veh.p);
-                if (otherDist < 10) return;
-              }
-              const dist = e.p.distanceTo(veh.p);
-              if (dist < 180 && dist < bestVehDist) {
-                bestVehDist = dist;
-                bestVeh = veh;
-              }
-            }
-          });
-
-          if (bestVeh) {
-            e.aiState = 'board_veh';
-            e.targetVeh = bestVeh;
-            bestVeh.boardingBot = e;
-          } else if (e.hp < e.mhp * 0.4 || e.underFireTimer > 0) {
-            e.aiState = 'seek_cover';
-            if (bestTarget) e.coverPt = findBestCoverPoint(e.p, bestTarget.p);
-          } else if (bestTarget && e.los && Math.random() < 0.45) {
-            e.aiState = 'flank';
+          // If already en-route to an unoccupied vehicle, maintain commitment!
+          if (e.aiState === 'board_veh' && e.targetVeh && !e.targetVeh.dead && !e.targetVeh.driver && P.veh !== e.targetVeh) {
+            // Stay committed to boarding vehicle!
           } else {
-            e.aiState = 'assault';
+            // Actively search for available uncrewed vehicles (tanks, APCs, SAM trucks, helicopters)
+            let bestVeh = null, bestScore = -1e9;
+            E.forEach(veh => {
+              if ((veh.type === 'car' || veh.type === 'heli' || veh.type === 'tank' || veh.type === 'sam')
+                  && !veh.dead && !veh.driver && P.veh !== veh
+                  && (veh.team === 0 || veh.tm === e.tm)) {
+                // If another bot is already claiming this vehicle, skip so bots distribute across all vehicles!
+                if (veh.boardingBot && veh.boardingBot !== e && veh.boardingBot.hp > 0 && !veh.boardingBot.dead) {
+                  return;
+                }
+                const dist = e.p.distanceTo(veh.p);
+                if (dist < 190) {
+                  // High weight for heavy armor and APCs so bots do not ignore ground vehicles
+                  const typeBonus = veh.type === 'tank' ? 45 : veh.type === 'car' ? 40 : veh.type === 'sam' ? 35 : 30;
+                  const score = typeBonus - dist * 0.3;
+                  if (score > bestScore) {
+                    bestScore = score;
+                    bestVeh = veh;
+                  }
+                }
+              }
+            });
+
+            if (bestVeh) {
+              e.aiState = 'board_veh';
+              e.targetVeh = bestVeh;
+              bestVeh.boardingBot = e;
+            } else if (e.hp < e.mhp * 0.4 || e.underFireTimer > 0) {
+              e.aiState = 'seek_cover';
+              if (bestTarget) e.coverPt = findBestCoverPoint(e.p, bestTarget.p);
+            } else if (bestTarget && e.los && Math.random() < 0.45) {
+              e.aiState = 'flank';
+            } else {
+              e.aiState = 'assault';
+            }
           }
         }
       }
@@ -3342,7 +3465,7 @@
           e.boardTimer = 0;
         } else {
           const vDist = e.p.distanceTo(e.targetVeh.p);
-          if (vDist > 4.6) {
+          if (vDist > 5.5) {
             targetX = e.targetVeh.p.x;
             targetZ = e.targetVeh.p.z;
             e.boardTimer = 0;
@@ -3363,6 +3486,7 @@
                 e.targetVeh.driver = e;
                 e.drivingVeh = e.targetVeh;
                 e.targetVeh.boardingBot = null;
+                e.aiState = 'patrol';
                 bannerMsg(`${e.tm === P.tm ? 'ALLY' : 'ENEMY'} BOT MANNED THE ${e.targetVeh.type.toUpperCase()}`);
                 return;
               }
@@ -3437,6 +3561,16 @@
           targetX = e.p.x - (tp.x - e.p.x);
           targetZ = e.p.z - (tp.z - e.p.z);
         } else if (dist > 95 || !e.los) {
+          targetX = tp.x;
+          targetZ = tp.z;
+        }
+      }
+      // Command APC 25mm Autocannon assault & transport
+      else if (e.type === 'car' && tg) {
+        if (dist < 30) {
+          targetX = e.p.x - (tp.x - e.p.x);
+          targetZ = e.p.z - (tp.z - e.p.z);
+        } else if (dist > 65 || !e.los) {
           targetX = tp.x;
           targetZ = tp.z;
         }
@@ -3526,7 +3660,7 @@
       }
 
       const moveLen = Math.hypot(mx, mz);
-      const moveSpeed = isHeli ? 22 : isInf ? (e.aiState === 'seek_cover' ? 8.5 : 5.5) : 4.0;
+      const moveSpeed = isHeli ? 22 : isInf ? (e.aiState === 'seek_cover' ? 8.5 : 5.5) : e.type === 'car' ? 14 : e.type === 'tank' ? 10.5 : e.type === 'sam' ? 11.5 : 8;
       if (moveLen > 0) {
         const vx = (mx / moveLen) * moveSpeed * dt;
         const vz = (mz / moveLen) * moveSpeed * dt;
@@ -3565,8 +3699,6 @@
       }
 
       if (isHeli) {
-        e.m.rotation.x = Math.max(-0.25, Math.min(0.25, mx * 0.15));
-        e.m.rotation.z = Math.max(-0.35, Math.min(0.35, -mz * 0.22));
         if (e.m.chinGun && tp) {
           const dir = tp.clone().sub(e.p).normalize();
           const localYaw = Math.atan2(dir.x, dir.z) - e.yaw;
@@ -3575,6 +3707,9 @@
         }
       } else if (e.type === 'sam' && e.m.radarDish) {
         e.m.radarDish.rotation.y += dt * 3.5;
+      } else if ((e.type === 'car' || isTank) && e.m.tu && tp) {
+        const dir = tp.clone().sub(e.p).normalize();
+        e.m.tu.rotation.y = Math.atan2(dir.x, dir.z) - e.yaw;
       }
 
       if (canEngage && tp) {
@@ -3586,8 +3721,8 @@
 
       // Smart Bot Weapons Firing
       if (canEngage && e.t <= 0) {
-        e.t = (isInf ? rnd(0.4, 0.9) : isTank ? 2.8 : e.type === 'sam' ? 1.6 : 0.28) * diff.rate;
-        const muzzleY = isHeli ? e.p.y : (isTank ? 2.5 : e.type === 'sam' ? 2.8 : 1.6);
+        e.t = (isInf ? rnd(0.4, 0.9) : isTank ? 2.8 : e.type === 'sam' ? 1.6 : e.type === 'car' ? 0.14 : 0.28) * diff.rate;
+        const muzzleY = isHeli ? e.p.y : (isTank ? 2.5 : e.type === 'sam' ? 2.8 : e.type === 'car' ? 2.2 : 1.6);
         const origin = new V3(e.p.x, muzzleY, e.p.z);
 
         if (e.type === 'sam') {
@@ -3604,6 +3739,16 @@
           playSnd(90, 0.6, 0.35, 'sawtooth');
           if (tg.type === 'inf') {
             fireTankCoaxMG(e);
+          }
+        } else if (e.type === 'car') {
+          const dir = tp.clone().sub(origin).normalize();
+          spawnExplosion(origin.clone().addScaledVector(dir, 2.5), 0.45, 0x60a5fa, 0.08);
+          drawTracer(origin, new V3(tp.x + rnd(-0.6, 0.6), tp.y + (tg.type === 'inf' ? 1.0 : 2.0), tp.z + rnd(-0.6, 0.6)));
+          if (dist < 120) playSnd(340, 0.07, 0.08, 'sawtooth');
+          if (Math.random() < diff.acc * (1 - dist / 140)) {
+            const dmg = 22;
+            if (tg.pl) hurtPlayer(dmg, e);
+            else applyDamage(tg, dmg * (tg.type === 'inf' ? 1 : 0.4), e);
           }
         } else {
           spawnExplosion(origin, 0.35, 0xfde047, 0.08);
@@ -3627,15 +3772,15 @@
       e.driver = null;
       e.drivingVeh = null;
       e.boardTimer = 0;
+      e.boardingBot = null;
       e.stuckTimer = 0;
       if (e.type === 'inf' && e.team) {
         e.baseStayTimer = 1.0;
         e.aiState = 'patrol';
-      }
-      if (e.team) {
-        const pt = e.type === 'inf' ? getSpawnPoint(e.tm) : [e.sp.x, e.sp.z];
-        e.p.set(pt[0], e.type === 'heli' ? e.sp.y : 0, pt[1]);
+        const pt = getSpawnPoint(e.tm);
+        e.p.set(pt[0], 0, pt[1]);
       } else {
+        e.team = 0;
         e.p.copy(e.sp);
       }
       if (e.lastPos) e.lastPos.copy(e.p);
@@ -4297,7 +4442,7 @@
         const col = isFFA ? 0x64748b : TC[tm];
         const vMesh = vType === 'heli' ? mkHeli(col) : vType === 'tank' ? mkTank(col) : vType === 'sam' ? mkSAMTruck(col) : mkAPC(col);
         const hp = vType === 'tank' ? 320 : vType === 'sam' ? 380 : vType === 'heli' ? 180 : 380;
-        const e = addEntity(vType, vMesh, s[0], s[1], hp, tm, vType === 'heli' ? 28 : 0);
+        const e = addEntity(vType, vMesh, s[0], s[1], hp, tm, vType === 'heli' ? 0.5 : 0, 0);
         e.heliSlot = idx;
       });
 
@@ -5095,25 +5240,25 @@
       const vehicleType = vehicle ? vehicle.type : 'inf';
       const controlSets = {
         inf: {
-          fire: ['FIRE', 'Fire weapon'], aim: ['AIM', 'Aim or secondary fire'], use: ['USE', 'Enter or exit vehicle'],
+          fire: ['FIRE', 'Fire weapon'], aim: ['AIM', 'Aim or secondary fire'], slide: ['SLIDE', 'Tactical slide'], use: ['USE', 'Enter or exit vehicle'],
           jump: ['JUMP', 'Jump'], descend: ['SPRINT', 'Sprint'], reload: ['RELOAD', 'Reload weapon'],
           missile: null, swap: ['SWAP', 'Switch weapon slot'], loadout: ['ARMORY', 'Open loadout']
         },
         car: {
-          fire: ['25MM', 'Fire APC autocannon'], aim: null, use: ['EXIT', 'Exit vehicle'], jump: null, descend: null,
+          fire: ['25MM', 'Fire APC autocannon'], aim: null, slide: null, use: ['EXIT', 'Exit vehicle'], jump: null, descend: null,
           reload: ['RELOAD', 'Reload autocannon'], missile: null, swap: null, loadout: null
         },
         tank: {
-          fire: ['120MM', 'Fire tank cannon'], aim: ['COAX', 'Fire coaxial machine gun'], use: ['EXIT', 'Exit tank'],
+          fire: ['120MM', 'Fire tank cannon'], aim: ['COAX', 'Fire coaxial machine gun'], slide: null, use: ['EXIT', 'Exit tank'],
           jump: null, descend: null, reload: ['RELOAD', 'Reload tank weapons'], missile: null, swap: null, loadout: null
         },
         sam: {
-          fire: ['SAM', 'Fire surface-to-air missile'], aim: ['CIWS', 'Fire close-in weapon system'],
+          fire: ['SAM', 'Fire surface-to-air missile'], aim: ['CIWS', 'Fire close-in weapon system'], slide: null,
           use: ['EXIT', 'Exit air-defense truck'], jump: null, descend: null, reload: ['RELOAD', 'Reload SAM or CIWS'],
           missile: null, swap: null, loadout: null
         },
         heli: {
-          fire: ['CHAIN GUN', 'Fire helicopter chain gun'], aim: null, use: ['EXIT', 'Exit helicopter'],
+          fire: ['CHAIN GUN', 'Fire helicopter chain gun'], aim: null, slide: null, use: ['EXIT', 'Exit helicopter'],
           jump: ['CLIMB ▲', 'Climb helicopter'], descend: ['DESCEND ▼', 'Descend helicopter'],
           reload: ['RELOAD', 'Reload helicopter gun'], missile: ['AGM', 'Fire guided air/ground missile'],
           swap: null, loadout: null
