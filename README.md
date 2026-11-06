@@ -1,6 +1,6 @@
 # Clash-of-steel
 
-Version 0.85 adds a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. The settings/profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
+Version 0.9 improves bot navigation, including reliable exits through base gates instead of getting stuck at the perimeter corners. It also includes a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. The settings/profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
 
 ## Run locally
 

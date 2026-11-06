@@ -1219,7 +1219,7 @@
   <div class="menu-modal" id="main-menu-modal">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 0.85</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 0.9</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -1324,7 +1324,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.85">v.85</div>
+    <div id="game-version" aria-label="Game version 0.9">v0.9</div>
   </div>
 
   <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -4672,10 +4672,11 @@
           targetX = e.baseExitGoal.x;
           targetZ = e.baseExitGoal.z;
         } else if (inBase && targetOutside && e.aiState !== 'board_veh') {
-          const sign = ownBase[0] < 0 ? 1 : -1;
+          const outward = ownBase[0] < 0 ? -1 : 1;
+          // Keep the exit point aligned with the two openings in the base perimeter.
           const exits = [
-            { x: ownBase[0] - sign * 48, z: ownBase[1] - sign * 18 },
-            { x: ownBase[0] - sign * 18, z: ownBase[1] - sign * 48 }
+            { x: ownBase[0] + outward * 48, z: ownBase[1] - outward * 18 },
+            { x: ownBase[0] - outward * 18, z: ownBase[1] + outward * 48 }
           ];
           exits.sort((a, b) => (
             Math.hypot(e.p.x - a.x, e.p.z - a.z) + Math.hypot(targetX - a.x, targetZ - a.z)
