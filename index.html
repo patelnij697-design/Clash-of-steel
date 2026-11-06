@@ -1125,7 +1125,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.3">v0.3</div>
+    <div id="game-version" aria-label="Game version 0.35">v0.35</div>
   </div>
 
   <!-- In-game Pause Modal -->
@@ -3308,7 +3308,7 @@
     }
 
     /* -------------------------------------------------------------------------
-       SUPER SMART BOT AI: FLANKING, COVER-SEEKING & 5S VEHICLE BOARDING DELAY
+       BOT AI: FLANKING, COVER-SEEKING & OBSTACLE-AWARE VEHICLE ROUTING
        ------------------------------------------------------------------------- */
     const BOT_DIFFICULTY = [
       { acc: 0.3, rate: 1.2, name: 'RECRUIT' },
@@ -3345,6 +3345,188 @@
         }
       }
       return bestPt;
+    }
+
+    const BOT_NAV_STEP = 6;
+    const BOT_NAV_MIN = -276;
+    const BOT_NAV_SIZE = 93;
+    const BOT_BOARDING_DELAY = 0.5;
+    const botNavGrids = new Map();
+
+    function getBotNavGrid(radius) {
+      if (botNavGrids.has(radius)) return botNavGrids.get(radius);
+      const blocked = new Uint8Array(BOT_NAV_SIZE * BOT_NAV_SIZE);
+
+      for (let z = 0; z < BOT_NAV_SIZE; z++) {
+        for (let x = 0; x < BOT_NAV_SIZE; x++) {
+          const worldX = BOT_NAV_MIN + x * BOT_NAV_STEP;
+          const worldZ = BOT_NAV_MIN + z * BOT_NAV_STEP;
+          const index = z * BOT_NAV_SIZE + x;
+          blocked[index] = worldX < -280 + radius || worldX > 280 - radius
+            || worldZ < -280 + radius || worldZ > 280 - radius
+            || OB.some(o => o.h > 0
+              && Math.abs(worldX - o.x) < o.hw + radius
+              && Math.abs(worldZ - o.z) < o.hd + radius) ? 1 : 0;
+        }
+      }
+
+      const grid = { blocked };
+      botNavGrids.set(radius, grid);
+      return grid;
+    }
+
+    function isBotNavSegmentClear(x1, z1, x2, z2, radius) {
+      const length = Math.hypot(x2 - x1, z2 - z1);
+      const steps = Math.max(1, Math.ceil(length / (BOT_NAV_STEP / 2)));
+      for (let step = 0; step <= steps; step++) {
+        const progress = step / steps;
+        const x = x1 + (x2 - x1) * progress;
+        const z = z1 + (z2 - z1) * progress;
+        if (x < -280 + radius || x > 280 - radius || z < -280 + radius || z > 280 - radius) return false;
+        if (OB.some(o => o.h > 0
+          && Math.abs(x - o.x) < o.hw + radius
+          && Math.abs(z - o.z) < o.hd + radius)) return false;
+      }
+      return true;
+    }
+
+    function nearestBotNavNode(x, z, grid) {
+      const centerX = THREE.MathUtils.clamp(Math.round((x - BOT_NAV_MIN) / BOT_NAV_STEP), 0, BOT_NAV_SIZE - 1);
+      const centerZ = THREE.MathUtils.clamp(Math.round((z - BOT_NAV_MIN) / BOT_NAV_STEP), 0, BOT_NAV_SIZE - 1);
+      for (let ring = 0; ring < BOT_NAV_SIZE; ring++) {
+        let bestNode = -1, bestDistance = Infinity;
+        for (let dz = -ring; dz <= ring; dz++) {
+          for (let dx = -ring; dx <= ring; dx++) {
+            if (ring && Math.abs(dx) !== ring && Math.abs(dz) !== ring) continue;
+            const nodeX = centerX + dx, nodeZ = centerZ + dz;
+            if (nodeX < 0 || nodeX >= BOT_NAV_SIZE || nodeZ < 0 || nodeZ >= BOT_NAV_SIZE) continue;
+            const node = nodeZ * BOT_NAV_SIZE + nodeX;
+            if (grid.blocked[node]) continue;
+            const worldX = BOT_NAV_MIN + nodeX * BOT_NAV_STEP;
+            const worldZ = BOT_NAV_MIN + nodeZ * BOT_NAV_STEP;
+            const distance = (worldX - x) ** 2 + (worldZ - z) ** 2;
+            if (distance < bestDistance) {
+              bestNode = node;
+              bestDistance = distance;
+            }
+          }
+        }
+        if (bestNode >= 0) return bestNode;
+      }
+      return -1;
+    }
+
+    function findBotVehiclePath(startX, startZ, targetX, targetZ, radius) {
+      if (isBotNavSegmentClear(startX, startZ, targetX, targetZ, radius)) return [];
+
+      const grid = getBotNavGrid(radius);
+      const start = nearestBotNavNode(startX, startZ, grid);
+      const goal = nearestBotNavNode(targetX, targetZ, grid);
+      if (start < 0 || goal < 0) return null;
+
+      const totalNodes = BOT_NAV_SIZE * BOT_NAV_SIZE;
+      const costs = new Float32Array(totalNodes);
+      costs.fill(Infinity);
+      const previous = new Int32Array(totalNodes);
+      previous.fill(-1);
+      const closed = new Uint8Array(totalNodes);
+      const heapNodes = [];
+      const heapScores = [];
+      const goalX = goal % BOT_NAV_SIZE;
+      const goalZ = Math.floor(goal / BOT_NAV_SIZE);
+      const heuristic = node => {
+        const dx = Math.abs(node % BOT_NAV_SIZE - goalX);
+        const dz = Math.abs(Math.floor(node / BOT_NAV_SIZE) - goalZ);
+        return Math.max(dx, dz) + (Math.SQRT2 - 1) * Math.min(dx, dz);
+      };
+      const push = (node, score) => {
+        let index = heapNodes.length;
+        heapNodes.push(node);
+        heapScores.push(score);
+        while (index > 0) {
+          const parent = Math.floor((index - 1) / 2);
+          if (heapScores[parent] <= score) break;
+          heapNodes[index] = heapNodes[parent];
+          heapScores[index] = heapScores[parent];
+          index = parent;
+        }
+        heapNodes[index] = node;
+        heapScores[index] = score;
+      };
+      const pop = () => {
+        const node = heapNodes[0];
+        const lastNode = heapNodes.pop();
+        const lastScore = heapScores.pop();
+        if (heapNodes.length) {
+          let index = 0;
+          while (true) {
+            const left = index * 2 + 1, right = left + 1;
+            if (left >= heapNodes.length) break;
+            const child = right < heapNodes.length && heapScores[right] < heapScores[left] ? right : left;
+            if (heapScores[child] >= lastScore) break;
+            heapNodes[index] = heapNodes[child];
+            heapScores[index] = heapScores[child];
+            index = child;
+          }
+          heapNodes[index] = lastNode;
+          heapScores[index] = lastScore;
+        }
+        return node;
+      };
+
+      costs[start] = 0;
+      push(start, heuristic(start));
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+      while (heapNodes.length) {
+        const current = pop();
+        if (closed[current]) continue;
+        if (current === goal) break;
+        closed[current] = 1;
+        const currentX = current % BOT_NAV_SIZE;
+        const currentZ = Math.floor(current / BOT_NAV_SIZE);
+
+        for (const [dx, dz] of directions) {
+          const nextX = currentX + dx, nextZ = currentZ + dz;
+          if (nextX < 0 || nextX >= BOT_NAV_SIZE || nextZ < 0 || nextZ >= BOT_NAV_SIZE) continue;
+          const next = nextZ * BOT_NAV_SIZE + nextX;
+          if (grid.blocked[next] || closed[next]) continue;
+          if (dx && dz && (grid.blocked[currentZ * BOT_NAV_SIZE + nextX]
+            || grid.blocked[nextZ * BOT_NAV_SIZE + currentX])) continue;
+
+          const nextCost = costs[current] + (dx && dz ? Math.SQRT2 : 1);
+          if (nextCost >= costs[next]) continue;
+          costs[next] = nextCost;
+          previous[next] = current;
+          push(next, nextCost + heuristic(next));
+        }
+      }
+
+      if (start !== goal && previous[goal] < 0) return null;
+      const path = [];
+      for (let node = goal; node !== start; node = previous[node]) {
+        path.push({
+          x: BOT_NAV_MIN + (node % BOT_NAV_SIZE) * BOT_NAV_STEP,
+          z: BOT_NAV_MIN + Math.floor(node / BOT_NAV_SIZE) * BOT_NAV_STEP
+        });
+      }
+      path.reverse();
+
+      const smoothed = [];
+      let anchorX = startX, anchorZ = startZ, pathIndex = 0;
+      while (pathIndex < path.length) {
+        let furthest = pathIndex;
+        for (let candidate = path.length - 1; candidate > pathIndex; candidate--) {
+          if (isBotNavSegmentClear(anchorX, anchorZ, path[candidate].x, path[candidate].z, radius)) {
+            furthest = candidate;
+            break;
+          }
+        }
+        smoothed.push(path[furthest]);
+        anchorX = path[furthest].x;
+        anchorZ = path[furthest].z;
+        pathIndex = furthest + 1;
+      }
+      return smoothed;
     }
 
     function updateBotAI(e, dt) {
@@ -3457,9 +3639,10 @@
       let mx = 0, mz = 0;
       const ownBase = B[e.tm];
 
-      // Vehicle Commandeering with prompt 1-Second Boarding Window
+      // Vehicle commandeering with a short, visible boarding countdown.
       if (isInf && e.aiState === 'board_veh' && e.targetVeh && !e.targetVeh.dead) {
         if (e.targetVeh.driver || P.veh === e.targetVeh) {
+          if (e.targetVeh.boardingBot === e) e.targetVeh.boardingBot = null;
           e.aiState = 'patrol';
           e.targetVeh = null;
           e.boardTimer = 0;
@@ -3470,9 +3653,8 @@
             targetZ = e.targetVeh.p.z;
             e.boardTimer = 0;
           } else {
-            // Reached vehicle! 1-second boarding countdown
             if (e.boardTimer <= 0) {
-              e.boardTimer = 1.0;
+              e.boardTimer = BOT_BOARDING_DELAY;
               e.targetVeh.boardingBot = e;
             } else {
               e.boardTimer -= dt;
@@ -3630,6 +3812,33 @@
       }
 
       if (targetX != null) {
+        if (e.type === 'car' || isTank || e.type === 'sam') {
+          const navRadius = 3.0;
+          e.navTimer = (e.navTimer || 0) - dt;
+          const targetChanged = !e.navGoal || Math.hypot(targetX - e.navGoal.x, targetZ - e.navGoal.z) > 12;
+          if (!e.navPath || targetChanged || e.navTimer <= 0) {
+            e.navPath = findBotVehiclePath(e.p.x, e.p.z, targetX, targetZ, navRadius) || [];
+            e.navIndex = 0;
+            e.navGoal = { x: targetX, z: targetZ };
+            e.navTimer = 0.75;
+          }
+
+          while (e.navIndex < e.navPath.length
+            && Math.hypot(e.p.x - e.navPath[e.navIndex].x, e.p.z - e.navPath[e.navIndex].z) < 4) {
+            e.navIndex++;
+          }
+
+          if (e.navIndex < e.navPath.length) {
+            targetX = e.navPath[e.navIndex].x;
+            targetZ = e.navPath[e.navIndex].z;
+          } else if (e.navPath.length
+            && !isBotNavSegmentClear(e.p.x, e.p.z, targetX, targetZ, navRadius)) {
+            const lastWaypoint = e.navPath[e.navPath.length - 1];
+            targetX = lastWaypoint.x;
+            targetZ = lastWaypoint.z;
+          }
+        }
+
         const dx = targetX - e.p.x, dz = targetZ - e.p.z;
         const len = Math.hypot(dx, dz) || 1;
         if (len > 1.5) { mx += dx / len; mz += dz / len; }
@@ -3692,6 +3901,7 @@
           if (e.stuckTimer > 1.5) {
             e.stuckDir = -e.stuckDir;
             e.stuckTimer = 0;
+            if (e.type === 'car' || isTank || e.type === 'sam') e.navTimer = 0;
             if (ownBase) {
               const sign = ownBase[0] < 0 ? 1 : -1;
               e.p.x += sign * 1.8;
@@ -3779,6 +3989,10 @@
       e.boardTimer = 0;
       e.boardingBot = null;
       e.stuckTimer = 0;
+      e.navPath = null;
+      e.navGoal = null;
+      e.navIndex = 0;
+      e.navTimer = 0;
       if (e.type === 'inf' && e.team) {
         e.baseStayTimer = 1.0;
         e.aiState = 'patrol';
@@ -3855,9 +4069,9 @@
         hwCtx.fillStyle = hpColor;
         hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW * hpPercent, barH);
 
-        // Active 1-Second Bot Boarding Countdown Banner!
-        if (v.boardingBot && v.boardingBot.boardTimer > 0) {
-          const bTime = v.boardingBot.boardTimer.toFixed(1);
+        const boardingTime = v.boardingBot?.boardTimer || v.boardingTime || 0;
+        if (boardingTime > 0) {
+          const bTime = boardingTime.toFixed(1);
           hwCtx.fillStyle = 'rgba(239, 68, 68, 0.95)';
           hwCtx.strokeStyle = '#fff';
           hwCtx.lineWidth = 1;
@@ -3868,7 +4082,7 @@
 
           hwCtx.fillStyle = '#fff';
           hwCtx.font = `700 ${Math.round(10 * scale)}px "JetBrains Mono", monospace`;
-          hwCtx.fillText(`⚠ BOT BOARDING: ${bTime}s`, sx, sy + 24 * scale);
+          hwCtx.fillText(`⚠ ${bTime}s TILL BOT BOARDING`, sx, sy + 24 * scale);
         }
       });
 
@@ -4718,6 +4932,9 @@
         entity.dead = item.dead;
         if (Number.isInteger(item.team)) entity.team = item.team;
         if (Number.isInteger(item.tm)) entity.tm = item.tm;
+        entity.boardingTime = Number.isFinite(item.boardingTime)
+          ? Math.max(0, Math.min(BOT_BOARDING_DELAY, item.boardingTime))
+          : 0;
         entity.m.visible = !item.dead;
         entity.v = item.v || 0;
       });
@@ -4808,7 +5025,8 @@
           id: entity.nid,
           x: entity.p.x, y: entity.p.y, z: entity.p.z,
           yaw: entity.yaw, hp: entity.hp, dead: entity.dead, v: entity.v,
-          team: entity.team, tm: entity.tm
+          team: entity.team, tm: entity.tm,
+          boardingTime: entity.boardingBot?.boardTimer > 0 ? entity.boardingBot.boardTimer : 0
         })),
         missiles: MISSILES.map(missile => ({
           id: missile.id, type: missile.type, x: missile.p.x, y: missile.p.y, z: missile.p.z,

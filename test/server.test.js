@@ -68,6 +68,8 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /data-session="bots"/);
   assert.match(html, /id="btn-join-public"/);
   assert.match(html, /id="mobile-controls"/);
+  assert.match(html, /v0\.35/);
+  assert.match(html, /TILL BOT BOARDING/);
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
   assert.equal(sourcePath.status, 200);
