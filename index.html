@@ -361,6 +361,16 @@
       overflow-y: auto;
       overscroll-behavior: contain;
     }
+    #game-version {
+      position: fixed;
+      left: max(12px, env(safe-area-inset-left));
+      bottom: max(10px, env(safe-area-inset-bottom));
+      z-index: 21;
+      color: #64748b;
+      font: 600 10px var(--font-mono);
+      letter-spacing: 1px;
+      pointer-events: none;
+    }
     .modal-box {
       max-width: 900px;
       width: 100%;
@@ -1027,6 +1037,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
+    <div id="game-version" aria-label="Game version 0.1">v0.1</div>
   </div>
 
   <!-- In-game Pause Modal -->
@@ -1037,7 +1048,7 @@
         WASD move · Shift sprint · Space jump · LMB main fire · RMB scope / secondary · R reload.<br>
         1 / 2 or Q swaps soldier weapon slots · E enters or exits vehicles.<br>
         <b>M901 SAM Truck:</b> LMB radar-guided surface-to-air missiles · RMB twin 20mm CIWS vulcan.<br>
-        <b>M1A2 Tank:</b> LMB 120mm Cannon (with anti-air lead FCS) · RMB Coaxial MG.<br>
+        <b>M1A2 Tank:</b> LMB 120mm Cannon · RMB Coaxial MG.<br>
         <b>AH-64 Heli:</b> W/S pitch, A/D turn, Space/Shift climb/descend, LMB chain gun, F guided missiles (air/ground lock).<br>
         <b>Air Reticles:</b> Dedicated high-tech flight and air-defense reticles for every vehicle!
       </p>
@@ -2719,7 +2730,7 @@
 
       const fwd = new V3(Math.sin(v.yaw), 0, Math.cos(v.yaw));
       const accel = (K.KeyW ? 1 : 0) - (K.KeyS ? 1 : 0);
-      const steer = (K.KeyD ? 1 : 0) - (K.KeyA ? 1 : 0);
+      const steer = (K.KeyA ? 1 : 0) - (K.KeyD ? 1 : 0);
 
       if (v.type !== 'heli') {
         v.v += accel * (v.type === 'tank' ? 15 : v.type === 'sam' ? 16 : 18) * dt;
@@ -3036,6 +3047,7 @@
       const canEngage = tg && e.los && dist < (isInf ? 65 : isHeli ? 120 : 130);
 
       let targetX = null, targetZ = null;
+      let mx = 0, mz = 0;
       const ownBase = B[e.tm];
 
       // Vehicle Commandeering behavior with 5-Second Boarding Delay
@@ -3106,8 +3118,11 @@
             e.p.y = THREE.MathUtils.lerp(e.p.y, cruiseAlt + Math.sin(e.a) * 3.5, dt * 2.0);
           }
         } else {
-          targetX = rnd(-180, 180);
-          targetZ = rnd(-180, 180);
+          if (!e.wp || Math.hypot(e.wp[0] - e.p.x, e.wp[1] - e.p.z) < 12) {
+            e.wp = [rnd(-180, 180), rnd(-180, 180)];
+          }
+          targetX = e.wp[0];
+          targetZ = e.wp[1];
           e.p.y = THREE.MathUtils.lerp(e.p.y, cruiseAlt, dt * 1.5);
         }
 
@@ -3174,11 +3189,10 @@
         targetZ = e.wp[1];
       }
 
-      let mx = 0, mz = 0;
       if (targetX != null) {
         const dx = targetX - e.p.x, dz = targetZ - e.p.z;
         const len = Math.hypot(dx, dz) || 1;
-        if (len > 2) { mx = dx / len; mz = dz / len; }
+        if (len > 2) { mx += dx / len; mz += dz / len; }
       }
 
       if (canEngage && !isHeli && isInf) {
@@ -3531,33 +3545,6 @@
         ctx.textAlign = 'center';
         ctx.fillText(`TURRET HDG: ${headingDeg}° [AZIMUTH]`, cx, 65);
 
-        // 120MM Anti-Air Intercept Solution: Calculate deflection lead for enemy helicopters!
-        E.forEach(e => {
-          if (e.type !== 'heli' || !e.team || e.dead || e.tm === P.tm) return;
-          projVec.copy(e.p);
-          projVec.project(camera);
-          if (projVec.z >= 1.0) return;
-          const ex = (projVec.x + 1) * 0.5 * w;
-          const ey = (1 - projVec.y) * 0.5 * h;
-          const dist = v.p.distanceTo(e.p);
-
-          // Intercept Lead Pip for Main Cannon
-          const flightTime = dist / 110;
-          const leadX = ex + Math.sin(e.yaw || 0) * (e.v || 14) * flightTime * 7;
-          const leadY = ey - 18; // High elevation deflection compensation
-
-          ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(leadX, leadY, 12, 0, Math.PI * 2);
-          ctx.moveTo(leadX - 16, leadY); ctx.lineTo(leadX + 16, leadY);
-          ctx.moveTo(leadX, leadY - 16); ctx.lineTo(leadX, leadY + 16);
-          ctx.stroke();
-
-          ctx.fillStyle = '#ef4444';
-          ctx.font = '700 10px "JetBrains Mono", monospace';
-          ctx.fillText(`120MM AIR LEAD [${dist.toFixed(0)}M]`, leadX, leadY - 20);
-        });
         ctx.restore();
 
       } else if (v.type === 'car') {
