@@ -68,7 +68,7 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /data-session="bots"/);
   assert.match(html, /id="btn-join-public"/);
   assert.match(html, /id="mobile-controls"/);
-  assert.match(html, /v0\.35/);
+  assert.match(html, /v\.04/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
@@ -128,6 +128,14 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
       kind: 'shot', x: 1, y: 2, z: 3, dx: 0, dy: 0, dz: -1, damage: 25
     });
     assert.equal((await combatAction).playerId, guest.id);
+
+    const playerDamage = once(guest, 'player:damage');
+    host.emit('player:damage', {
+      id: guest.id, amount: 10, attacker: 'Enemy fire', sourceX: 4, sourceZ: 5
+    });
+    assert.deepEqual(await playerDamage, {
+      amount: 10, attacker: 'Enemy fire', sourceX: 4, sourceZ: 5
+    });
 
     const worldState = once(guest, 'game:state');
     host.emit('game:state', { entities: [], missiles: [], scores: { 0: 1 } });

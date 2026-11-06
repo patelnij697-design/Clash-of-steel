@@ -205,7 +205,17 @@ io.on('connection', socket => {
     if (!room || room.hostId !== socket.id || !damage || typeof damage.id !== 'string'
       || !Number.isFinite(damage.amount) || damage.amount <= 0 || damage.amount > 1000) return;
     const target = room.players.get(damage.id);
-    if (target) io.to(damage.id).emit('player:damage', { amount: damage.amount, attacker: cleanName(damage.attacker) });
+    if (target) {
+      const source = Number.isFinite(damage.sourceX) && Math.abs(damage.sourceX) <= 1000
+        && Number.isFinite(damage.sourceZ) && Math.abs(damage.sourceZ) <= 1000
+        ? { sourceX: damage.sourceX, sourceZ: damage.sourceZ }
+        : {};
+      io.to(damage.id).emit('player:damage', {
+        amount: damage.amount,
+        attacker: cleanName(damage.attacker),
+        ...source
+      });
+    }
   });
 
   socket.on('player:effect', effect => {
