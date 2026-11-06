@@ -1125,7 +1125,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.25">v0.25</div>
+    <div id="game-version" aria-label="Game version 0.3">v0.3</div>
   </div>
 
   <!-- In-game Pause Modal -->
@@ -3481,7 +3481,7 @@
 
               if (e.boardTimer <= 0) {
                 e.m.visible = false;
-                e.targetVeh.team = 1;
+                e.targetVeh.team = e.team;
                 e.targetVeh.tm = e.tm;
                 e.targetVeh.driver = e;
                 e.drivingVeh = e.targetVeh;
@@ -3497,8 +3497,13 @@
         e.boardTimer = 0;
       }
 
+      // Keep vehicle boarding ahead of mode-specific movement objectives.
+      if (isInf && e.aiState === 'board_veh' && e.targetVeh && !e.targetVeh.dead && !e.targetVeh.driver) {
+        targetX = e.targetVeh.p.x;
+        targetZ = e.targetVeh.p.z;
+      }
       // Smart Cover Seeking
-      if (isInf && e.aiState === 'seek_cover' && e.coverPt) {
+      else if (isInf && e.aiState === 'seek_cover' && e.coverPt) {
         targetX = e.coverPt.x;
         targetZ = e.coverPt.z;
         e.hp = Math.min(e.mhp, e.hp + 6 * dt);
@@ -3850,7 +3855,7 @@
         hwCtx.fillStyle = hpColor;
         hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW * hpPercent, barH);
 
-        // Active 5-Second Bot Boarding Countdown Banner!
+        // Active 1-Second Bot Boarding Countdown Banner!
         if (v.boardingBot && v.boardingBot.boardTimer > 0) {
           const bTime = v.boardingBot.boardTimer.toFixed(1);
           hwCtx.fillStyle = 'rgba(239, 68, 68, 0.95)';
