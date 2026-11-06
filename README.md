@@ -7,7 +7,7 @@ npm install
 npm start
 ```
 
-Open `http://localhost:3000`. The lobby offers a public match with bots, code-protected private rooms with bots, and offline bot-only matches. Public and private rooms include room chat and live player counts. Bot-driven ground vehicles route around battlefield obstacles, and vehicle boarding shows a 0.5-second countdown. Helicopter guided missiles lock onto enemy aircraft and ground units, and each team base has fortified perimeter walls, gated approaches, watchtowers, and sandbag cover. Phones and tablets get a virtual movement stick, touch-to-look area, and combat/action buttons. Operator callsigns and armor finishes are saved in the browser and appear on in-world name tags.
+Open `http://localhost:3000`. The lobby offers a public match with bots, code-protected private rooms where the host can toggle bots on or off, and offline bot-only matches. Public and private rooms include room chat and live player counts. Bot-driven ground vehicles route around battlefield obstacles; bots use imperfect aim and ballistic rounds, and vehicle boarding shows a 2-second countdown. Helicopter guided missiles lock onto enemy aircraft and ground units, and each team base has fortified perimeter walls, gated approaches, watchtowers, and sandbag cover. Phones and tablets get a virtual movement stick, touch-to-look area, and combat/action buttons. Operator callsigns and armor finishes are saved in the browser and appear on in-world name tags.
 
 ## Deploy on Render
 

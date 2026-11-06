@@ -37,7 +37,8 @@ function makeRoom(id, kind) {
     players: new Map(),
     hostId: null,
     matchConfig: null,
-    gameState: null
+    gameState: null,
+    botsEnabled: true
   };
   rooms.set(id, room);
   return room;
@@ -51,7 +52,8 @@ function roomSummary(room) {
     players: [...room.players.values()],
     activePlayers,
     matchConfig: room.matchConfig,
-    gameState: room.gameState
+    gameState: room.gameState,
+    botsEnabled: room.botsEnabled
   };
 }
 
@@ -105,6 +107,7 @@ io.on('connection', socket => {
       let code;
       do { code = randomInt(100000, 1000000).toString(); } while (rooms.has(code));
       room = makeRoom(code, 'private');
+      room.botsEnabled = request.botsEnabled !== false;
     } else {
       const code = typeof request.roomCode === 'string' ? request.roomCode.trim().toUpperCase() : '';
       room = rooms.get(code);
@@ -165,9 +168,20 @@ io.on('connection', socket => {
   socket.on('match:start', config => {
     const room = rooms.get(socket.data.roomId);
     if (!room || room.hostId !== socket.id || !config || !['tdm', 'ffa', 'ctf'].includes(config.mode)) return;
-    room.matchConfig = { mode: config.mode, difficulty: Math.max(0, Math.min(2, Number(config.difficulty) || 0)) };
+    room.matchConfig = {
+      mode: config.mode,
+      difficulty: Math.max(0, Math.min(2, Number(config.difficulty) || 0)),
+      botsEnabled: room.kind !== 'private' || room.botsEnabled
+    };
     room.gameState = null;
     io.to(room.id).emit('match:start', room.matchConfig);
+  });
+
+  socket.on('room:bots', enabled => {
+    const room = rooms.get(socket.data.roomId);
+    if (!room || room.kind !== 'private' || room.hostId !== socket.id || typeof enabled !== 'boolean') return;
+    room.botsEnabled = enabled;
+    io.to(room.id).emit('room:settings', { botsEnabled: room.botsEnabled });
   });
 
   socket.on('match:end', result => {
@@ -265,7 +279,8 @@ function leaveRoom(socket) {
     if (room.hostId) {
       io.to(room.hostId).emit('host:changed', {
         matchConfig: room.matchConfig,
-        gameState: room.gameState
+        gameState: room.gameState,
+        botsEnabled: room.botsEnabled
       });
     }
   }

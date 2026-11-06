@@ -1104,7 +1104,7 @@
             <p>Join the public battlefield with real players; bots keep the fight active.</p>
           </div>
           <div class="tactical-card" data-session="private" role="button" tabindex="0">
-            <h4>PRIVATE ROOM + BOTS</h4>
+            <h4>PRIVATE ROOM</h4>
             <p>Create a room or join friends with a six-digit code.</p>
           </div>
           <div class="tactical-card" data-session="bots" role="button" tabindex="0">
@@ -1115,6 +1115,7 @@
         <div class="lobby-tools" id="private-room-tools">
           <input id="room-code-input" maxlength="6" placeholder="ROOM CODE" aria-label="Private room code">
           <button class="btn-secondary" id="btn-join-public">JOIN PUBLIC LOBBY</button>
+          <button class="btn-secondary" id="btn-private-bots" type="button" aria-pressed="true" style="display:none;">BOTS: ON</button>
           <button class="btn-secondary" id="btn-create-room">CREATE PRIVATE ROOM</button>
           <button class="btn-secondary" id="btn-join-room">JOIN BY CODE</button>
           <button class="btn-secondary" id="btn-leave-room" style="display:none;">LEAVE ROOM</button>
@@ -1148,7 +1149,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.4">v.04</div>
+    <div id="game-version" aria-label="Game version 0.5">v.05</div>
   </div>
 
   <!-- In-game Pause Modal -->
@@ -1232,7 +1233,7 @@
        - Cannon.js Real Physics Engine (Rigid bodies, Explosive impulse shockwaves)
        - High-Detail Animated Weapon Models (Recoil kick, sway, reload animations, muzzle flash)
        - In-World 3D Floating Vehicle Health Bars & Telemetry
-       - Smart Combat Bot AI with 5-Second Vehicle Boarding Window
+       - Smart Combat Bot AI with 2-Second Vehicle Boarding Window
        - Vehicle Magazines (120mm autoloader, Coaxial MG, 25mm Autocannon, 30mm Chain Gun)
        - 30-Second Inactivity Base Auto-Respawn
        ========================================================================= */
@@ -2730,15 +2731,34 @@
     }
 
     const RC = new THREE.Raycaster();
-    function raycastBullet(origin, dir, damage, attacker = 1) {
-      RC.set(origin, dir);
-      RC.far = 300;
-      const shooterTeam = typeof attacker === 'object' ? attacker.tm : P.tm;
-      const targets = E.filter(e => e.team && !e.dead && e.tm !== shooterTeam).map(e => e.m);
-      const hitObj = RC.intersectObjects(targets.concat(OM), true)[0];
-      const endPt = hitObj ? hitObj.point : origin.clone().addScaledVector(dir, 180);
-      drawTracer(origin.clone().addScaledVector(dir, 1.5).add(new V3(0, -0.2, 0)), endPt);
+    const BULLETS = [];
+    const BULLET_GRAVITY = 9.8;
+    const BULLET_GEOMETRY = new THREE.SphereGeometry(0.09, 6, 6);
+    const BULLET_MATERIAL = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+    let bulletSequence = 0;
 
+    function spawnBullet(origin, direction, damage, attacker = 1, speed = 220, id = null, remote = false, teamOverride = null) {
+      const mesh = new THREE.Mesh(BULLET_GEOMETRY, BULLET_MATERIAL);
+      mesh.position.copy(origin);
+      scene.add(mesh);
+      const team = Number.isInteger(teamOverride) ? teamOverride
+        : typeof attacker === 'object' ? attacker.tm : P.tm;
+      const bullet = {
+        id: id || `bullet-${++bulletSequence}`,
+        m: mesh,
+        p: origin.clone(),
+        velocity: direction.clone().normalize().multiplyScalar(speed),
+        damage,
+        attacker,
+        team,
+        life: 2.5,
+        remote
+      };
+      BULLETS.push(bullet);
+      return bullet;
+    }
+
+    function raycastBullet(origin, dir, damage, attacker = 1) {
       if (networked && !networkHost) {
         netSocket.emit('combat:action', {
           kind: 'shot',
@@ -2748,15 +2768,91 @@
         });
         return;
       }
-      if (!hitObj) return;
-      spawnExplosion(hitObj.point, 0.4, 0xfef08a, 0.15);
-      const ent = hitObj.object.userData.ent;
-      if (ent && ent.team) {
-        hitMarkerPulse();
-        const isHead = hitObj.object.userData.head;
-        const mult = ent.type === 'inf' ? (isHead ? 2.5 : 1) : 0.18;
-        applyDamage(ent, damage * mult, attacker, origin);
+      spawnBullet(origin, dir, damage, attacker);
+    }
+
+    function updateBullets(dt) {
+      for (let index = BULLETS.length - 1; index >= 0; index--) {
+        const bullet = BULLETS[index];
+        if (bullet.remote) continue;
+
+        bullet.life -= dt;
+        bullet.velocity.y -= BULLET_GRAVITY * dt;
+        const previous = bullet.p.clone();
+        bullet.p.addScaledVector(bullet.velocity, dt);
+        const segment = bullet.p.clone().sub(previous);
+        const segmentLength = segment.length();
+        let hitObj = null;
+        if (segmentLength > 0) {
+          RC.set(previous, segment.multiplyScalar(1 / segmentLength));
+          RC.far = segmentLength;
+          const targets = E.filter(e => e.team && !e.dead && e.tm !== bullet.team).map(e => e.m);
+          hitObj = RC.intersectObjects(targets.concat(OM), true)[0] || null;
+        }
+        const hitGround = bullet.p.y <= 0;
+
+        let hitPlayer = false;
+        let playerAlong = 0;
+        if (P.hp > 0 && P.tm !== bullet.team) {
+          const playerCenter = (P.veh ? P.veh.p : P.p).clone().add(new V3(0, P.veh ? 1.3 : 1.0, 0));
+          const segmentDirection = segmentLength ? segment.clone().normalize() : new V3();
+          const toPlayer = playerCenter.clone().sub(previous);
+          playerAlong = Math.max(0, Math.min(segmentLength, toPlayer.dot(segmentDirection)));
+          const closest = previous.clone().addScaledVector(segmentDirection, playerAlong);
+          const radius = P.veh ? 2.1 : 0.55;
+          if (closest.distanceToSquared(playerCenter) <= radius * radius && (!hitObj || playerAlong < hitObj.distance)) {
+            hitPlayer = true;
+          }
+        }
+
+        if (hitObj || hitPlayer || hitGround || bullet.life <= 0) {
+          const impact = hitObj ? hitObj.point : hitPlayer
+            ? previous.clone().lerp(bullet.p, segmentLength ? Math.min(1, playerAlong / segmentLength) : 0)
+            : hitGround ? bullet.p.clone().setY(0) : bullet.p;
+          drawTracer(previous, impact);
+          if (hitPlayer) {
+            hurtPlayer(bullet.damage, bullet.attacker);
+          } else if (hitObj) {
+            const entity = hitObj.object.userData.ent;
+            if (entity && entity.team && entity.tm !== bullet.team) {
+              const isHead = hitObj.object.userData.head;
+              const multiplier = entity.type === 'inf'
+                ? (bullet.headshots && isHead ? 2.5 : 1)
+                : (bullet.vehicleDamageScale ?? 0.18);
+              if (!bullet.remote) hitMarkerPulse();
+              applyDamage(entity, bullet.damage * multiplier, bullet.attacker, previous);
+            }
+            spawnExplosion(impact, 0.25, 0xfef08a, 0.1);
+          }
+          scene.remove(bullet.m);
+          BULLETS.splice(index, 1);
+          continue;
+        }
+
+        bullet.m.position.copy(bullet.p);
       }
+    }
+
+    function getBotAimPoint(shooter, target, origin, speed) {
+      const aimHeight = target.type === 'inf' || target.pl ? 1.0 : target.type === 'heli' ? 1.6 : 1.3;
+      const aimPoint = target.p.clone().add(new V3(0, aimHeight, 0));
+      const flightTime = Math.min(1.5, origin.distanceTo(aimPoint) / speed);
+      if (shooter.aimTargetVelocity) {
+        aimPoint.addScaledVector(shooter.aimTargetVelocity, flightTime * 0.65);
+      }
+      aimPoint.y += 0.5 * BULLET_GRAVITY * flightTime * flightTime;
+      return aimPoint;
+    }
+
+    function fireBotBullet(shooter, target, origin, damage, speed, spread, vehicleDamageScale = 1) {
+      const aimPoint = getBotAimPoint(shooter, target, origin, speed);
+      const direction = aimPoint.sub(origin).normalize();
+      direction.x += rnd(-spread, spread);
+      direction.y += rnd(-spread, spread);
+      direction.z += rnd(-spread, spread);
+      const bullet = spawnBullet(origin, direction.normalize(), damage, shooter, speed);
+      bullet.vehicleDamageScale = vehicleDamageScale;
+      bullet.headshots = false;
     }
 
     const MISSILES = [];
@@ -3353,9 +3449,9 @@
        BOT AI: FLANKING, COVER-SEEKING & OBSTACLE-AWARE VEHICLE ROUTING
        ------------------------------------------------------------------------- */
     const BOT_DIFFICULTY = [
-      { acc: 0.3, rate: 1.2, name: 'RECRUIT' },
-      { acc: 0.48, rate: 0.8, name: 'OPERATOR' },
-      { acc: 0.72, rate: 0.5, name: 'VETERAN' }
+      { spread: 0.12, rate: 1.45, name: 'RECRUIT' },
+      { spread: 0.09, rate: 1.2, name: 'OPERATOR' },
+      { spread: 0.065, rate: 1, name: 'VETERAN' }
     ];
     let selectedDiff = 1;
 
@@ -3392,7 +3488,7 @@
     const BOT_NAV_STEP = 6;
     const BOT_NAV_MIN = -276;
     const BOT_NAV_SIZE = 93;
-    const BOT_BOARDING_DELAY = 0.5;
+    const BOT_BOARDING_DELAY = 2;
     const botNavGrids = new Map();
 
     function getBotNavGrid(radius) {
@@ -3676,6 +3772,25 @@
       const tp = tg ? tg.p : null;
       const dist = tg ? e.p.distanceTo(tp) : 1e9;
       const canEngage = tg && e.los && dist < (isInf ? 65 : isHeli ? 120 : 130);
+      if (!e.aimTargetVelocity) e.aimTargetVelocity = new V3();
+      const targetKey = tg ? (tg.pl ? 'player' : tg.nid || tg) : null;
+      if (!tg || targetKey !== e.aimTargetKey) {
+        e.aimTargetKey = targetKey;
+        e.aimTargetPosition = tp ? tp.clone() : null;
+        e.aimTargetSampleTimer = 0;
+        e.aimWarmup = tg ? rnd(0.35, 0.75) : 0;
+        e.aimTargetVelocity.set(0, 0, 0);
+      } else {
+        e.aimWarmup = Math.max(0, (e.aimWarmup || 0) - dt);
+        e.aimTargetSampleTimer = (e.aimTargetSampleTimer || 0) + dt;
+        if (e.aimTargetSampleTimer >= 0.1) {
+          e.aimTargetVelocity.subVectors(tp, e.aimTargetPosition)
+            .multiplyScalar(1 / e.aimTargetSampleTimer)
+            .clampLength(0, 12);
+          e.aimTargetPosition.copy(tp);
+          e.aimTargetSampleTimer = 0;
+        }
+      }
 
       let targetX = null, targetZ = null;
       let mx = 0, mz = 0;
@@ -3987,53 +4102,48 @@
       }
 
       if (canEngage && tp) {
-        const targetLead = (tg.v || 0) * 0.25;
-        e.yaw = Math.atan2(tp.x + targetLead - e.p.x, tp.z - e.p.z);
+        const desiredYaw = Math.atan2(tp.x - e.p.x, tp.z - e.p.z);
+        const yawError = Math.atan2(Math.sin(desiredYaw - e.yaw), Math.cos(desiredYaw - e.yaw));
+        const turnSpeed = isInf ? 2.4 : isTank ? 0.8 : 1.4;
+        e.yaw += THREE.MathUtils.clamp(yawError, -turnSpeed * dt, turnSpeed * dt);
       } else if (moveLen > 0) {
         e.yaw = Math.atan2(mx, mz);
       }
 
       // Smart Bot Weapons Firing
-      if (canEngage && e.t <= 0) {
-        e.t = (isInf ? rnd(0.4, 0.9) : isTank ? 2.8 : e.type === 'sam' ? 1.6 : e.type === 'car' ? 0.14 : 0.28) * diff.rate;
+      if (canEngage && e.aimWarmup <= 0 && e.t <= 0) {
+        e.t = (isInf ? rnd(0.9, 1.5) : isTank ? 4.5 : e.type === 'sam' ? 3.5 : e.type === 'car' ? 0.35 : 0.4) * diff.rate;
         const muzzleY = isHeli ? e.p.y : (isTank ? 2.5 : e.type === 'sam' ? 2.8 : e.type === 'car' ? 2.2 : 1.6);
         const origin = new V3(e.p.x, muzzleY, e.p.z);
+        const spread = diff.spread * (0.65 + dist / 100);
 
         if (e.type === 'sam') {
-          const dir = tp.clone().sub(origin).normalize();
-          if (tg.type === 'heli' || Math.random() < 0.6) {
+          if (tg.type === 'heli' && Math.random() < 0.65) {
+            const dir = getBotAimPoint(e, tg, origin, 105).sub(origin).normalize();
             launchMissile('sam', origin.addScaledVector(dir, 3), dir, tg);
             playSnd(120, 0.5, 0.35, 'sawtooth');
           } else {
-            fireSAMCIWS(e);
+            fireBotBullet(e, tg, origin, 14, 190, spread * 1.35, 0.3);
+            playSnd(360, 0.045, 0.14, 'sawtooth');
           }
         } else if (isTank) {
-          const dir = tp.clone().sub(origin).normalize();
+          const dir = getBotAimPoint(e, tg, origin, 72).sub(origin).normalize();
+          dir.x += rnd(-spread * 0.6, spread * 0.6);
+          dir.y += rnd(-spread * 0.6, spread * 0.6);
+          dir.z += rnd(-spread * 0.6, spread * 0.6);
+          dir.normalize();
           launchMissile('at', origin.addScaledVector(dir, 3), dir, null);
           playSnd(90, 0.6, 0.35, 'sawtooth');
           if (tg.type === 'inf') {
-            fireTankCoaxMG(e);
+            fireBotBullet(e, tg, origin, 16, 180, spread * 1.35, 0.18);
+            playSnd(320, 0.06, 0.16, 'sawtooth');
           }
         } else if (e.type === 'car') {
-          const dir = tp.clone().sub(origin).normalize();
-          spawnExplosion(origin.clone().addScaledVector(dir, 2.5), 0.45, 0x60a5fa, 0.08);
-          drawTracer(origin, new V3(tp.x + rnd(-0.6, 0.6), tp.y + (tg.type === 'inf' ? 1.0 : 2.0), tp.z + rnd(-0.6, 0.6)));
+          fireBotBullet(e, tg, origin, 22, 210, spread, 0.4);
           if (dist < 120) playSnd(340, 0.07, 0.08, 'sawtooth');
-          if (Math.random() < diff.acc * (1 - dist / 140)) {
-            const dmg = 22;
-            if (tg.pl) hurtPlayer(dmg, e);
-            else applyDamage(tg, dmg * (tg.type === 'inf' ? 1 : 0.4), e);
-          }
         } else {
-          spawnExplosion(origin, 0.35, 0xfde047, 0.08);
-          drawTracer(origin, new V3(tp.x + rnd(-0.8, 0.8), tp.y + (tg.type === 'inf' ? 1.2 : 2), tp.z + rnd(-0.8, 0.8)));
+          fireBotBullet(e, tg, origin, isInf ? 11 : 6, isInf ? 145 : 190, spread, 0.18);
           if (dist < 90) playSnd(280, 0.06, 0.06);
-
-          if (Math.random() < diff.acc * (1 - dist / 150) * (tg.pl ? 0.8 : 1.3)) {
-            const dmg = isInf ? 11 : 6;
-            if (tg.pl) hurtPlayer(dmg, e);
-            else applyDamage(tg, dmg * (tg.type === 'inf' ? 1 : 0.18), e);
-          }
         }
       }
     }
@@ -4533,6 +4643,7 @@
     let sessionMode = 'public';
     let networked = false, networkHost = false, networkRoomId = null, networkRoomKind = null, networkTeam = 0;
     let networkMatchConfig = null, networkGameState = null, networkWorldInitialized = false;
+    let privateRoomBotsEnabled = true, matchBotsEnabled = true;
     let networkPlayerId = null, networkSendTimer = 0, networkSnapshotTimer = 0, networkMissileSequence = 0;
     let profileUpdateTimer = 0;
     let networkRoster = new Map();
@@ -4579,7 +4690,7 @@
       `).join('');
       $('session-selector').innerHTML = [
         ['public', 'PUBLIC + BOTS', 'Join the public battlefield with real players; bots keep the fight active.'],
-        ['private', 'PRIVATE ROOM + BOTS', 'Create or join a room with a six-digit code and play alongside bots.'],
+        ['private', 'PRIVATE ROOM', 'Create or join a room and choose whether to include bots.'],
         ['bots', 'BOTS ONLY', 'Practice offline against the tactical bot squads.']
       ].map(([key, title, description]) => `
         <div class="tactical-card ${key === sessionMode ? 'selected' : ''}" data-session="${key}" role="button" tabindex="0" aria-pressed="${key === sessionMode}">
@@ -4592,6 +4703,11 @@
       $('btn-join-public').style.display = sessionMode === 'public' ? 'inline-block' : 'none';
       $('btn-create-room').style.display = sessionMode === 'private' ? 'inline-block' : 'none';
       $('btn-join-room').style.display = sessionMode === 'private' ? 'inline-block' : 'none';
+      const botToggle = $('btn-private-bots');
+      botToggle.style.display = sessionMode === 'private' ? 'inline-block' : 'none';
+      botToggle.textContent = `BOTS: ${privateRoomBotsEnabled ? 'ON' : 'OFF'}`;
+      botToggle.setAttribute('aria-pressed', String(privateRoomBotsEnabled));
+      botToggle.disabled = networked && (networkRoomKind !== 'private' || !networkHost);
       $('btn-leave-room').style.display = networked ? 'inline-block' : 'none';
 
       $('mode-selector').innerHTML = Object.keys(MODES).map(k => `
@@ -4601,11 +4717,14 @@
         </div>
       `).join('');
 
+      $('diff-selector').parentElement.style.display = sessionMode === 'private' && !privateRoomBotsEnabled ? 'none' : 'block';
       $('diff-selector').innerHTML = ['RECRUIT', 'OPERATOR', 'VETERAN'].map((name, i) => `
         <button class="btn-secondary ${i === selectedDiff ? 'selected' : ''}" data-diff="${i}" style="padding:6px 16px;font-size:12px;${i === selectedDiff ? 'border-color:var(--color-primary);color:#fff;' : ''}">${name}</button>
       `).join('');
 
-      $('roster-preview').innerHTML = currentMode === 'ffa'
+      $('roster-preview').innerHTML = sessionMode === 'private' && !privateRoomBotsEnabled
+        ? '<b>PRIVATE ROOM:</b> Bots disabled — play with human operators only.'
+        : currentMode === 'ffa'
         ? `<b>OPERATORS:</b> You, ${BOT_NAMES.slice(0, 9).join(', ')}`
         : `<span style="color:var(--color-blue)">BLUE SQUAD:</span> You, ${BOT_NAMES.slice(0, 5).join(', ')}<br><span style="color:var(--color-red)">RED SQUAD:</span> ${BOT_NAMES.slice(5, 11).join(', ')}`;
     }
@@ -4642,6 +4761,14 @@
     });
 
     $('btn-join-public').onclick = () => joinOnlineRoom('public', 'join');
+    $('btn-private-bots').onclick = () => {
+      if (networked && networkRoomKind === 'private' && !networkHost) return;
+      privateRoomBotsEnabled = !privateRoomBotsEnabled;
+      if (networked && networkRoomKind === 'private') {
+        netSocket.emit('room:bots', privateRoomBotsEnabled);
+      }
+      buildLobbyUI();
+    };
     $('btn-create-room').onclick = () => joinOnlineRoom('private', 'create');
     $('btn-join-room').onclick = () => joinOnlineRoom('private', 'join', $('room-code-input').value);
     $('btn-leave-room').onclick = leaveOnlineRoom;
@@ -4657,6 +4784,9 @@
     });
 
     function startMatch() {
+      matchBotsEnabled = !networked || networkRoomKind !== 'private'
+        ? true
+        : networkHost ? privateRoomBotsEnabled : networkMatchConfig?.botsEnabled !== false;
       E.forEach(e => {
         scene.remove(e.m);
       });
@@ -4666,6 +4796,8 @@
       networkWorldInitialized = false;
       MISSILES.forEach(m => scene.remove(m.m));
       MISSILES.length = 0;
+      BULLETS.forEach(bullet => scene.remove(bullet.m));
+      BULLETS.length = 0;
       FX.forEach(f => scene.remove(f.m));
       FX.length = 0;
       if (FLAGS) FLAGS.forEach(f => scene.remove(f.m));
@@ -4702,19 +4834,21 @@
       addEntity('tank', mkTank(TC[0]), vehSpawns[2][0], vehSpawns[2][1], 420, 0, 0, 0);
       addEntity('sam', mkSAMTruck(TC[0]), vehSpawns[3][0], vehSpawns[3][1], 450, 0, 0, 0);
 
-      // Infantry squad bots
-      for (let i = 0; i < (isFFA ? 12 : 14); i++) {
-        const tm = isFFA ? 10 + i : (i < 7 ? 0 : 1);
-        const s = getSpawnPoint(tm);
-        const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm]), s[0], s[1], 65, tm);
-        bot.role = i % 2;
-        bot.nm = BOT_NAMES[i % BOT_NAMES.length];
+      if (matchBotsEnabled) {
+        // Infantry squad bots
+        for (let i = 0; i < (isFFA ? 12 : 14); i++) {
+          const tm = isFFA ? 10 + i : (i < 7 ? 0 : 1);
+          const s = getSpawnPoint(tm);
+          const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm]), s[0], s[1], 65, tm);
+          bot.role = i % 2;
+          bot.nm = BOT_NAMES[i % BOT_NAMES.length];
+        }
       }
 
       // Enemy / Red team vehicles
-      (isFFA
+      (matchBotsEnabled && isFFA
         ? [[20, 'heli', 0], [21, 'tank', 0], [22, 'sam', 0]]
-        : [[1, 'car', 0], [1, 'heli', 1], [1, 'tank', 2], [1, 'sam', 3]]
+        : matchBotsEnabled ? [[1, 'car', 0], [1, 'heli', 1], [1, 'tank', 2], [1, 'sam', 3]] : []
       ).forEach(([tm, vType, bayIdx], idx) => {
         const s = isFFA ? getSpawnPoint(tm) : bayPos(tm, bayIdx);
         const col = isFFA ? 0x64748b : TC[tm];
@@ -4741,7 +4875,7 @@
         });
         if (networkGameState) applyNetworkGameState(networkGameState);
         if (networkHost) {
-          networkMatchConfig = { mode: currentMode, difficulty: selectedDiff };
+          networkMatchConfig = { mode: currentMode, difficulty: selectedDiff, botsEnabled: matchBotsEnabled };
           netSocket.emit('match:start', networkMatchConfig);
         }
       }
@@ -4884,6 +5018,7 @@
           kind,
           action,
           roomCode,
+          botsEnabled: privateRoomBotsEnabled,
           name: operatorProfile.name.trim(),
           appearance: operatorProfile.appearance
         }, (error, result) => {
@@ -4900,6 +5035,7 @@
           networkTeam = result.player.team;
           networkMatchConfig = result.matchConfig;
           networkGameState = result.gameState;
+          if (result.roomKind === 'private') privateRoomBotsEnabled = result.botsEnabled !== false;
           networkRoster = new Map((result.players || []).map(player => [player.id, player]));
           setRoomChatCollapsed(supportsTouchControls);
           $('chat-panel').style.display = 'block';
@@ -5053,6 +5189,29 @@
           }
         }
       }
+      const incomingBullets = new Set((state.bullets || []).map(bullet => bullet.id));
+      (state.bullets || []).forEach(bullet => {
+        let current = BULLETS.find(candidate => candidate.id === bullet.id);
+        if (!current) {
+          current = spawnBullet(
+            new V3(bullet.x, bullet.y, bullet.z),
+            new V3(bullet.dx, bullet.dy, bullet.dz),
+            0, 1, 1, bullet.id, true, bullet.team
+          );
+        }
+        current.p.set(bullet.x, bullet.y, bullet.z);
+        current.velocity.set(bullet.dx, bullet.dy, bullet.dz);
+        current.life = bullet.life;
+        current.m.position.copy(current.p);
+      });
+      if (!networkHost) {
+        for (let index = BULLETS.length - 1; index >= 0; index--) {
+          if (BULLETS[index].remote && !incomingBullets.has(BULLETS[index].id)) {
+            scene.remove(BULLETS[index].m);
+            BULLETS.splice(index, 1);
+          }
+        }
+      }
     }
 
     function updateNetwork(dt) {
@@ -5086,6 +5245,12 @@
           yaw: entity.yaw, hp: entity.hp, dead: entity.dead, v: entity.v,
           team: entity.team, tm: entity.tm,
           boardingTime: entity.boardingBot?.boardTimer > 0 ? entity.boardingBot.boardTimer : 0
+        })),
+        bullets: BULLETS.filter(bullet => !bullet.remote).map(bullet => ({
+          id: bullet.id,
+          x: bullet.p.x, y: bullet.p.y, z: bullet.p.z,
+          dx: bullet.velocity.x, dy: bullet.velocity.y, dz: bullet.velocity.z,
+          life: bullet.life, team: bullet.team
         })),
         missiles: MISSILES.map(missile => ({
           id: missile.id, type: missile.type, x: missile.p.x, y: missile.p.y, z: missile.p.z,
@@ -5189,6 +5354,7 @@
       networkMatchConfig = config;
       currentMode = config.mode;
       selectedDiff = config.difficulty;
+      privateRoomBotsEnabled = config.botsEnabled !== false;
       if (inLobby) {
         startMatch();
         awaitGameplayInput();
@@ -5201,6 +5367,7 @@
       networkHost = true;
       networkMatchConfig = data.matchConfig;
       networkGameState = data.gameState;
+      privateRoomBotsEnabled = data.botsEnabled !== false;
       if (data.matchConfig && inLobby) {
         currentMode = data.matchConfig.mode;
         selectedDiff = data.matchConfig.difficulty;
@@ -5209,6 +5376,13 @@
       }
       if (data.gameState) applyNetworkGameState(data.gameState);
       $('room-status').textContent = 'ROOM HOST TRANSFERRED TO YOU.';
+      buildLobbyUI();
+    });
+    netSocket.on('room:settings', settings => {
+      if (!networkHost && networkRoomKind === 'private' && typeof settings.botsEnabled === 'boolean') {
+        privateRoomBotsEnabled = settings.botsEnabled;
+        buildLobbyUI();
+      }
     });
     netSocket.on('game:state', state => {
       networkGameState = state;
@@ -5784,6 +5958,8 @@
             const turnSpeed = k.type === 'sam' ? 5.2 : 3.8;
             k.d.lerp(missileTargetPoint(k.target).sub(k.p).normalize(), Math.min(1, turnSpeed * dt)).normalize();
           }
+          if (k.type === 'at') k.d.y -= (BULLET_GRAVITY / 72) * dt;
+          k.d.normalize();
           k.p.addScaledVector(k.d, (k.type === 'sam' ? 105 : k.type === 'aa' ? 95 : k.type === 'agm' ? 80 : 72) * dt);
           k.m.position.copy(k.p);
           k.m.lookAt(k.p.clone().add(k.d));
@@ -5799,6 +5975,7 @@
             MISSILES.splice(i, 1);
           }
         }
+        updateBullets(dt);
 
         // Supply Pickups
         const playerPos = P.veh ? P.veh.p : P.p;

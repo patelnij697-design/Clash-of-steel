@@ -66,9 +66,10 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /data-session="public"/);
   assert.match(html, /data-session="private"/);
   assert.match(html, /data-session="bots"/);
+  assert.match(html, /id="btn-private-bots"/);
   assert.match(html, /id="btn-join-public"/);
   assert.match(html, /id="mobile-controls"/);
-  assert.match(html, /v\.04/);
+  assert.match(html, /v\.05/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
@@ -117,7 +118,7 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
 
     const matchStart = once(guest, 'match:start');
     host.emit('match:start', { mode: 'tdm', difficulty: 1 });
-    assert.deepEqual(await matchStart, { mode: 'tdm', difficulty: 1 });
+    assert.deepEqual(await matchStart, { mode: 'tdm', difficulty: 1, botsEnabled: true });
 
     const roomChat = once(guest, 'chat:message');
     host.emit('chat:message', 'Ready to deploy');
@@ -153,12 +154,26 @@ test('private rooms use codes and reject unknown codes', async () => {
   const guest = await connectClient();
   const stranger = await connectClient();
   try {
-    const created = await join(host, { kind: 'private', action: 'create', name: 'Host' });
+    const created = await join(host, { kind: 'private', action: 'create', name: 'Host', botsEnabled: false });
     assert.match(created.roomCode, /^\d{6}$/);
+    assert.equal(created.botsEnabled, false);
     const joined = await join(guest, { kind: 'private', action: 'join', roomCode: created.roomCode });
     assert.equal(joined.roomCode, created.roomCode);
     assert.equal(joined.hostId, host.id);
     assert.equal(joined.players.length, 2);
+    assert.equal(joined.botsEnabled, false);
+
+    const botsEnabled = once(guest, 'room:settings');
+    host.emit('room:bots', true);
+    assert.deepEqual(await botsEnabled, { botsEnabled: true });
+
+    const botsDisabled = once(guest, 'room:settings');
+    host.emit('room:bots', false);
+    assert.deepEqual(await botsDisabled, { botsEnabled: false });
+
+    const matchStart = once(guest, 'match:start');
+    host.emit('match:start', { mode: 'tdm', difficulty: 2, botsEnabled: true });
+    assert.deepEqual(await matchStart, { mode: 'tdm', difficulty: 2, botsEnabled: false });
 
     const invalid = await join(stranger, { kind: 'private', action: 'join', roomCode: '000000' });
     assert.match(invalid.error, /not found/i);
