@@ -24,6 +24,10 @@
       --bg-glass: rgba(10, 16, 26, 0.82);
       --border-glass: rgba(255, 255, 255, 0.14);
     }
+    .btn-action:focus-visible, .btn-secondary:focus-visible, .tactical-card:focus-visible, .appearance-choice:focus-visible {
+      outline:2px solid #38bdf8;
+      outline-offset:3px;
+    }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -351,24 +355,26 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 24px;
+      padding: 24px 16px;
       overflow-y: auto;
+      overscroll-behavior: contain;
     }
     .modal-box {
       max-width: 900px;
       width: 100%;
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      border-radius: 10px;
-      padding: 32px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      background: linear-gradient(145deg, rgba(20, 32, 52, 0.97), rgba(8, 14, 24, 0.97));
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 16px;
+      padding: clamp(20px, 4vw, 36px);
+      margin: auto 0;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.72), inset 0 1px rgba(255,255,255,0.06);
       text-align: center;
     }
     .modal-title {
       font-family: var(--font-display);
-      font-size: 42px;
+      font-size: clamp(30px, 5vw, 44px);
       font-weight: 700;
       letter-spacing: 4px;
       color: var(--color-primary);
@@ -379,7 +385,7 @@
       color: #94a3b8;
       font-size: 13px;
       letter-spacing: 1px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .mode-grid {
@@ -388,24 +394,225 @@
       gap: 14px;
       margin: 20px 0;
     }
-    .tactical-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
+    .online-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 999px;
+      color: #a7f3d0;
+      font: 700 11px "JetBrains Mono", monospace;
+    }
+    .multiplayer-section {
+      margin: 18px 0 12px;
       padding: 16px;
+      border: 1px solid rgba(56,189,248,0.28);
+      border-radius: 12px;
+      background: linear-gradient(135deg,rgba(8,28,44,.82),rgba(8,14,24,.82));
+      box-shadow: inset 0 1px rgba(255,255,255,.04);
+    }
+    .multiplayer-heading {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:8px;
+      color:#e0f2fe;
+      font:700 13px "JetBrains Mono",monospace;
+      letter-spacing:1.2px;
+    }
+    #server-status {
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      color:#fbbf24;
+      font:600 10px "JetBrains Mono",monospace;
+      letter-spacing:.3px;
+      white-space:nowrap;
+    }
+    #server-status::before {
+      content:"";
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:currentColor;
+      box-shadow:0 0 9px currentColor;
+    }
+    #server-status.connected { color:#34d399; }
+    #server-status.unavailable { color:#fb7185; }
+    .multiplayer-section .mode-grid { margin:10px 0; }
+    .mode-grid[data-selector="session"] .tactical-card { min-height:96px; }
+    .operator-customizer {
+      display: grid;
+      grid-template-columns: minmax(190px, 0.8fr) minmax(260px, 1.2fr);
+      align-items: center;
+      gap: 18px;
+      margin: 18px auto 8px;
+      padding: 14px 16px;
+      max-width: 620px;
+      border: 1px solid rgba(148,163,184,0.18);
+      border-radius: 12px;
+      background: rgba(6,12,22,0.62);
+      text-align: left;
+    }
+    .operator-identity { display:flex; align-items:center; gap:12px; }
+    #operator-preview {
+      display:grid;
+      place-items:center;
+      width:48px;
+      height:48px;
+      flex:0 0 48px;
+      border:2px solid rgba(255,255,255,0.7);
+      border-radius:14px;
+      color:#07101d;
+      font:800 21px "Chakra Petch", sans-serif;
+      box-shadow:0 0 22px var(--operator-glow, rgba(56,189,248,0.3));
+    }
+    .operator-identity label {
+      display:block;
+      margin-bottom:5px;
+      color:#94a3b8;
+      font:700 9px "JetBrains Mono", monospace;
+      letter-spacing:1.6px;
+    }
+    .operator-identity input {
+      width:100%;
+      min-width:0;
+      padding:7px 8px;
+      border:1px solid rgba(148,163,184,0.24);
+      border-radius:5px;
+      outline:none;
+      background:rgba(15,23,42,0.9);
+      color:#fff;
+      font:600 13px "JetBrains Mono", monospace;
+    }
+    .operator-identity input:focus, .lobby-tools input:focus, #chat-input:focus {
+      border-color:#38bdf8;
+      box-shadow:0 0 0 3px rgba(56,189,248,0.13);
+    }
+    .appearance-label {
+      margin-bottom:7px;
+      color:#94a3b8;
+      font:700 9px "JetBrains Mono", monospace;
+      letter-spacing:1.5px;
+    }
+    .appearance-grid { display:flex; flex-wrap:wrap; gap:7px; }
+    .appearance-choice {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 8px;
+      border:1px solid rgba(148,163,184,0.22);
+      border-radius:999px;
+      background:rgba(15,23,42,0.75);
+      color:#cbd5e1;
+      cursor:pointer;
+      font:600 9px "JetBrains Mono", monospace;
+      transition:all .16s ease;
+    }
+    .appearance-choice:hover { border-color:rgba(255,255,255,.55); color:#fff; }
+    .appearance-choice.selected {
+      border-color:var(--swatch);
+      background:color-mix(in srgb, var(--swatch) 18%, #0f172a);
+      color:#fff;
+      box-shadow:0 0 12px color-mix(in srgb, var(--swatch) 30%, transparent);
+    }
+    .appearance-dot {
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:var(--swatch);
+      box-shadow:0 0 8px var(--swatch);
+    }
+    .online-counter::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .lobby-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .lobby-tools input {
+      min-width: 180px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background: rgba(15,23,42,0.9);
+      color: #fff;
+      font: 600 14px "JetBrains Mono", monospace;
+      text-transform: uppercase;
+    }
+    #room-status { min-height: 18px; color: #a7f3d0; font-size: 12px; }
+    #chat-panel {
+      position: fixed;
+      right: 16px;
+      bottom: 76px;
+      z-index: 25;
+      width: min(320px, calc(100vw - 32px));
+      padding: 10px;
+      border: 1px solid rgba(148,163,184,0.35);
+      border-radius: 8px;
+      background: rgba(10,16,27,0.92);
+      color: #e2e8f0;
+      pointer-events: auto;
+      display: none;
+    }
+    #chat-messages {
+      max-height: 150px;
+      overflow-y: auto;
+      font: 11px/1.5 "JetBrains Mono", monospace;
+      overflow-wrap: anywhere;
+    }
+    #chat-messages > div { padding:3px 4px; border-bottom:1px solid rgba(148,163,184,0.08); }
+    #chat-form { display: flex; gap: 6px; margin-top: 8px; }
+    #players-online {
+      top: 46px;
+      right: 16px;
+      z-index: 6;
+      padding: 6px 10px;
+      border: 1px solid rgba(16,185,129,0.35);
+      border-radius: 5px;
+      background: rgba(10,16,27,0.8);
+      color: #a7f3d0;
+      font: 700 10px "JetBrains Mono", monospace;
+    }
+    #chat-input {
+      flex: 1;
+      min-width: 0;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      background: #0f172a;
+      color: #fff;
+    }
+    .tactical-card {
+      background: linear-gradient(145deg, rgba(22, 35, 54, 0.8), rgba(12, 19, 32, 0.92));
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 11px;
+      padding: 17px;
       cursor: pointer;
       text-align: left;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .tactical-card:hover {
-      background: rgba(30, 41, 59, 0.8);
-      border-color: rgba(245, 158, 11, 0.5);
-      transform: translateY(-2px);
+      background: linear-gradient(145deg, rgba(30, 48, 73, 0.95), rgba(13, 23, 38, 0.98));
+      border-color: rgba(245, 158, 11, 0.62);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 26px rgba(0,0,0,0.24);
     }
     .tactical-card.selected {
-      background: rgba(245, 158, 11, 0.15);
-      border-color: var(--color-primary);
-      box-shadow: 0 0 16px var(--color-primary-glow);
+      background: linear-gradient(145deg, rgba(245, 158, 11, 0.18), rgba(15, 23, 42, 0.9));
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 1px rgba(251,191,36,0.2), 0 10px 24px rgba(245,158,11,0.1);
     }
     .tactical-card h4 {
       margin: 0 0 6px;
@@ -508,6 +715,119 @@
       gap: 16px;
     }
     #controls-dock b { color: #f1f5f9; }
+    @media (max-width: 620px) {
+      .menu-modal { align-items:flex-start; padding:10px 8px; }
+      .modal-box { margin:0; padding:18px 14px; }
+      .multiplayer-section { padding:12px 10px; }
+      .multiplayer-heading { align-items:flex-start; flex-direction:column; gap:7px; }
+      .operator-customizer { grid-template-columns:1fr; gap:12px; }
+      .mode-grid { grid-template-columns:1fr; gap:9px; margin:12px 0; }
+      .tactical-card { padding:13px; }
+      .online-counter { margin-top:8px; }
+      #players-online { top:42px; right:8px; font-size:9px; }
+      #chat-panel { right:8px; bottom:66px; width:min(300px, calc(100vw - 16px)); }
+    }
+    @media (pointer: coarse) {
+      body { touch-action:manipulation; }
+      .modal-box { max-height:calc(100vh - 16px); overflow-y:auto; overscroll-behavior:contain; }
+      @supports (height: 100dvh) { .modal-box { max-height:calc(100dvh - 16px); } }
+    }
+    #mobile-controls { display:none; }
+    #mobile-controls.active { display:block; }
+    #mobile-look-zone {
+      position:fixed;
+      z-index:8;
+      top:12%;
+      right:0;
+      width:44vw;
+      height:58vh;
+      touch-action:none;
+    }
+    #mobile-stick {
+      position:fixed;
+      z-index:12;
+      left:18px;
+      bottom:24px;
+      width:132px;
+      height:132px;
+      border:1px solid rgba(226,232,240,.42);
+      border-radius:50%;
+      background:rgba(8,18,30,.48);
+      box-shadow:inset 0 0 28px rgba(56,189,248,.12);
+      touch-action:none;
+    }
+    #mobile-stick::before, #mobile-stick::after {
+      content:"";
+      position:absolute;
+      background:rgba(226,232,240,.18);
+      pointer-events:none;
+    }
+    #mobile-stick::before { width:1px; height:100%; left:50%; top:0; }
+    #mobile-stick::after { height:1px; width:100%; top:50%; left:0; }
+    #mobile-stick-knob {
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:52px;
+      height:52px;
+      border:1px solid rgba(125,211,252,.8);
+      border-radius:50%;
+      background:rgba(14,165,233,.3);
+      box-shadow:0 0 18px rgba(56,189,248,.28);
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+    }
+    #mobile-action-pad {
+      position:fixed;
+      z-index:13;
+      right:14px;
+      bottom:20px;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(64px,78px));
+      gap:8px;
+      touch-action:none;
+    }
+    .mobile-action {
+      min-height:54px;
+      padding:6px;
+      border:1px solid rgba(148,163,184,.48);
+      border-radius:13px;
+      background:rgba(10,18,30,.82);
+      color:#e2e8f0;
+      font:700 9px "JetBrains Mono",monospace;
+      letter-spacing:.4px;
+      box-shadow:0 6px 16px rgba(0,0,0,.35);
+      touch-action:none;
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;
+    }
+    .mobile-action:active, .mobile-action.pressed {
+      border-color:#38bdf8;
+      background:rgba(14,116,144,.72);
+      color:#fff;
+    }
+    .mobile-action:disabled { opacity:.42; }
+    .mobile-action.primary { border-color:rgba(245,158,11,.72); color:#fbbf24; }
+    #mobile-pause {
+      position:fixed;
+      z-index:13;
+      top:12px;
+      right:12px;
+      min-width:64px;
+      padding:9px 12px;
+      border:1px solid rgba(148,163,184,.5);
+      border-radius:9px;
+      background:rgba(10,18,30,.82);
+      color:#fff;
+      font:700 10px "JetBrains Mono",monospace;
+      touch-action:manipulation;
+    }
+    @media (pointer:coarse) {
+      #controls-dock { display:none; }
+      #mobile-stick { width:120px; height:120px; bottom:18px; left:12px; }
+      #mobile-action-pad { right:10px; bottom:14px; grid-template-columns:repeat(2,68px); gap:6px; }
+      .mobile-action { min-height:48px; font-size:8px; }
+    }
   </style>
 </head>
 <body>
@@ -521,6 +841,7 @@
     <div class="score-badge score-red" id="score-red">0 RED</div>
     <div id="weather-badge" title="Click to cycle weather">☀ CLEAR</div>
   </div>
+  <div class="hud-layer" id="players-online">ROOM PLAYERS: <span id="room-player-count">0</span></div>
 
   <div class="hud-layer" id="radar-container">
     <canvas id="radar-canvas" width="140" height="140"></canvas>
@@ -569,7 +890,48 @@
       <h1 class="modal-title">CLASH OF STEEL</h1>
       <div class="modal-subtitle">TACTICAL BATTLEFIELD COMBAT SIMULATION · REAL CANNON.JS PHYSICS</div>
       <div id="match-result" style="font-family:var(--font-display);font-size:28px;font-weight:700;color:#f59e0b;min-height:36px;margin-bottom:12px"></div>
-
+      <div class="online-counter">REAL PLAYERS ONLINE: <span id="active-player-count">0</span></div>
+      <section class="multiplayer-section" aria-label="Multiplayer lobby">
+        <div class="multiplayer-heading">
+          <span>PLAY ONLINE</span>
+          <span id="server-status" role="status" aria-live="polite">CHECKING SERVER</span>
+        </div>
+        <div class="mode-grid" id="session-selector" data-selector="session">
+          <div class="tactical-card selected" data-session="public" role="button" tabindex="0">
+            <h4>PUBLIC + BOTS</h4>
+            <p>Join the public battlefield with real players; bots keep the fight active.</p>
+          </div>
+          <div class="tactical-card" data-session="private" role="button" tabindex="0">
+            <h4>PRIVATE ROOM + BOTS</h4>
+            <p>Create a room or join friends with a six-digit code.</p>
+          </div>
+          <div class="tactical-card" data-session="bots" role="button" tabindex="0">
+            <h4>BOTS ONLY</h4>
+            <p>Practice offline against tactical bot squads.</p>
+          </div>
+        </div>
+        <div class="lobby-tools" id="private-room-tools">
+          <input id="room-code-input" maxlength="6" placeholder="ROOM CODE" aria-label="Private room code">
+          <button class="btn-secondary" id="btn-join-public">JOIN PUBLIC LOBBY</button>
+          <button class="btn-secondary" id="btn-create-room">CREATE PRIVATE ROOM</button>
+          <button class="btn-secondary" id="btn-join-room">JOIN BY CODE</button>
+          <button class="btn-secondary" id="btn-leave-room" style="display:none;">LEAVE ROOM</button>
+        </div>
+        <div id="room-status" role="status" aria-live="polite">Connecting to multiplayer service…</div>
+      </section>
+      <section class="operator-customizer" aria-label="Operator customization">
+        <div class="operator-identity">
+          <div id="operator-preview" aria-hidden="true">C</div>
+          <div style="min-width:0;flex:1;">
+            <label for="player-name">OPERATOR CALLSIGN</label>
+            <input id="player-name" maxlength="20" placeholder="ENTER CALLSIGN" aria-label="Player callsign">
+          </div>
+        </div>
+        <div>
+          <div class="appearance-label">ARMOR FINISH</div>
+          <div class="appearance-grid" id="appearance-selector"></div>
+        </div>
+      </section>
       <div class="mode-grid" id="mode-selector"></div>
 
       <div style="margin: 18px 0; font-size:13px; color:#94a3b8;">
@@ -595,7 +957,7 @@
         1 / 2 or Q swaps soldier weapon slots · E enters or exits vehicles.<br>
         <b>M901 SAM Truck:</b> LMB radar-guided surface-to-air missiles · RMB twin 20mm CIWS vulcan.<br>
         <b>M1A2 Tank:</b> LMB 120mm Cannon (with anti-air lead FCS) · RMB Coaxial MG.<br>
-        <b>AH-64 Heli:</b> W/S pitch, A/D turn, Space/Shift climb/descend, LMB chain gun, F missiles.<br>
+        <b>AH-64 Heli:</b> W/S pitch, A/D turn, Space/Shift climb/descend, LMB chain gun, F guided missiles (air/ground lock).<br>
         <b>Air Reticles:</b> Dedicated high-tech flight and air-defense reticles for every vehicle!
       </p>
 
@@ -628,7 +990,32 @@
     </div>
   </div>
 
+  <div id="chat-panel">
+    <div style="font:700 11px 'JetBrains Mono',monospace;color:#38bdf8;margin-bottom:6px;">ROOM CHAT</div>
+    <div id="chat-messages" aria-live="polite"></div>
+    <form id="chat-form">
+      <input id="chat-input" maxlength="240" autocomplete="off" placeholder="Message room..." aria-label="Chat message">
+      <button class="btn-secondary" type="submit" style="margin:0;padding:7px 10px;">SEND</button>
+    </form>
+  </div>
+  <div id="mobile-controls" aria-label="Touch controls">
+    <div id="mobile-look-zone" aria-label="Drag to look"></div>
+    <div id="mobile-stick" aria-label="Movement joystick"><div id="mobile-stick-knob"></div></div>
+    <div id="mobile-action-pad">
+      <button class="mobile-action primary" data-hold="fire" aria-label="Fire weapon">FIRE</button>
+      <button class="mobile-action" data-hold="aim" aria-label="Aim or secondary fire">AIM</button>
+      <button class="mobile-action" data-tap="use" aria-label="Enter or exit vehicle">USE</button>
+      <button class="mobile-action" data-hold="jump" aria-label="Jump or climb">JUMP</button>
+      <button class="mobile-action" data-tap="reload" aria-label="Reload">RELOAD</button>
+      <button class="mobile-action" data-tap="missile" aria-label="Fire guided missile">MISSILE</button>
+      <button class="mobile-action" data-tap="swap" aria-label="Switch weapon slot">SWAP</button>
+      <button class="mobile-action" data-tap="loadout" aria-label="Open loadout">ARMORY</button>
+    </div>
+    <button id="mobile-pause" type="button">PAUSE</button>
+  </div>
+
   <!-- Cannon.js Real Physics Engine & Three.js from CDN -->
+  <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
@@ -1130,6 +1517,24 @@
       addObstacle(2, 5, 68, mats.concrete, b[0] + sign * 38, b[1]);
       addObstacle(68, 5, 2, mats.concrete, b[0], b[1] + sign * 38);
 
+      const gateOffset = -sign * 18;
+      const gateHalfWidth = 8;
+      const lowWallLength = 32 + gateOffset;
+      const highWallLength = 32 - gateOffset;
+      const innerX = b[0] - sign * 38;
+      const innerZ = b[1] - sign * 38;
+      if (lowWallLength > 0) {
+        addObstacle(2, 4.2, lowWallLength, mats.concrete, innerX, b[1] - 40 + lowWallLength / 2);
+        addObstacle(lowWallLength, 4.2, 2, mats.concrete, b[0] - 40 + lowWallLength / 2, innerZ);
+      }
+      if (highWallLength > 0) {
+        addObstacle(2, 4.2, highWallLength, mats.concrete, innerX, b[1] + gateOffset + gateHalfWidth + highWallLength / 2);
+        addObstacle(highWallLength, 4.2, 2, mats.concrete, b[0] + gateOffset + gateHalfWidth + highWallLength / 2, innerZ);
+      }
+      // Low HESCO-style firing positions reinforce the corners without closing the vehicle gates.
+      addObstacle(12, 1.4, 1.8, mats.camoTan, b[0] - sign * 27, b[1] + sign * 20, 0.7);
+      addObstacle(1.8, 1.4, 12, mats.camoTan, b[0] + sign * 20, b[1] - sign * 27, 0.7);
+
       mkWatchtower(b[0] - sign * 34, b[1] - sign * 34);
       mkWatchtower(b[0] + sign * 34, b[1] + sign * 34);
       mkContainer(b[0] - sign * 12, b[1] - sign * 24, 0, teamIdx);
@@ -1473,6 +1878,7 @@
         hp,
         mhp: hp,
         team,
+        nid: `entity-${E.reduce((count, entity) => count + (!entity.remote && !entity.playerProxy ? 1 : 0), 0)}`,
         yaw: 0,
         v: 0,
         t: rnd(0, 2),
@@ -1597,12 +2003,139 @@
        INPUT HANDLING
        ------------------------------------------------------------------------- */
     const K = {};
+    const mobileMissileButton = $('mobile-action-pad').querySelector('[data-tap="missile"]');
     let isLocked = false, lm = 0, rm = 0, lc = 0;
+    let mobileControlsActive = false;
+    const supportsTouchControls = (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches)
+      || navigator.maxTouchPoints > 0;
     let mouseDeltaX = 0, mouseDeltaY = 0;
     const scoped = () => rm && !P.veh && W[P.w].zoom > 1;
+    function enterGameplayControls() {
+      $('pause-modal').style.display = 'none';
+      if (supportsTouchControls) {
+        mobileControlsActive = true;
+        isLocked = true;
+        $('mobile-controls').classList.add('active');
+      } else {
+        canvas.requestPointerLock();
+      }
+    }
+    function awaitGameplayInput() {
+      if (supportsTouchControls) enterGameplayControls();
+      else $('pause-modal').style.display = 'flex';
+    }
+    function leaveGameplayControls() {
+      mobileControlsActive = false;
+      isLocked = false;
+      lm = rm = lc = 0;
+      Object.keys(K).forEach(key => { K[key] = 0; });
+      $('mobile-controls').classList.remove('active');
+      if (document.pointerLockElement) document.exitPointerLock();
+    }
+
+    function updateMobileStick(event) {
+      const bounds = $('mobile-stick').getBoundingClientRect();
+      const centerX = bounds.left + bounds.width / 2;
+      const centerY = bounds.top + bounds.height / 2;
+      const maxRadius = bounds.width * 0.34;
+      let dx = event.clientX - centerX, dy = event.clientY - centerY;
+      const distance = Math.hypot(dx, dy);
+      if (distance > maxRadius) {
+        dx *= maxRadius / distance;
+        dy *= maxRadius / distance;
+      }
+      $('mobile-stick-knob').style.transform = `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+      K.KeyA = dx < -12 ? 1 : 0;
+      K.KeyD = dx > 12 ? 1 : 0;
+      K.KeyW = dy < -12 ? 1 : 0;
+      K.KeyS = dy > 12 ? 1 : 0;
+    }
+    function clearMobileStick() {
+      K.KeyA = K.KeyD = K.KeyW = K.KeyS = 0;
+      $('mobile-stick-knob').style.transform = 'translate(-50%,-50%)';
+    }
+    const mobileStick = $('mobile-stick');
+    mobileStick.addEventListener('pointerdown', event => {
+      if (!mobileControlsActive) return;
+      event.preventDefault();
+      mobileStick.setPointerCapture(event.pointerId);
+      updateMobileStick(event);
+    });
+    mobileStick.addEventListener('pointermove', event => {
+      if (mobileControlsActive && mobileStick.hasPointerCapture(event.pointerId)) updateMobileStick(event);
+    });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
+      mobileStick.addEventListener(type, clearMobileStick);
+    });
+
+    let mobileLookPointer = null, mobileLookX = 0, mobileLookY = 0;
+    const mobileLookZone = $('mobile-look-zone');
+    mobileLookZone.addEventListener('pointerdown', event => {
+      if (!mobileControlsActive) return;
+      event.preventDefault();
+      mobileLookPointer = event.pointerId;
+      mobileLookX = event.clientX;
+      mobileLookY = event.clientY;
+      mobileLookZone.setPointerCapture(event.pointerId);
+    });
+    mobileLookZone.addEventListener('pointermove', event => {
+      if (!mobileControlsActive || mobileLookPointer !== event.pointerId) return;
+      const dx = event.clientX - mobileLookX, dy = event.clientY - mobileLookY;
+      mobileLookX = event.clientX;
+      mobileLookY = event.clientY;
+      if (P.veh) {
+        P.ay = P.veh.type === 'heli'
+          ? Math.max(-1.4, Math.min(1.4, P.ay - dx * 0.006))
+          : P.ay - dx * 0.006;
+        P.ap = Math.max(-0.55, Math.min(0.65, P.ap - dy * 0.006));
+      } else {
+        P.yaw -= dx * 0.006;
+        P.pit = Math.max(-1.5, Math.min(1.5, P.pit - dy * 0.006));
+      }
+    });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
+      mobileLookZone.addEventListener(type, () => { mobileLookPointer = null; });
+    });
+
+    $('mobile-action-pad').addEventListener('pointerdown', event => {
+      const button = event.target.closest('[data-hold], [data-tap]');
+      if (!button || !mobileControlsActive) return;
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      button.classList.add('pressed');
+      if (button.dataset.hold === 'fire') { lm = 1; lc = 1; }
+      if (button.dataset.hold === 'aim') rm = 1;
+      if (button.dataset.hold === 'jump') K.Space = 1;
+      if (button.dataset.tap === 'use') useVehicle();
+      if (button.dataset.tap === 'reload') reloadActiveWeapon();
+      if (button.dataset.tap === 'missile' && P.veh?.type === 'heli') fireHeliMissile();
+      if (button.dataset.tap === 'swap' && !P.veh) selectSlot(1 - P.sl);
+      if (button.dataset.tap === 'loadout') openLoadout();
+    });
+    const releaseMobileAction = event => {
+      const button = event.target.closest('[data-hold], [data-tap]');
+      if (!button) return;
+      button.classList.remove('pressed');
+      if (button.dataset.hold === 'fire') lm = 0;
+      if (button.dataset.hold === 'aim') rm = 0;
+      if (button.dataset.hold === 'jump') K.Space = 0;
+    };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
+      $('mobile-action-pad').addEventListener(type, releaseMobileAction);
+    });
+    $('mobile-pause').addEventListener('click', () => {
+      leaveGameplayControls();
+      $('pause-modal').style.display = 'flex';
+    });
 
     window.addEventListener('keydown', e => {
       K[e.code] = 1;
+      if (e.code === 'Enter' && networked && !inLobby && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        document.exitPointerLock();
+        $('chat-input').focus();
+        return;
+      }
       if (!isLocked) return;
       if (e.code === 'Tab') { e.preventDefault(); openLoadout(); }
       if (e.code === 'KeyE') useVehicle();
@@ -1641,13 +2174,12 @@
     });
 
     document.addEventListener('pointerlockchange', () => {
-      isLocked = document.pointerLockElement === canvas;
+      isLocked = mobileControlsActive || document.pointerLockElement === canvas;
       $('pause-modal').style.display = (!isLocked && !inLobby && $('loadout-modal').style.display !== 'flex') ? 'flex' : 'none';
       if (!isLocked) lm = rm = 0;
     });
 
-    $('btn-deploy').onclick = () => { startMatch(); canvas.requestPointerLock(); };
-    $('btn-resume').onclick = () => { canvas.requestPointerLock(); };
+    $('btn-resume').onclick = () => { enterGameplayControls(); };
     $('btn-quit-lobby').onclick = () => { quitToLobby(); };
 
     function selectSlot(idx) {
@@ -1749,8 +2281,19 @@
 
     function applyDamage(target, amount, attacker) {
       if (target.dead) return;
+      if (target.localPlayerProxy) {
+        hurtPlayer(amount, attacker);
+        return;
+      }
       target.hp -= amount;
       target.underFireTimer = 3.5;
+      if (target.remote && networkHost) {
+        netSocket.emit('player:damage', {
+          id: target.netId,
+          amount,
+          attacker: typeof attacker === 'object' ? attacker.nm : attacker === 1 ? 'Enemy fire' : 'Battlefield'
+        });
+      }
       if (target.hp <= 0) {
         target.dead = 1;
         target.m.visible = false;
@@ -1779,14 +2322,24 @@
     }
 
     const RC = new THREE.Raycaster();
-    function raycastBullet(origin, dir, damage) {
+    function raycastBullet(origin, dir, damage, attacker = 1) {
       RC.set(origin, dir);
       RC.far = 300;
-      const targets = E.filter(e => e.team && !e.dead && e.tm !== P.tm).map(e => e.m);
+      const shooterTeam = typeof attacker === 'object' ? attacker.tm : P.tm;
+      const targets = E.filter(e => e.team && !e.dead && e.tm !== shooterTeam).map(e => e.m);
       const hitObj = RC.intersectObjects(targets.concat(OM), true)[0];
       const endPt = hitObj ? hitObj.point : origin.clone().addScaledVector(dir, 180);
       drawTracer(origin.clone().addScaledVector(dir, 1.5).add(new V3(0, -0.2, 0)), endPt);
 
+      if (networked && !networkHost) {
+        netSocket.emit('combat:action', {
+          kind: 'shot',
+          x: origin.x, y: origin.y, z: origin.z,
+          dx: dir.x, dy: dir.y, dz: dir.z,
+          damage
+        });
+        return;
+      }
       if (!hitObj) return;
       spawnExplosion(hitObj.point, 0.4, 0xfef08a, 0.15);
       const ent = hitObj.object.userData.ent;
@@ -1794,19 +2347,33 @@
         hitMarkerPulse();
         const isHead = hitObj.object.userData.head;
         const mult = ent.type === 'inf' ? (isHead ? 2.5 : 1) : 0.18;
-        applyDamage(ent, damage * mult, 1);
+        applyDamage(ent, damage * mult, attacker);
       }
     }
 
     const MISSILES = [];
-    function launchMissile(type, origin, dir, target) {
+    function launchMissile(type, origin, dir, target, team = P.tm, attacker = 1, networkId = null, fromSnapshot = false) {
+      if (networked && !networkHost && !fromSnapshot) {
+        const actionId = `${networkPlayerId}:${++networkMissileSequence}`;
+        netSocket.emit('combat:action', {
+          kind: 'missile',
+          x: origin.x, y: origin.y, z: origin.z,
+          dx: dir.x, dy: dir.y, dz: dir.z,
+          missileType: type,
+          targetId: target ? target.nid : null,
+          actionId
+        });
+        return null;
+      }
       const col = type === 'sam' ? 0x10b981 : type === 'aa' ? 0xe2e8f0 : 0xf97316;
       const mMesh = box(type === 'sam' ? 0.42 : 0.35, type === 'sam' ? 0.42 : 0.35, type === 'sam' ? 2.4 : 1.8, new THREE.MeshLambertMaterial({ color: col }), origin.x, origin.y, origin.z);
-      MISSILES.push({ m: mMesh, p: origin.clone(), d: dir.clone(), type, target, life: 7 });
+      const id = networkId || `${networkPlayerId || 'local'}:${++networkMissileSequence}`;
+      MISSILES.push({ id, m: mMesh, p: origin.clone(), d: dir.clone(), type, target, team, attacker, life: 7 });
       playSnd(type === 'sam' ? 110 : 140, 0.45, 0.35, 'sawtooth', 30);
+      return MISSILES[MISSILES.length - 1];
     }
 
-    function detonateExplosion(pos, type) {
+    function detonateExplosion(pos, type, team = P.tm, attacker = 1) {
       playSnd(80, 0.8, 0.45, 'sawtooth', 20);
       spawnExplosion(pos, type === 'sam' ? 12 : 9, type === 'sam' ? 0x10b981 : 0xf97316, 0.8);
 
@@ -1825,29 +2392,34 @@
           }
         }
       });
-
       // Damage entities
       E.forEach(e => {
-        if (!e.team || e.dead || e.tm === P.tm) return;
+        if (!e.team || e.dead || e.tm === team) return;
         const dist = e.p.distanceTo(pos);
         if (dist < 14) {
           const baseDmg = type === 'sam' ? 360 : 280;
-          const dmg = (e.type === 'inf' ? 180 : baseDmg) * (1 - dist / 15) * (type === 'aa' && e.type !== 'heli' ? 0.3 : 1);
-          applyDamage(e, dmg, 1);
+          const dmg = (e.type === 'inf' ? 180 : baseDmg) * (1 - dist / 15) * (type === 'aa' && e.type !== 'heli' && e.displayType !== 'heli' ? 0.3 : 1);
+          applyDamage(e, dmg, attacker);
         }
       });
     }
 
-    function lockTarget(origin, dir, maxDist = 320, maxAngle = 0.35) {
+    function missileTargetPoint(target) {
+      const height = target.type === 'inf' || target.displayType === 'inf' ? 1.1
+        : target.type === 'heli' || target.displayType === 'heli' ? 1.5 : 1;
+      return target.p.clone().add(new V3(0, height, 0));
+    }
+
+    function lockTarget(origin, dir, maxDist = 320, maxAngle = 0.35, team = P.tm) {
       let best = null, bestAngle = maxAngle;
       E.forEach(e => {
-        if (!e.team || e.dead || e.tm === P.tm) return;
-        const v = e.p.clone().sub(origin);
+        if (!e.team || e.dead || e.tm === team) return;
+        const v = missileTargetPoint(e).sub(origin);
         const dist = v.length();
         if (dist > maxDist) return;
         const a = v.angleTo(dir);
         let effAngle = a;
-        if (e.type === 'heli') effAngle *= 0.6; // Higher priority for airborne helicopters!
+        if (e.type === 'heli' || e.displayType === 'heli') effAngle *= 0.6;
         if (effAngle < bestAngle) {
           bestAngle = effAngle;
           best = e;
@@ -1905,8 +2477,9 @@
 
       const o = getMuzzlePos(v);
       const f = getVehicleAimDir(v, o);
-      const lock = lockTarget(v.p, f);
-      launchMissile(lock ? 'aa' : 'at', o.addScaledVector(f, 4), f, lock);
+      const lock = lockTarget(o, f, 420, 0.48, v.tm);
+      const missileType = lock ? (lock.type === 'heli' || lock.displayType === 'heli' ? 'aa' : 'agm') : 'at';
+      launchMissile(missileType, o.addScaledVector(f, 4), f, lock);
     }
 
     /* -------------------------------------------------------------------------
@@ -1943,6 +2516,9 @@
       if (best) {
         P.veh = best;
         best.v = 0;
+        best.team = 1;
+        best.tm = P.tm;
+        best.driver = P;
         P.ay = 0;
         P.ap = best.type === 'heli' ? -0.1 : 0.05;
         const msg = best.type === 'tank' ? ' · [LMB] 120MM CANNON · [RMB] COAXIAL MG'
@@ -1959,6 +2535,9 @@
       P.p.set(v.p.x + 4.5, v.p.y + 0.5, v.p.z);
       P.vy = 0;
       P.yaw = v.yaw + Math.PI;
+      v.team = 0;
+      v.tm = 0;
+      v.driver = null;
       P.veh = null;
     }
 
@@ -2207,7 +2786,7 @@
     }
 
     function getMuzzlePos(v) {
-      return new V3(v.p.x, v.p.y + (v.type === 'tank' ? 2.6 : v.type === 'sam' ? 2.8 : v.type === 'car' ? 2.5 : -0.8), v.p.z);
+      return new V3(v.p.x, v.p.y + (v.type === 'tank' ? 2.6 : v.type === 'sam' ? 2.8 : v.type === 'car' ? 2.5 : v.type === 'heli' ? 0.4 : 0), v.p.z);
     }
     function getAimPoint() {
       const d = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -2219,6 +2798,10 @@
       return o.addScaledVector(d, t);
     }
     const getVehicleAimDir = (v, o) => getAimPoint().sub(o).normalize();
+    function getHeliTargetLock(v) {
+      const origin = getMuzzlePos(v);
+      return lockTarget(origin, getVehicleAimDir(v, origin), 420, 0.48, v.tm);
+    }
 
     function fireVehicleMG(v, dmg, spread) {
       playSnd(260, 0.08, 0.18, 'square');
@@ -2702,6 +3285,38 @@
         }
       });
 
+      E.forEach(entity => {
+        if (entity.dead || entity.localPlayerProxy || (!entity.remote && (entity.type !== 'inf' || !entity.nm))) return;
+        const name = entity.nm || 'OPERATOR';
+        const distance = camera.position.distanceTo(entity.p);
+        if (distance > 110) return;
+        projVec.set(entity.p.x, entity.p.y + (entity.displayType === 'heli' ? 4.8 : entity.remote && entity.displayType ? 3.2 : 2.35), entity.p.z);
+        projVec.project(camera);
+        if (projVec.z >= 1 || Math.abs(projVec.x) > 1.15 || Math.abs(projVec.y) > 1.15) return;
+
+        const x = (projVec.x + 1) * 0.5 * innerWidth;
+        const y = (1 - projVec.y) * 0.5 * innerHeight;
+        const scale = Math.max(0.72, Math.min(1, 64 / distance));
+        const color = entity.remote
+          ? getAppearance(entity.appearance).color
+          : entity.tm === P.tm ? '#7dd3fc' : '#fda4af';
+        const label = name.toUpperCase().slice(0, 20);
+        hwCtx.font = `700 ${Math.round(11 * scale)}px "JetBrains Mono", monospace`;
+        const labelWidth = Math.min(180 * scale, hwCtx.measureText(label).width + 18 * scale);
+        const boxHeight = 24 * scale;
+        hwCtx.fillStyle = 'rgba(5, 10, 18, 0.84)';
+        hwCtx.strokeStyle = color;
+        hwCtx.lineWidth = 1;
+        hwCtx.beginPath();
+        hwCtx.roundRect(x - labelWidth / 2, y - boxHeight / 2, labelWidth, boxHeight, 5 * scale);
+        hwCtx.fill();
+        hwCtx.stroke();
+        hwCtx.fillStyle = color;
+        hwCtx.textAlign = 'center';
+        hwCtx.textBaseline = 'middle';
+        hwCtx.fillText(label, x, y, labelWidth - 10 * scale);
+      });
+
       // Render Dedicated High-Tech Air Reticles for Current Vehicle
       if (P.veh && isLocked) {
         drawVehicleAirReticles(hwCtx, P.veh, innerWidth, innerHeight);
@@ -3043,11 +3658,72 @@
       ctf: { name: 'CAPTURE THE FLAG', desc: 'Infiltrate enemy base, secure the intelligence flag, and return home.', target: 3 }
     };
     const BOT_NAMES = ['Viper', 'Ghost', 'Rook', 'Anvil', 'Bishop', 'Cobra', 'Dagger', 'Falcon', 'Havoc', 'Grizzly', 'Echo', 'Titan'];
+    const PLAYER_APPEARANCES = [
+      { id: 'cobalt', name: 'COBALT', color: '#38bdf8' },
+      { id: 'crimson', name: 'CRIMSON', color: '#fb7185' },
+      { id: 'olive', name: 'OLIVE', color: '#a3e635' },
+      { id: 'sand', name: 'SAND', color: '#fbbf24' },
+      { id: 'violet', name: 'VIOLET', color: '#c084fc' },
+      { id: 'arctic', name: 'ARCTIC', color: '#e2e8f0' }
+    ];
+    const defaultOperatorName = `Operator-${Math.floor(1000 + Math.random() * 9000)}`;
+    let operatorProfile = { name: defaultOperatorName, appearance: 'cobalt' };
+    try {
+      const savedProfile = JSON.parse(localStorage.getItem('clash-of-steel-operator') || 'null');
+      if (savedProfile && typeof savedProfile.name === 'string') {
+        operatorProfile.name = savedProfile.name.slice(0, 20);
+      }
+      if (savedProfile && PLAYER_APPEARANCES.some(item => item.id === savedProfile.appearance)) {
+        operatorProfile.appearance = savedProfile.appearance;
+      }
+    } catch (error) {
+      console.warn('Saved operator customization could not be loaded.', error);
+    }
+
+    function saveOperatorProfile() {
+      try {
+        localStorage.setItem('clash-of-steel-operator', JSON.stringify(operatorProfile));
+      } catch (error) {
+        $('room-status').textContent = 'CUSTOMIZATION WILL LAST FOR THIS SESSION ONLY.';
+        console.warn('Operator customization could not be saved.', error);
+      }
+    }
+
+    function getAppearance(id) {
+      return PLAYER_APPEARANCES.find(item => item.id === id) || PLAYER_APPEARANCES[0];
+    }
 
     let currentMode = 'tdm';
     let matchEnded = 1, inLobby = 1;
     let scores = {};
     let FLAGS = null;
+    let sessionMode = 'public';
+    let networked = false, networkHost = false, networkRoomId = null, networkRoomKind = null, networkTeam = 0;
+    let networkMatchConfig = null, networkGameState = null, networkWorldInitialized = false;
+    let networkPlayerId = null, networkSendTimer = 0, networkSnapshotTimer = 0, networkMissileSequence = 0;
+    let profileUpdateTimer = 0;
+    let networkRoster = new Map();
+    const networkPickupRequests = new Map();
+    const remotePlayers = new Map();
+    const hasSocketClient = typeof io === 'function';
+    const netSocket = hasSocketClient ? io() : {
+      connected: false,
+      id: null,
+      timeout() { return this; },
+      on() { return this; },
+      emit(event, ...args) {
+        if (event === 'room:join') {
+          const acknowledge = args[args.length - 1];
+          if (typeof acknowledge === 'function') acknowledge({ error: 'Multiplayer is unavailable. Open the game from its Render Web Service URL.' });
+        }
+        return this;
+      }
+    };
+    if (!hasSocketClient) {
+      $('server-status').textContent = 'MULTIPLAYER UNAVAILABLE';
+      $('server-status').className = 'unavailable';
+      $('room-status').textContent = 'Open this game from its Render Web Service URL to use online rooms.';
+    }
 
     function getSpawnPoint(team) {
       if (currentMode === 'ffa' || team > 1) {
@@ -3058,6 +3734,33 @@
     }
 
     function buildLobbyUI() {
+      $('player-name').value = operatorProfile.name;
+      const appearance = getAppearance(operatorProfile.appearance);
+      $('operator-preview').textContent = operatorProfile.name.trim().charAt(0).toUpperCase() || 'C';
+      $('operator-preview').style.background = appearance.color;
+      $('operator-preview').style.setProperty('--operator-glow', `${appearance.color}55`);
+      $('appearance-selector').innerHTML = PLAYER_APPEARANCES.map(item => `
+        <button type="button" class="appearance-choice ${item.id === operatorProfile.appearance ? 'selected' : ''}" data-appearance="${item.id}" style="--swatch:${item.color}" aria-pressed="${item.id === operatorProfile.appearance}">
+          <span class="appearance-dot"></span>${item.name}
+        </button>
+      `).join('');
+      $('session-selector').innerHTML = [
+        ['public', 'PUBLIC + BOTS', 'Join the public battlefield with real players; bots keep the fight active.'],
+        ['private', 'PRIVATE ROOM + BOTS', 'Create or join a room with a six-digit code and play alongside bots.'],
+        ['bots', 'BOTS ONLY', 'Practice offline against the tactical bot squads.']
+      ].map(([key, title, description]) => `
+        <div class="tactical-card ${key === sessionMode ? 'selected' : ''}" data-session="${key}" role="button" tabindex="0" aria-pressed="${key === sessionMode}">
+          <h4>${title}</h4>
+          <p>${description}</p>
+        </div>
+      `).join('');
+      $('private-room-tools').style.display = sessionMode === 'bots' ? 'none' : 'flex';
+      $('room-code-input').style.display = sessionMode === 'private' ? 'block' : 'none';
+      $('btn-join-public').style.display = sessionMode === 'public' ? 'inline-block' : 'none';
+      $('btn-create-room').style.display = sessionMode === 'private' ? 'inline-block' : 'none';
+      $('btn-join-room').style.display = sessionMode === 'private' ? 'inline-block' : 'none';
+      $('btn-leave-room').style.display = networked ? 'inline-block' : 'none';
+
       $('mode-selector').innerHTML = Object.keys(MODES).map(k => `
         <div class="tactical-card ${k === currentMode ? 'selected' : ''}" data-mode="${k}">
           <h4>${MODES[k].name}</h4>
@@ -3075,6 +3778,18 @@
     }
 
     $('lobby-modal').onclick = e => {
+      const appearanceChoice = e.target.closest('[data-appearance]');
+      if (appearanceChoice) {
+        operatorProfile.appearance = appearanceChoice.dataset.appearance;
+        saveOperatorProfile();
+        if (networked) netSocket.emit('player:profile', operatorProfile);
+        buildLobbyUI();
+      }
+      const sessionCard = e.target.closest('[data-session]');
+      if (sessionCard) {
+        sessionMode = sessionCard.dataset.session;
+        buildLobbyUI();
+      }
       const modeCard = e.target.closest('[data-mode]');
       if (modeCard) {
         currentMode = modeCard.dataset.mode;
@@ -3086,6 +3801,27 @@
         buildLobbyUI();
       }
     };
+    $('lobby-modal').addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-session]')) {
+        e.preventDefault();
+        e.target.click();
+      }
+    });
+
+    $('btn-join-public').onclick = () => joinOnlineRoom('public', 'join');
+    $('btn-create-room').onclick = () => joinOnlineRoom('private', 'create');
+    $('btn-join-room').onclick = () => joinOnlineRoom('private', 'join', $('room-code-input').value);
+    $('btn-leave-room').onclick = leaveOnlineRoom;
+    $('btn-deploy').onclick = deployFromLobby;
+    $('player-name').addEventListener('input', () => {
+      operatorProfile.name = $('player-name').value.slice(0, 20);
+      $('operator-preview').textContent = operatorProfile.name.trim().charAt(0).toUpperCase() || 'C';
+      saveOperatorProfile();
+      if (networked) {
+        clearTimeout(profileUpdateTimer);
+        profileUpdateTimer = setTimeout(() => netSocket.emit('player:profile', operatorProfile), 250);
+      }
+    });
 
     function startMatch() {
       E.forEach(e => {
@@ -3093,6 +3829,9 @@
         if (e.physBody) world.remove(e.physBody);
       });
       E.length = 0;
+      remotePlayers.clear();
+      networkPickupRequests.clear();
+      networkWorldInitialized = false;
       MISSILES.forEach(m => scene.remove(m.m));
       MISSILES.length = 0;
       FX.forEach(f => scene.remove(f.m));
@@ -3106,7 +3845,7 @@
       P.sp = 0;
       P.hp = 100;
       P.veh = null;
-      P.tm = 0;
+      P.tm = networked ? networkTeam : 0;
       P.vy = 0;
       P.pit = 0;
       scores = {};
@@ -3118,13 +3857,13 @@
       spawnAllPickups();
 
       const isFFA = currentMode === 'ffa';
-      const pSpawn = getSpawnPoint(0);
+      const pSpawn = getSpawnPoint(P.tm);
       P.p.set(pSpawn[0], 0, pSpawn[1]);
-      P.yaw = isFFA ? 0 : -2.35;
+      P.yaw = isFFA ? 0 : P.tm ? 0.785 : -2.35;
 
       const vehSpawns = isFFA
         ? [[pSpawn[0] + 8, pSpawn[1] + 10], [pSpawn[0] - 14, pSpawn[1] + 12], [pSpawn[0] + 20, pSpawn[1] - 8], [pSpawn[0] - 8, pSpawn[1] - 16]]
-        : [0, 1, 2, 3].map(i => bayPos(0, i));
+        : [0, 1, 2, 3].map(i => bayPos(P.tm, i));
 
       addEntity('car', mkAPC(TC[0]), vehSpawns[0][0], vehSpawns[0][1], 550, 0, 0, 0);
       addEntity('heli', mkHeli(TC[0]), vehSpawns[1][0], vehSpawns[1][1], 280, 0, 0.5, 0);
@@ -3164,9 +3903,555 @@
         });
       }
 
+      if (networked) {
+        networkRoster.forEach(player => {
+          if (player.id !== networkPlayerId) upsertNetworkPlayer(player);
+        });
+        if (networkGameState) applyNetworkGameState(networkGameState);
+        if (networkHost) {
+          networkMatchConfig = { mode: currentMode, difficulty: selectedDiff };
+          netSocket.emit('match:start', networkMatchConfig);
+        }
+      }
+
       bannerMsg(MODES[currentMode].name + ' — DEPLOYED');
       updateHUD();
     }
+
+    function networkProxyMesh(type, team, appearanceId) {
+      const color = type === 'inf' ? Number.parseInt(getAppearance(appearanceId).color.slice(1), 16) : team ? TC[1] : TC[0];
+      if (type === 'heli') return mkHeli(color);
+      if (type === 'tank') return mkTank(color);
+      if (type === 'sam') return mkSAMTruck(color);
+      if (type === 'car') return mkAPC(color);
+      return mkInf(color);
+    }
+
+    function setNetworkProxyDisplay(entity, displayType, appearanceId = entity.appearance) {
+      if (entity.displayType === displayType && entity.renderAppearance === appearanceId) return;
+      scene.remove(entity.m);
+      const colorId = entity.localPlayerProxy ? operatorProfile.appearance : appearanceId;
+      entity.m = networkProxyMesh(displayType, entity.tm, colorId);
+      entity.m.traverse(object => { object.userData.ent = entity; });
+      if (entity.localPlayerProxy) {
+        entity.m.traverse(object => {
+          if (!object.material) return;
+          object.material = object.material.clone();
+          object.material.transparent = true;
+          object.material.opacity = 0;
+        });
+      }
+      scene.add(entity.m);
+      entity.displayType = displayType;
+      entity.renderAppearance = appearanceId;
+    }
+
+    function upsertNetworkPlayer(player) {
+      if (!player || !player.id) return null;
+      networkRoster.set(player.id, player);
+      const state = player.state || player;
+      let entity = remotePlayers.get(player.id);
+      if (!entity) {
+        entity = addEntity('inf', networkProxyMesh('inf', player.team, player.appearance), state.x || 0, state.z || 0, 100, player.team, state.y || 0);
+        entity.remote = true;
+        entity.playerProxy = player.id === networkPlayerId;
+        entity.localPlayerProxy = entity.playerProxy;
+        entity.netId = player.id;
+        entity.nid = `player:${player.id}`;
+        entity.nm = player.name;
+        remotePlayers.set(player.id, entity);
+      }
+      entity.nm = player.name || entity.nm;
+      entity.appearance = getAppearance(player.appearance).id;
+      entity.tm = player.team;
+      entity.team = 1;
+      entity.dead = Number.isFinite(state.health) && state.health <= 0 ? 1 : 0;
+      entity.m.visible = !entity.dead;
+      entity.p.set(state.x || 0, state.y || 0, state.z || 0);
+      entity.yaw = state.vehicle ? (state.vehicleYaw || 0) : (state.yaw || 0);
+      entity.hp = Number.isFinite(state.health) ? state.health : entity.hp;
+      const displayType = ['heli', 'tank', 'sam', 'car'].includes(state.vehicle) ? state.vehicle : 'inf';
+      setNetworkProxyDisplay(entity, displayType, entity.appearance);
+      entity.m.visible = !entity.dead && !state.vehicleId;
+      entity.m.position.copy(entity.p);
+      entity.m.rotation.y = entity.yaw;
+      return entity;
+    }
+
+    function ensureLocalNetworkPlayer() {
+      if (!networkPlayerId) return;
+      let entity = remotePlayers.get(networkPlayerId);
+      if (!entity) {
+        entity = addEntity('inf', networkProxyMesh('inf', P.tm, operatorProfile.appearance), P.p.x, P.p.z, 100, P.tm, P.p.y);
+        entity.remote = true;
+        entity.playerProxy = true;
+        entity.localPlayerProxy = true;
+        entity.netId = networkPlayerId;
+        entity.nid = `player:${networkPlayerId}`;
+        entity.nm = $('player-name').value.trim() || 'Operator';
+        entity.displayType = 'inf';
+        entity.m.traverse(object => {
+          if (!object.material) return;
+          object.material = object.material.clone();
+          object.material.transparent = true;
+          object.material.opacity = 0;
+        });
+        remotePlayers.set(networkPlayerId, entity);
+      }
+      entity.tm = P.tm;
+      entity.hp = P.veh ? P.veh.hp : P.hp;
+      entity.dead = entity.hp <= 0 ? 1 : 0;
+      entity.m.visible = !entity.dead;
+      entity.p.copy(P.veh ? P.veh.p : P.p);
+      entity.yaw = P.veh ? P.veh.yaw : P.yaw;
+      entity.appearance = operatorProfile.appearance;
+      setNetworkProxyDisplay(entity, P.veh ? P.veh.type : 'inf', operatorProfile.appearance);
+      entity.m.position.copy(entity.p);
+      entity.m.rotation.y = entity.yaw;
+      upsertNetworkPlayer({
+        id: networkPlayerId,
+        name: entity.nm,
+        team: P.tm,
+        state: {
+          x: entity.p.x, y: entity.p.y, z: entity.p.z,
+          yaw: P.yaw, vehicle: P.veh ? P.veh.type : null,
+          vehicleYaw: entity.yaw, health: entity.hp
+        }
+      });
+    }
+
+    function removeNetworkPlayer(id) {
+      const entity = remotePlayers.get(id);
+      if (!entity || entity.playerProxy) return;
+      E.forEach(candidate => {
+        if (candidate.driver === entity) {
+          candidate.driver = null;
+          candidate.team = 0;
+          candidate.tm = 0;
+        }
+      });
+      scene.remove(entity.m);
+      const index = E.indexOf(entity);
+      if (index >= 0) E.splice(index, 1);
+      remotePlayers.delete(id);
+      networkRoster.delete(id);
+    }
+
+    function joinOnlineRoom(kind, action, roomCode = '') {
+      if (!hasSocketClient) {
+        $('room-status').textContent = 'MULTIPLAYER SERVICE UNAVAILABLE. OPEN THE GAME FROM ITS RENDER WEB SERVICE URL.';
+        return Promise.resolve(null);
+      }
+      if (networked) {
+        $('room-status').textContent = 'Leave the current room before joining another.';
+        return Promise.resolve(null);
+      }
+      $('room-status').textContent = 'CONNECTING TO ROOM...';
+      return new Promise(resolve => {
+        netSocket.timeout(6000).emit('room:join', {
+          kind,
+          action,
+          roomCode,
+          name: operatorProfile.name.trim(),
+          appearance: operatorProfile.appearance
+        }, (error, result) => {
+          if (error || !result || result.error) {
+            $('room-status').textContent = result?.error || 'Could not connect to the room server. Check your connection and retry.';
+            resolve(null);
+            return;
+          }
+          networked = true;
+          networkPlayerId = netSocket.id;
+          networkHost = result.hostId === networkPlayerId;
+          networkRoomId = result.roomCode || 'public';
+          networkRoomKind = result.roomKind;
+          networkTeam = result.player.team;
+          networkMatchConfig = result.matchConfig;
+          networkGameState = result.gameState;
+          networkRoster = new Map((result.players || []).map(player => [player.id, player]));
+          $('chat-panel').style.display = 'block';
+          $('btn-leave-room').style.display = 'inline-block';
+          $('room-player-count').textContent = result.players.length;
+          $('room-status').textContent = `${result.roomKind === 'private' ? `PRIVATE ROOM ${result.roomCode}` : 'PUBLIC ROOM'} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${result.players.length} REAL PLAYERS`;
+          if (result.gameState) applyNetworkGameState(result.gameState);
+          if (result.matchConfig && !networkHost) {
+            currentMode = result.matchConfig.mode;
+            selectedDiff = result.matchConfig.difficulty;
+          }
+          resolve(result);
+        });
+      });
+    }
+
+    function leaveOnlineRoom() {
+      if (networked) netSocket.emit('room:leave');
+      if (!inLobby) quitToLobby();
+      networked = false;
+      networkHost = false;
+      networkRoomId = null;
+      networkRoomKind = null;
+      networkPlayerId = null;
+      networkMatchConfig = null;
+      networkGameState = null;
+      networkRoster.clear();
+      networkPickupRequests.clear();
+      remotePlayers.forEach(entity => scene.remove(entity.m));
+      remotePlayers.clear();
+      for (let index = E.length - 1; index >= 0; index--) {
+        if (E[index].remote) E.splice(index, 1);
+      }
+      $('chat-panel').style.display = 'none';
+      $('room-status').textContent = 'LEFT ROOM.';
+      $('btn-leave-room').style.display = 'none';
+    }
+
+    async function deployFromLobby() {
+      if (sessionMode === 'bots') {
+        if (networked) leaveOnlineRoom();
+        startMatch();
+        enterGameplayControls();
+        return;
+      }
+
+      if (!networked) {
+        if (sessionMode === 'private') {
+          $('room-status').textContent = 'CREATE A PRIVATE ROOM OR JOIN USING A ROOM CODE FIRST.';
+          return;
+        }
+        const joined = await joinOnlineRoom('public', 'join');
+        if (!joined) return;
+        $('room-status').textContent = 'PUBLIC ROOM JOINED. PRESS DEPLOY TO START THE MATCH.';
+        return;
+      }
+
+      if (networkRoomKind !== sessionMode) {
+        $('room-status').textContent = 'Leave the current room before changing lobby type.';
+        return;
+      }
+      if (networkHost) {
+        startMatch();
+        enterGameplayControls();
+      } else {
+        const config = networkMatchConfig;
+        if (!inLobby) {
+          enterGameplayControls();
+        } else if (config) {
+          currentMode = config.mode;
+          selectedDiff = config.difficulty;
+          startMatch();
+          enterGameplayControls();
+        } else {
+          $('room-status').textContent = 'WAITING FOR THE ROOM HOST TO DEPLOY.';
+        }
+      }
+    }
+
+    function applyNetworkGameState(state) {
+      if (!networked || !state) return;
+      (state.entities || []).forEach(item => {
+        const entity = E.find(candidate => candidate.nid === item.id);
+        if (!entity || entity.remote) return;
+        entity.p.set(item.x, item.y, item.z);
+        entity.yaw = item.yaw;
+        entity.hp = item.hp;
+        entity.dead = item.dead;
+        if (Number.isInteger(item.team)) entity.team = item.team;
+        if (Number.isInteger(item.tm)) entity.tm = item.tm;
+        entity.m.visible = !item.dead;
+        entity.v = item.v || 0;
+        if (entity.physBody) {
+          entity.physBody.position.set(item.x, item.y + 1.2, item.z);
+          entity.physBody.velocity.set(0, 0, 0);
+        }
+      });
+      if (state.scores) scores = state.scores;
+      if (Array.isArray(state.pickups)) {
+        if (!networkWorldInitialized) {
+          PK.forEach(pickup => scene.remove(pickup.m));
+          PK.length = 0;
+          state.pickups.forEach(pickup => mkPickup(pickup.type, pickup.x, pickup.z));
+          networkWorldInitialized = true;
+        }
+        state.pickups.forEach((item, index) => {
+          const pickup = PK[index];
+          if (!pickup) return;
+          pickup.on = item.on;
+          pickup.t = item.t;
+          pickup.m.visible = !!item.on;
+          if (!item.on) networkPickupRequests.delete(index);
+        });
+      }
+      if (FLAGS && Array.isArray(state.flags)) {
+        state.flags.forEach((item, index) => {
+          const flag = FLAGS[index];
+          if (!flag) return;
+          flag.p.set(item.x, item.y, item.z);
+          flag.m.position.copy(flag.p);
+          flag.carrier = item.carrierId === `player:${networkPlayerId}`
+            ? P
+            : E.find(entity => entity.nid === item.carrierId) || null;
+        });
+      }
+      networkRoster.forEach(player => {
+        if (player.id !== networkPlayerId) upsertNetworkPlayer(player);
+      });
+      const incomingMissiles = new Set((state.missiles || []).map(missile => missile.id));
+      (state.missiles || []).forEach(missile => {
+        let current = MISSILES.find(candidate => candidate.id === missile.id);
+        const target = E.find(entity => entity.nid === missile.targetId) || null;
+        if (!current) {
+          launchMissile(missile.type, new V3(missile.x, missile.y, missile.z), new V3(missile.dx, missile.dy, missile.dz), target, missile.team, 1, missile.id, true);
+          current = MISSILES.find(candidate => candidate.id === missile.id);
+        }
+        if (current) {
+          current.p.set(missile.x, missile.y, missile.z);
+          current.d.set(missile.dx, missile.dy, missile.dz);
+          current.life = missile.life;
+          current.target = target;
+          current.m.position.copy(current.p);
+          current.m.lookAt(current.p.clone().add(current.d));
+        }
+      });
+      if (!networkHost) {
+        for (let index = MISSILES.length - 1; index >= 0; index--) {
+          if (!incomingMissiles.has(MISSILES[index].id)) {
+            scene.remove(MISSILES[index].m);
+            MISSILES.splice(index, 1);
+          }
+        }
+      }
+    }
+
+    function updateNetwork(dt) {
+      if (!networked || !netSocket.connected) return;
+      networkSendTimer += dt;
+      if (networkSendTimer >= 0.05) {
+        networkSendTimer = 0;
+        const position = P.veh ? P.veh.p : P.p;
+        netSocket.emit('player:state', {
+          x: position.x, y: position.y, z: position.z,
+          yaw: P.yaw, pitch: P.pit,
+          health: P.veh ? P.veh.hp : P.hp,
+          shield: P.sh,
+          vehicle: P.veh ? P.veh.type : null,
+          vehicleId: P.veh ? P.veh.nid : null,
+          vehicleYaw: P.veh ? P.veh.yaw : 0,
+          maxHealth: P.veh ? P.veh.mhp : 100,
+          hasAmmo: W.some(weapon => weapon.a < weapon.mag),
+          boostActive: P.sp > 0
+        });
+        ensureLocalNetworkPlayer();
+      }
+      if (!networkHost) return;
+      networkSnapshotTimer += dt;
+      if (networkSnapshotTimer < 0.1) return;
+      networkSnapshotTimer = 0;
+      netSocket.emit('game:state', {
+        entities: E.filter(entity => !entity.remote).map(entity => ({
+          id: entity.nid,
+          x: entity.p.x, y: entity.p.y, z: entity.p.z,
+          yaw: entity.yaw, hp: entity.hp, dead: entity.dead, v: entity.v,
+          team: entity.team, tm: entity.tm
+        })),
+        missiles: MISSILES.map(missile => ({
+          id: missile.id, type: missile.type, x: missile.p.x, y: missile.p.y, z: missile.p.z,
+          dx: missile.d.x, dy: missile.d.y, dz: missile.d.z, life: missile.life,
+          team: missile.team, targetId: missile.target ? missile.target.nid : null
+        })),
+        pickups: PK.map(pickup => ({
+          type: pickup.type, x: pickup.p.x, z: pickup.p.z, on: pickup.on, t: pickup.t
+        })),
+        flags: FLAGS ? FLAGS.map(flag => ({
+          x: flag.p.x, y: flag.p.y, z: flag.p.z,
+          carrierId: flag.carrier === P ? `player:${networkPlayerId}` : flag.carrier?.nid || null
+        })) : null,
+        scores: { ...scores }
+      });
+    }
+
+    netSocket.on('presence', data => {
+      $('active-player-count').textContent = data.activePlayers;
+    });
+    netSocket.on('connect', () => {
+      $('server-status').textContent = 'MULTIPLAYER CONNECTED';
+      $('server-status').className = 'connected';
+      if (!networked) $('room-status').textContent = 'Server ready — choose a public lobby or create/join a private room.';
+    });
+    netSocket.on('connect_error', () => {
+      $('server-status').textContent = 'SERVER UNAVAILABLE';
+      $('server-status').className = 'unavailable';
+      if (!networked) $('room-status').textContent = 'Could not reach multiplayer. Check the Render Web Service deployment and refresh.';
+    });
+    netSocket.on('disconnect', () => {
+      $('server-status').textContent = 'RECONNECTING…';
+      $('server-status').className = 'unavailable';
+      if (!networked) return;
+      networked = false;
+      networkHost = false;
+      networkPlayerId = null;
+      networkRoomId = null;
+      networkRoomKind = null;
+      networkRoster.clear();
+      networkPickupRequests.clear();
+      if (!inLobby) quitToLobby();
+      $('chat-panel').style.display = 'none';
+      $('btn-leave-room').style.display = 'none';
+      $('room-status').textContent = 'Connection lost. Rejoin the room when the server reconnects.';
+    });
+    netSocket.on('room:presence', data => {
+      $('room-player-count').textContent = data.activePlayers;
+      if (networked) $('room-status').textContent = `${networkRoomKind === 'private' ? `PRIVATE ROOM ${networkRoomId}` : 'PUBLIC ROOM'} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${data.activePlayers} REAL PLAYERS`;
+    });
+    netSocket.on('player:joined', player => {
+      networkRoster.set(player.id, player);
+      if (!inLobby) upsertNetworkPlayer(player);
+    });
+    netSocket.on('player:state', state => {
+      const player = networkRoster.get(state.id) || { id: state.id, name: 'Operator', team: state.team || 1 };
+      const previousVehicleId = player.state && player.state.vehicleId;
+      player.state = state;
+      networkRoster.set(state.id, player);
+      if (!inLobby) {
+        const proxy = upsertNetworkPlayer(player);
+        if (networkHost) {
+          if (previousVehicleId && previousVehicleId !== state.vehicleId) {
+            const previousVehicle = E.find(entity => entity.nid === previousVehicleId);
+            if (previousVehicle && previousVehicle.driver === proxy) {
+              previousVehicle.driver = null;
+              previousVehicle.team = 0;
+              previousVehicle.tm = 0;
+            }
+          }
+          const vehicle = state.vehicleId && E.find(entity => entity.nid === state.vehicleId);
+          if (vehicle) {
+            if (vehicle.driver && vehicle.driver !== proxy) {
+              netSocket.emit('player:vehicle-denied', state.id);
+            } else {
+              vehicle.driver = proxy;
+              vehicle.team = 1;
+              vehicle.tm = player.team;
+              vehicle.p.set(state.x, state.y, state.z);
+              vehicle.yaw = state.vehicleYaw || 0;
+              vehicle.hp = state.health;
+            }
+          }
+        }
+      }
+    });
+    netSocket.on('player:profile', profile => {
+      const player = networkRoster.get(profile.id);
+      if (!player) return;
+      player.name = profile.name;
+      player.appearance = profile.appearance;
+      if (!inLobby) upsertNetworkPlayer(player);
+    });
+    netSocket.on('player:left', data => {
+      removeNetworkPlayer(data.id);
+      networkHost = data.hostId === networkPlayerId;
+    });
+    netSocket.on('match:start', config => {
+      if (networkHost) return;
+      networkMatchConfig = config;
+      currentMode = config.mode;
+      selectedDiff = config.difficulty;
+      if (inLobby) {
+        startMatch();
+        awaitGameplayInput();
+      }
+    });
+    netSocket.on('match:end', result => {
+      if (!networkHost && !inLobby) endMatch(result.winnerTeam);
+    });
+    netSocket.on('host:changed', data => {
+      networkHost = true;
+      networkMatchConfig = data.matchConfig;
+      networkGameState = data.gameState;
+      if (data.matchConfig && inLobby) {
+        currentMode = data.matchConfig.mode;
+        selectedDiff = data.matchConfig.difficulty;
+        startMatch();
+        awaitGameplayInput();
+      }
+      if (data.gameState) applyNetworkGameState(data.gameState);
+      $('room-status').textContent = 'ROOM HOST TRANSFERRED TO YOU.';
+    });
+    netSocket.on('game:state', state => {
+      networkGameState = state;
+      applyNetworkGameState(state);
+    });
+    netSocket.on('combat:action', action => {
+      if (!networkHost) return;
+      const attacker = remotePlayers.get(action.playerId);
+      if (!attacker) return;
+      const origin = new V3(action.x, action.y, action.z);
+      const direction = new V3(action.dx, action.dy, action.dz).normalize();
+      if (action.kind === 'shot') {
+        raycastBullet(origin, direction, action.damage, attacker);
+      } else {
+        const target = E.find(entity => entity.nid === action.targetId) || null;
+        launchMissile(action.missileType, origin, direction, target, attacker.tm, attacker, action.actionId);
+      }
+    });
+    netSocket.on('player:damage', damage => {
+      P.by = damage.attacker;
+      if (P.veh) applyDamage(P.veh, damage.amount, damage.attacker);
+      else P.hp -= damage.amount;
+    });
+    netSocket.on('player:vehicle-denied', () => {
+      if (P.veh) exitVehicle();
+      bannerMsg('VEHICLE ALREADY OCCUPIED');
+    });
+    netSocket.on('player:effect', effect => {
+      if (effect.type === 'med' && !P.veh) P.hp = Math.min(100, P.hp + 60);
+      else if (effect.type === 'shield' && !P.veh) P.sh = 50;
+      else if (effect.type === 'ammo' && !P.veh) W.forEach(weapon => { weapon.a = weapon.mag; weapon.rl = 0; });
+      else if (effect.type === 'repair' && P.veh) P.veh.hp = Math.min(P.veh.mhp, P.veh.hp + P.veh.mhp * 0.5);
+      else if (effect.type === 'boost' && !P.veh) P.sp = 10;
+    });
+    netSocket.on('world:pickup', request => {
+      if (!networkHost) return;
+      const pickup = PK[request.index];
+      const player = networkRoster.get(request.playerId);
+      const state = player && player.state;
+      if (!pickup || !pickup.on || !state || state.health <= 0
+        || state.y > 6 || Math.hypot(state.x - pickup.p.x, state.z - pickup.p.z) > (state.vehicle ? 4.5 : 2.5)) return;
+      const needsPickup = pickup.type === 'med' ? !state.vehicle && state.health < 100
+        : pickup.type === 'shield' ? !state.vehicle && state.shield < 50
+        : pickup.type === 'ammo' ? !state.vehicle && state.hasAmmo
+        : pickup.type === 'repair' ? !!state.vehicle && state.health < state.maxHealth
+        : pickup.type === 'boost' ? !state.vehicle && !state.boostActive : false;
+      if (!needsPickup) return;
+      pickup.on = 0;
+      pickup.t = 25;
+      pickup.m.visible = false;
+      netSocket.emit('player:effect', { id: request.playerId, type: pickup.type });
+      networkPickupRequests.delete(request.index);
+    });
+    netSocket.on('chat:message', message => {
+      const line = document.createElement('div');
+      line.textContent = `${message.name}: ${message.text}`;
+      $('chat-messages').appendChild(line);
+      $('chat-messages').scrollTop = $('chat-messages').scrollHeight;
+      while ($('chat-messages').children.length > 40) $('chat-messages').firstChild.remove();
+    });
+    $('chat-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const input = $('chat-input');
+      const message = input.value.trim();
+      if (networked && message) netSocket.emit('chat:message', message);
+      input.value = '';
+      input.blur();
+    });
+    let mobileMatchBeforeChat = false;
+    $('chat-input').addEventListener('focus', () => {
+      mobileMatchBeforeChat = supportsTouchControls && mobileControlsActive && !inLobby;
+      if (mobileMatchBeforeChat) leaveGameplayControls();
+    });
+    $('chat-input').addEventListener('blur', () => {
+      if (!mobileMatchBeforeChat) return;
+      mobileMatchBeforeChat = false;
+      if (!inLobby) enterGameplayControls();
+    });
 
     function onKill(victim, attacker) {
       if (!victim.team && victim.type !== 'pl') return;
@@ -3205,7 +4490,8 @@
     function endMatch(winnerTeam) {
       matchEnded = 1;
       inLobby = 1;
-      document.exitPointerLock();
+      leaveGameplayControls();
+      if (networked && networkHost) netSocket.emit('match:end', { winnerTeam });
       $('match-result').textContent = winnerTeam === P.tm ? 'VICTORY — MISSION ACCOMPLISHED' : 'DEFEAT — MISSION FAILED';
       $('match-result').style.color = winnerTeam === P.tm ? 'var(--color-primary)' : 'var(--color-red)';
       $('lobby-modal').style.display = 'flex';
@@ -3214,6 +4500,7 @@
     function quitToLobby() {
       matchEnded = 1;
       inLobby = 1;
+      leaveGameplayControls();
       $('pause-modal').style.display = 'none';
       $('match-result').textContent = '';
       $('lobby-modal').style.display = 'flex';
@@ -3302,7 +4589,7 @@
     function openLoadout() {
       loadoutOpenedFromLobby = inLobby;
       inLobby = 1;
-      document.exitPointerLock();
+      leaveGameplayControls();
       renderLoadoutUI();
       $('loadout-modal').style.display = 'flex';
     }
@@ -3311,7 +4598,7 @@
       if (!loadoutOpenedFromLobby) {
         inLobby = 0;
         if (!P.veh) P.w = L[P.sl];
-        canvas.requestPointerLock();
+        enterGameplayControls();
       }
     }
 
@@ -3400,6 +4687,7 @@
       const w = W[P.w];
       const v = P.veh;
       const isSc = scoped();
+      mobileMissileButton.disabled = !v || v.type !== 'heli';
 
       const s = teamId => scores[teamId] || 0;
       if (currentMode === 'ffa') {
@@ -3422,7 +4710,7 @@
         $('veh-hint').innerHTML = v.type === 'tank'
           ? `TANK ACTIVE · [LMB] CANNON · [RMB] COAXIAL MG · [R] RELOAD · [E] EXIT`
           : v.type === 'heli'
-          ? `HELI ACTIVE · [LMB] CHAIN GUN · [F] MISSILE · [E] EXIT`
+          ? `HELI ACTIVE · [LMB] CHAIN GUN · [F] GUIDED AIR/GROUND MISSILE · [E] EXIT`
           : `APC ACTIVE · [LMB] AUTOCANNON · [R] RELOAD · [E] EXIT`;
       } else {
         $('health-label').textContent = 'VITAL INTEGRITY';
@@ -3458,7 +4746,7 @@
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = v.mReloading > 0
             ? `[F] MISSILE POD RELOADING (${v.mReloading.toFixed(1)}s)`
-            : `[F] MISSILES: ${v.mAmmo} / ${v.mMag}`;
+            : `[F] GUIDED AIR/GROUND MISSILES: ${v.mAmmo} / ${v.mMag}`;
         } else {
           $('weapon-name').textContent = 'COMMAND APC';
           $('weapon-class').textContent = 'ARMORED CARRIER';
@@ -3483,7 +4771,7 @@
         } else if (v.type === 'tank') {
           dock.innerHTML = '<span><b>WASD</b> Drive & Pivot</span><span><b>Mouse</b> Aim Turret</span><span><b>LMB</b> 120mm Cannon</span><span><b>RMB</b> Coaxial MG</span><span><b>R</b> Reload MG</span><span><b>E</b> Exit</span>';
         } else if (v.type === 'heli') {
-          dock.innerHTML = '<span><b>W/S</b> Pitch & Fly</span><span><b>A/D</b> Turn</span><span><b>Space/Shift</b> Altitude</span><span><b>LMB</b> Chain Gun</span><span><b>F</b> Missile</span><span><b>R</b> Reload Gun</span><span><b>E</b> Exit</span>';
+          dock.innerHTML = '<span><b>W/S</b> Pitch & Fly</span><span><b>A/D</b> Turn</span><span><b>Space/Shift</b> Altitude</span><span><b>LMB</b> Chain Gun</span><span><b>F</b> Guided Air/Ground Missile</span><span><b>R</b> Reload Gun</span><span><b>E</b> Exit</span>';
         } else {
           dock.innerHTML = '<span><b>WASD</b> Drive & Steer</span><span><b>Mouse</b> Aim Autocannon</span><span><b>LMB</b> 25mm Autocannon</span><span><b>R</b> Reload</span><span><b>E</b> Exit</span>';
         }
@@ -3501,8 +4789,14 @@
 
       const vDir = v ? new V3(Math.sin(v.yaw), -0.08, Math.cos(v.yaw)) : new V3(0, 0, -1).applyQuaternion(camera.quaternion);
       const vOrigin = v ? v.p : camera.position;
-      const targetLock = ((v && (v.type === 'heli' || v.type === 'sam')) || (!v && w.m === 'aa')) ? lockTarget(vOrigin, vDir) : null;
-      $('lock-alert').textContent = targetLock ? '[ TACTICAL TARGET LOCKED ]' : '';
+      const targetLock = v && v.type === 'heli'
+        ? getHeliTargetLock(v)
+        : ((v && v.type === 'sam') || (!v && w.m === 'aa')) ? lockTarget(vOrigin, vDir) : null;
+      $('lock-alert').textContent = targetLock
+        ? v && v.type === 'heli'
+          ? `[ ${targetLock.type === 'heli' ? 'AIR' : 'GROUND'} TARGET LOCKED ]`
+          : '[ TACTICAL TARGET LOCKED ]'
+        : '';
 
       if (bannerTimeout > 0) {
         bannerTimeout -= 0.05;
@@ -3530,7 +4824,7 @@
       }
 
       if (isLocked) {
-        updateCTFFlags();
+        if (!networked || networkHost) updateCTFFlags();
 
         W.forEach(w => {
           if (w.cd > 0) w.cd -= dt;
@@ -3558,6 +4852,13 @@
             checkVehicleInactivity(e, dt);
           }
 
+          if (e.remote) {
+            if (e.playerProxy) ensureLocalNetworkPlayer();
+            e.m.position.copy(e.p);
+            e.m.rotation.y = e.yaw;
+            return;
+          }
+
           if (e.dead) {
             e.rs -= dt;
             if (e.rs <= 0) respawnEntity(e);
@@ -3565,7 +4866,7 @@
           }
 
           if (e.team) {
-            updateBotAI(e, dt);
+            if (!networked || networkHost) updateBotAI(e, dt);
           } else if (P.veh !== e && !e.driver) {
             e.v = 0;
             if (e.type === 'heli') e.p.y = Math.max(0.5, e.p.y - 8 * dt);
@@ -3594,15 +4895,15 @@
           }
         });
 
-        // Missiles
-        for (let i = MISSILES.length - 1; i >= 0; i--) {
+        // The room host simulates guided weapons; clients render host snapshots.
+        if (!networked || networkHost) for (let i = MISSILES.length - 1; i >= 0; i--) {
           const k = MISSILES[i];
           k.life -= dt;
-          if ((k.type === 'aa' || k.type === 'sam') && k.target && !k.target.dead) {
+          if ((k.type === 'aa' || k.type === 'agm' || k.type === 'sam') && k.target && !k.target.dead) {
             const turnSpeed = k.type === 'sam' ? 5.2 : 3.8;
-            k.d.lerp(k.target.p.clone().sub(k.p).normalize(), Math.min(1, turnSpeed * dt)).normalize();
+            k.d.lerp(missileTargetPoint(k.target).sub(k.p).normalize(), Math.min(1, turnSpeed * dt)).normalize();
           }
-          k.p.addScaledVector(k.d, (k.type === 'sam' ? 105 : k.type === 'aa' ? 95 : 72) * dt);
+          k.p.addScaledVector(k.d, (k.type === 'sam' ? 105 : k.type === 'aa' ? 95 : k.type === 'agm' ? 80 : 72) * dt);
           k.m.position.copy(k.p);
           k.m.lookAt(k.p.clone().add(k.d));
 
@@ -3610,9 +4911,9 @@
             k.life <= 0 ||
             k.p.y < 0.4 ||
             OB.some(o => Math.abs(k.p.x - o.x) < o.hw && Math.abs(k.p.z - o.z) < o.hd && k.p.y < o.h) ||
-            E.some(e => e.team && !e.dead && e.tm !== P.tm && e.p.distanceTo(k.p) < ((k.type === 'sam' || k.type === 'aa') ? 6.5 : (e.type === 'heli' ? 5.5 : 3.5)))
+            E.some(e => e.team && !e.dead && e.tm !== k.team && e.p.distanceTo(k.p) < ((k.type === 'sam' || k.type === 'aa' || k.type === 'agm') ? 6.5 : (e.type === 'heli' || e.displayType === 'heli' ? 5.5 : 3.5)))
           ) {
-            detonateExplosion(k.p, k.type);
+            detonateExplosion(k.p, k.type, k.team, k.attacker);
             scene.remove(k.m);
             MISSILES.splice(i, 1);
           }
@@ -3621,8 +4922,9 @@
         // Supply Pickups
         const playerPos = P.veh ? P.veh.p : P.p;
         if (P.sp > 0) P.sp -= dt;
-        PK.forEach(k => {
+        PK.forEach((k, pickupIndex) => {
           if (!k.on) {
+            if (networked && !networkHost) return;
             k.t -= dt;
             if (k.t <= 0) {
               k.on = 1;
@@ -3632,6 +4934,17 @@
           }
           k.m.rotation.y += dt * 2.2;
           k.m.children[0].position.y = 1.2 + Math.sin(now * 0.003) * 0.2;
+
+          if (networked && !networkHost) {
+            const inRange = P.hp > 0 && playerPos.y <= 6
+              && Math.hypot(playerPos.x - k.p.x, playerPos.z - k.p.z) <= (P.veh ? 4.5 : 2.5);
+            const lastRequest = networkPickupRequests.get(pickupIndex) || 0;
+            if (inRange && Date.now() - lastRequest > 1000) {
+              networkPickupRequests.set(pickupIndex, Date.now());
+              netSocket.emit('world:pickup', { index: pickupIndex });
+            }
+            return;
+          }
 
           if (P.hp <= 0 || playerPos.y > 6 || Math.hypot(playerPos.x - k.p.x, playerPos.z - k.p.z) > (P.veh ? 4.5 : 2.5)) return;
           let collected = 0;
@@ -3661,6 +4974,7 @@
           P.veh = null;
           bannerMsg('TACTICAL REDEPLOYMENT');
         }
+        updateNetwork(dt);
       }
 
       // Visual Effects (Explosions & Tracers)
