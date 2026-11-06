@@ -119,8 +119,8 @@ io.on('connection', socket => {
     const teamCounts = [...room.players.values()].reduce((counts, player) => {
       counts[player.team] = (counts[player.team] || 0) + 1;
       return counts;
-    }, {});
-    const team = kind === 'public' ? (teamCounts[0] || 0) <= (teamCounts[1] || 0) ? 0 : 1 : room.players.size % 2;
+    }, { 0: 0, 1: 0 });
+    const team = teamCounts[0] <= teamCounts[1] ? 0 : 1;
     const player = { id: socket.id, name: cleanName(request.name), team, appearance: cleanAppearance(request.appearance) };
     room.players.set(socket.id, player);
     activePlayers++;

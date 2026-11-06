@@ -901,7 +901,7 @@
       right:14px;
       bottom:20px;
       display:grid;
-      grid-template-columns:repeat(2,minmax(64px,78px));
+      grid-template-columns:repeat(3,minmax(56px,68px));
       gap:8px;
       touch-action:none;
     }
@@ -986,8 +986,8 @@
       #weapon-sec-info { font-size:8px; letter-spacing:0; }
       #weapon-slots { display:none; }
       #mobile-stick { width:108px; height:108px; bottom:calc(14px + env(safe-area-inset-bottom)); left:calc(10px + env(safe-area-inset-left)); }
-      #mobile-action-pad { right:calc(8px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom)); grid-template-columns:repeat(2,minmax(58px,68px)); gap:5px; }
-      .mobile-action { min-height:44px; padding:4px; font-size:8px; }
+      #mobile-action-pad { right:calc(8px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom)); grid-template-columns:repeat(3,minmax(56px,68px)); gap:5px; }
+      .mobile-action { min-height:48px; padding:4px; font-size:8px; }
       #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); min-width:56px; min-height:44px; padding:7px 8px; font-size:8px; }
       #chat-toggle { min-height:44px; }
       #weather-badge { min-height:36px; }
@@ -1000,8 +1000,8 @@
       #vitals-card { top:126px; }
       #weapon-card { top:126px; }
       #mobile-stick { width:96px; height:96px; }
-      #mobile-action-pad { grid-template-columns:repeat(2,minmax(56px,62px)); }
-      .mobile-action { min-height:44px; font-size:7px; }
+      #mobile-action-pad { grid-template-columns:repeat(3,minmax(0,1fr)); width:min(204px,58vw); }
+      .mobile-action { min-height:48px; font-size:7px; }
       #chat-panel { bottom:calc(265px + env(safe-area-inset-bottom)); width:min(260px,calc(100vw - 16px)); }
       #chat-messages { max-height:95px; }
     }
@@ -1339,7 +1339,7 @@
 
     // Material Library
     const mats = {
-      ground: new THREE.MeshLambertMaterial({ color: 0x4a6b3e }),
+      ground: new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: true }),
       asphalt: new THREE.MeshLambertMaterial({ color: 0x22262c }),
       concrete: new THREE.MeshLambertMaterial({ color: 0x6e7682 }),
       steelDark: new THREE.MeshLambertMaterial({ color: 0x1e242d }),
@@ -1567,7 +1567,26 @@
       world.addBody(body);
     }
 
-    const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200, 32, 32), mats.ground);
+    const groundGeometry = new THREE.PlaneGeometry(1200, 1200, 96, 96);
+    const groundPositions = groundGeometry.attributes.position;
+    const groundColors = [];
+    const grassColor = new THREE.Color(0x667b49);
+    const dryColor = new THREE.Color(0x98835b);
+    const stoneColor = new THREE.Color(0x777663);
+    const groundColor = new THREE.Color();
+    for (let i = 0; i < groundPositions.count; i++) {
+      const x = groundPositions.getX(i);
+      const z = groundPositions.getY(i);
+      const broadNoise = Math.sin(x * 0.016 + Math.sin(z * 0.011) * 1.8)
+        + Math.cos(z * 0.019 - x * 0.008) * 0.8;
+      const fineNoise = Math.sin((x + z) * 0.047) * Math.cos((x - z) * 0.039);
+      const grassBlend = THREE.MathUtils.clamp(0.52 + broadNoise * 0.22, 0, 1);
+      const rockyBlend = THREE.MathUtils.clamp((fineNoise - 0.25) * 0.42, 0, 0.22);
+      groundColor.copy(dryColor).lerp(grassColor, grassBlend).lerp(stoneColor, rockyBlend);
+      groundColors.push(groundColor.r, groundColor.g, groundColor.b);
+    }
+    groundGeometry.setAttribute('color', new THREE.Float32BufferAttribute(groundColors, 3));
+    const groundMesh = new THREE.Mesh(groundGeometry, mats.ground);
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
@@ -1617,6 +1636,23 @@
       const body = new CANNON.Body({ mass: 0 });
       body.addShape(new CANNON.Sphere(s * 0.85));
       body.position.set(x, s * 0.7, z);
+      world.addBody(body);
+    }
+
+    function mkTerrainMound(x, z, width, depth, height, color) {
+      const geometry = new THREE.SphereGeometry(1, 12, 8);
+      geometry.scale(width / 2, height / 2, depth / 2);
+      const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color }));
+      mesh.position.set(x, height / 2, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      OB.push({ x, z, hw: width / 2, hd: depth / 2, h: height });
+      OM.push(mesh);
+
+      const body = new CANNON.Body({ mass: 0 });
+      body.addShape(new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2)));
+      body.position.set(x, height / 2, z);
       world.addBody(body);
     }
 
@@ -1762,11 +1798,21 @@
       if (Math.hypot(tx, tz) < 25 || Math.hypot(tx + 215, tz + 215) < 55 || Math.hypot(tx - 215, tz - 215) < 55) continue;
       mkTree(tx, tz, rnd(0.8, 1.4));
     }
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 45; i++) {
       const rx = rnd(-260, 260), rz = rnd(-260, 260);
       if (Math.hypot(rx, rz) < 20 || Math.hypot(rx + 215, rz + 215) < 50 || Math.hypot(rx - 215, rz - 215) < 50) continue;
       mkRock(rx, rz, rnd(1.8, 4.5));
     }
+    [
+      [-150, -70, 22, 16, 3.5, 0x857a55],
+      [130, 20, 20, 18, 3.0, 0x6e7652],
+      [-60, 150, 24, 16, 4.0, 0x8c7953],
+      [100, -145, 22, 18, 3.2, 0x73745a],
+      [-190, 20, 18, 16, 2.8, 0x94815a],
+      [20, 190, 20, 16, 3.4, 0x77785b]
+    ].forEach(([x, z, width, depth, height, color]) => {
+      mkTerrainMound(x, z, width, depth, height, color);
+    });
     for (let i = 0; i < 20; i++) {
       const cx = rnd(-230, 230), cz = rnd(-230, 230);
       if (Math.hypot(cx, cz) < 24 || Math.hypot(cx + 215, cz + 215) < 60 || Math.hypot(cx - 215, cz - 215) < 60) continue;
@@ -4711,7 +4757,7 @@
       $('btn-leave-room').style.display = networked ? 'inline-block' : 'none';
 
       $('mode-selector').innerHTML = Object.keys(MODES).map(k => `
-        <div class="tactical-card ${k === currentMode ? 'selected' : ''}" data-mode="${k}">
+        <div class="tactical-card ${k === currentMode ? 'selected' : ''}" data-mode="${k}" role="button" tabindex="0" aria-pressed="${k === currentMode}">
           <h4>${MODES[k].name}</h4>
           <p>${MODES[k].desc}</p>
         </div>
@@ -4754,7 +4800,7 @@
       }
     };
     $('lobby-modal').addEventListener('keydown', e => {
-      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-session]')) {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-session], [data-mode]')) {
         e.preventDefault();
         e.target.click();
       }
@@ -4825,14 +4871,33 @@
       P.p.set(pSpawn[0], 0, pSpawn[1]);
       P.yaw = isFFA ? 0 : P.tm ? 0.785 : -2.35;
 
-      const vehSpawns = isFFA
-        ? [[pSpawn[0] + 8, pSpawn[1] + 10], [pSpawn[0] - 14, pSpawn[1] + 12], [pSpawn[0] + 20, pSpawn[1] - 8], [pSpawn[0] - 8, pSpawn[1] - 16]]
-        : [0, 1, 2, 3].map(i => bayPos(P.tm, i));
+      const spawnVehicleFleet = (team, spawns, color) => {
+        const vehicleTypes = [
+          ['car', 550, mkAPC],
+          ['heli', 280, mkHeli],
+          ['tank', 420, mkTank],
+          ['sam', 450, mkSAMTruck]
+        ];
+        vehicleTypes.forEach(([type, hp, makeMesh], index) => {
+          const [x, z] = spawns[index];
+          const entity = addEntity(type, makeMesh(color), x, z, hp, team, type === 'heli' ? 0.5 : 0, 0);
+          entity.heliSlot = index;
+        });
+      };
 
-      addEntity('car', mkAPC(TC[0]), vehSpawns[0][0], vehSpawns[0][1], 550, 0, 0, 0);
-      addEntity('heli', mkHeli(TC[0]), vehSpawns[1][0], vehSpawns[1][1], 280, 0, 0.5, 0);
-      addEntity('tank', mkTank(TC[0]), vehSpawns[2][0], vehSpawns[2][1], 420, 0, 0, 0);
-      addEntity('sam', mkSAMTruck(TC[0]), vehSpawns[3][0], vehSpawns[3][1], 450, 0, 0, 0);
+      if (isFFA) {
+        const vehicleSpawns = [
+          [pSpawn[0] + 8, pSpawn[1] + 10],
+          [pSpawn[0] - 14, pSpawn[1] + 12],
+          [pSpawn[0] + 20, pSpawn[1] - 8],
+          [pSpawn[0] - 8, pSpawn[1] - 16]
+        ];
+        spawnVehicleFleet(P.tm, vehicleSpawns, TC[0]);
+      } else {
+        [0, 1].forEach(team => {
+          spawnVehicleFleet(team, [0, 1, 2, 3].map(index => bayPos(team, index)), TC[team]);
+        });
+      }
 
       if (matchBotsEnabled) {
         // Infantry squad bots
@@ -4845,18 +4910,15 @@
         }
       }
 
-      // Enemy / Red team vehicles
-      (matchBotsEnabled && isFFA
-        ? [[20, 'heli', 0], [21, 'tank', 0], [22, 'sam', 0]]
-        : matchBotsEnabled ? [[1, 'car', 0], [1, 'heli', 1], [1, 'tank', 2], [1, 'sam', 3]] : []
-      ).forEach(([tm, vType, bayIdx], idx) => {
-        const s = isFFA ? getSpawnPoint(tm) : bayPos(tm, bayIdx);
-        const col = isFFA ? 0x64748b : TC[tm];
-        const vMesh = vType === 'heli' ? mkHeli(col) : vType === 'tank' ? mkTank(col) : vType === 'sam' ? mkSAMTruck(col) : mkAPC(col);
-        const hp = vType === 'tank' ? 320 : vType === 'sam' ? 380 : vType === 'heli' ? 180 : 380;
-        const e = addEntity(vType, vMesh, s[0], s[1], hp, tm, vType === 'heli' ? 0.5 : 0, 0);
-        e.heliSlot = idx;
-      });
+      if (matchBotsEnabled && isFFA) {
+        [['heli', 180], ['tank', 320], ['sam', 380]].forEach(([type, hp], index) => {
+          const team = 20 + index;
+          const [x, z] = getSpawnPoint(team);
+          const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : mkSAMTruck;
+          const entity = addEntity(type, makeMesh(0x64748b), x, z, hp, team, type === 'heli' ? 0.5 : 0, 0);
+          entity.heliSlot = index;
+        });
+      }
 
       if (currentMode === 'ctf') {
         FLAGS = [0, 1].map(t => {

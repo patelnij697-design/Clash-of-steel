@@ -106,9 +106,11 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
     const hostRoom = await join(host, { kind: 'public', name: 'Host' });
     assert.equal(hostRoom.player.id, host.id);
     assert.equal(hostRoom.hostId, host.id);
+    assert.equal(hostRoom.player.team, 0);
 
     const guestRoom = await join(guest, { kind: 'public', name: '<Guest>' });
     assert.equal(guestRoom.hostId, host.id);
+    assert.equal(guestRoom.player.team, 1);
     assert.equal(guestRoom.players.length, 2);
     assert.equal(guestRoom.activePlayers, 2);
 
@@ -177,6 +179,10 @@ test('private rooms use codes and reject unknown codes', async () => {
 
     const invalid = await join(stranger, { kind: 'private', action: 'join', roomCode: '000000' });
     assert.match(invalid.error, /not found/i);
+
+    host.disconnect();
+    const rebalanced = await join(stranger, { kind: 'private', action: 'join', roomCode: created.roomCode });
+    assert.equal(rebalanced.player.team, 0);
   } finally {
     host.disconnect();
     guest.disconnect();
