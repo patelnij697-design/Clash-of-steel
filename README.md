@@ -1,6 +1,6 @@
 # Clash-of-steel
 
-Version 1.00.00 opens with an animated Apache-versus-tank intro, and infantry bots can now board helicopters as well as ground vehicles. The game also includes a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. Settings, profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
+Version 1.1.0 features a cinematic Apache-versus-tank intro, with infantry bots that can board helicopters as well as ground vehicles. The game also includes a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. Settings, profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
 
 ## Run locally
 

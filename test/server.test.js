@@ -72,6 +72,12 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="main-menu-modal"/);
   assert.match(html, /id="loading-screen"/);
   assert.match(html, /id="skip-loading"/);
+  assert.match(html, /MISSION 01 · OPERATION STEEL RAIN/);
+  assert.match(html, /class="loading-progress"/);
+  assert.match(html, /#vitals-card,\s*#weapon-card\s*\{\s*top:auto;\s*bottom:calc\(16px \+ env\(safe-area-inset-bottom\)\);/);
+  assert.match(html, /"slide jump fire"\s+"reload aim fire"\s+"swap use missile"\s+"loadout descend \."/);
+  assert.match(html, /data-mobile-action="fire"\]\s*\{\s*grid-area:fire;[\s\S]*?border-radius:50%/);
+  assert.match(html, /#mobile-stick \{[^}]*bottom:calc\(112px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /function updateLoadingIntro/);
   assert.match(html, /const introApache = mkHeli/);
   assert.match(html, /const introTank = mkTank/);
@@ -93,13 +99,13 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="active-player-count">—/);
   assert.match(html, /veh\.type === 'car' \|\| veh\.type === 'heli' \|\| veh\.type === 'tank' \|\| veh\.type === 'sam'/);
   assert.match(html, /currentMode === 'ffa' \|\| veh\.tm === e\.tm/);
-  assert.match(html, /VERSION 1\.00\.00/);
-  assert.match(html, /Game version 1\.00\.00/);
+  assert.match(html, /VERSION 1\.1\.0/);
+  assert.match(html, /Game version 1\.1\.0/);
   assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(packageInfo.version, '1.0.0');
+  assert.equal(packageInfo.version, '1.1.0');
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
   assert.equal(sourcePath.status, 200);

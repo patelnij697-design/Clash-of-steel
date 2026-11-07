@@ -918,14 +918,64 @@
       z-index:30;
       display:flex;
       align-items:flex-end;
-      justify-content:center;
+      justify-content:flex-start;
       padding:24px;
-      background:radial-gradient(ellipse at 68% 48%,rgba(7,12,18,.04),rgba(4,8,13,.44) 75%);
+      overflow:hidden;
+      background:
+        radial-gradient(ellipse at 68% 48%,rgba(7,12,18,.02),rgba(4,8,13,.42) 75%),
+        linear-gradient(110deg,rgba(3,7,12,.32),transparent 72%);
       transition:opacity .7s ease;
       pointer-events:none;
     }
+    #loading-screen::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(to bottom,#03070be8 0,#03070be8 6vh,transparent 11vh,transparent 89vh,#03070be8 94vh,#03070be8 100%);
+      box-shadow:inset 0 0 140px rgba(0,0,0,.72);
+    }
+    #loading-screen::after {
+      content:"";
+      position:absolute;
+      inset:clamp(18px,3vw,42px);
+      border:1px solid rgba(226,232,240,.12);
+      border-top-color:transparent;
+      border-bottom-color:transparent;
+      pointer-events:none;
+    }
+    .loading-copy {
+      position:relative;
+      z-index:1;
+      width:min(620px,calc(100vw - 48px));
+      margin:0 0 clamp(58px,12vh,118px) clamp(18px,5vw,72px);
+      padding-left:18px;
+      border-left:2px solid rgba(245,158,11,.72);
+      animation:loading-copy-in .9s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .loading-kicker {
+      display:flex;
+      align-items:center;
+      gap:9px;
+      margin-bottom:10px;
+      color:#fbbf24;
+      font:700 10px var(--font-mono);
+      letter-spacing:2.2px;
+      text-shadow:0 2px 12px #000;
+    }
+    .loading-kicker::before {
+      content:"";
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:#f43f5e;
+      box-shadow:0 0 12px rgba(244,63,94,.85);
+      animation:loading-beacon 1.2s ease-in-out infinite;
+    }
     #loading-screen button {
       position:absolute;
+      z-index:2;
       right:clamp(16px,4vw,48px);
       bottom:clamp(16px,4vh,36px);
       padding:9px 13px;
@@ -940,14 +990,48 @@
     }
     #loading-screen button:hover { color:#fff; border-color:#f59e0b; }
     #loading-caption {
-      margin-bottom:clamp(18px,4vh,42px);
+      margin:0;
+      color:#f8fafc;
+      font:700 clamp(32px,6.4vw,76px)/.9 var(--font-display);
+      letter-spacing:clamp(1px,.5vw,5px);
+      text-shadow:0 4px 28px rgba(0,0,0,.8),0 0 32px rgba(245,158,11,.18);
+    }
+    .loading-subtitle {
+      margin-top:12px;
       color:#cbd5e1;
-      font:600 10px var(--font-mono);
-      letter-spacing:2px;
+      font:600 clamp(9px,1.15vw,12px) var(--font-mono);
+      letter-spacing:clamp(1px,.32vw,2.5px);
       text-shadow:0 2px 12px #000;
+    }
+    .loading-progress {
+      width:min(230px,55vw);
+      height:2px;
+      margin-top:20px;
+      overflow:hidden;
+      background:rgba(226,232,240,.2);
+    }
+    .loading-progress span {
+      display:block;
+      width:0;
+      height:100%;
+      background:linear-gradient(90deg,#f59e0b,#fde68a);
+      box-shadow:0 0 12px rgba(245,158,11,.75);
+      animation:loading-progress 7s linear forwards;
+    }
+    @keyframes loading-copy-in {
+      from { opacity:0; transform:translate3d(0,16px,0); }
+      to { opacity:1; transform:translate3d(0,0,0); }
+    }
+    @keyframes loading-beacon {
+      50% { opacity:.35; box-shadow:0 0 3px rgba(244,63,94,.4); }
+    }
+    @keyframes loading-progress {
+      to { width:100%; }
     }
     @media (prefers-reduced-motion: reduce) {
       #loading-screen { transition:none; }
+      .loading-copy, .loading-kicker::before, .loading-progress span { animation:none; }
+      .loading-progress span { width:100%; }
     }
     .menu-home .modal-title { margin-top:4px; }
     .menu-home-actions {
@@ -1154,9 +1238,11 @@
       #radar-container { top:calc(48px + env(safe-area-inset-top)); left:8px; width:76px; height:76px; }
       #radar-canvas { width:76px; height:76px; }
       #players-online { top:calc(49px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); padding:5px 6px; font-size:8px; }
+      #vitals-card, #weapon-card {
+        top:auto;
+        bottom:calc(16px + env(safe-area-inset-bottom));
+      }
       #vitals-card {
-        top:132px;
-        bottom:auto;
         left:calc(8px + env(safe-area-inset-left));
         width:42vw;
         min-width:0;
@@ -1166,9 +1252,7 @@
       .bar-track { height:7px; margin-bottom:5px; }
       #veh-hint { font-size:8px; }
       #weapon-card {
-        top:132px;
         right:calc(8px + env(safe-area-inset-right));
-        bottom:auto;
         width:44vw;
         min-width:0;
         padding:7px 8px;
@@ -1179,10 +1263,52 @@
       #ammo-counter small { font-size:12px; }
       #weapon-sec-info { font-size:8px; letter-spacing:0; }
       #weapon-slots { display:none; }
-      #mobile-stick { width:clamp(120px,34vw,148px); height:clamp(120px,34vw,148px); bottom:calc(16px + env(safe-area-inset-bottom)); left:calc(12px + env(safe-area-inset-left)); }
+      #mobile-stick { width:clamp(120px,34vw,148px); height:clamp(120px,34vw,148px); bottom:calc(112px + env(safe-area-inset-bottom)); left:calc(12px + env(safe-area-inset-left)); }
       #mobile-stick-knob { width:58px; height:58px; }
-      #mobile-action-pad { right:calc(12px + env(safe-area-inset-right)); bottom:calc(12px + env(safe-area-inset-bottom)); grid-template-columns:repeat(3,minmax(60px,68px)); gap:6px; }
-      .mobile-action { min-height:60px; padding:8px; font-size:9px; border-radius:15px; }
+      #mobile-action-pad {
+        right:calc(12px + env(safe-area-inset-right));
+        bottom:calc(112px + env(safe-area-inset-bottom));
+        width:min(222px,58vw);
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        grid-template-rows:repeat(4,clamp(48px,13vw,56px));
+        grid-template-areas:
+          "slide jump fire"
+          "reload aim fire"
+          "swap use missile"
+          "loadout descend .";
+        gap:6px;
+      }
+      .mobile-action {
+        min-width:0;
+        min-height:48px;
+        padding:5px 3px;
+        font-size:clamp(8px,2.2vw,10px);
+        border-radius:13px;
+        line-height:1.15;
+      }
+      .mobile-action[data-mobile-action="fire"] {
+        grid-area:fire;
+        justify-self:center;
+        align-self:center;
+        width:clamp(72px,20vw,88px);
+        height:clamp(72px,20vw,88px);
+        min-height:0;
+        border:2px solid rgba(245,158,11,.9);
+        border-radius:50%;
+        background:radial-gradient(circle at 35% 30%,rgba(245,158,11,.3),rgba(10,18,30,.94) 72%);
+        box-shadow:0 0 0 5px rgba(245,158,11,.12),0 8px 22px rgba(0,0,0,.5),0 0 22px rgba(245,158,11,.24);
+        font-size:11px;
+        letter-spacing:1px;
+      }
+      .mobile-action[data-mobile-action="aim"] { grid-area:aim; }
+      .mobile-action[data-mobile-action="slide"] { grid-area:slide; }
+      .mobile-action[data-mobile-action="use"] { grid-area:use; }
+      .mobile-action[data-mobile-action="jump"] { grid-area:jump; }
+      .mobile-action[data-mobile-action="descend"] { grid-area:descend; }
+      .mobile-action[data-mobile-action="reload"] { grid-area:reload; }
+      .mobile-action[data-mobile-action="missile"] { grid-area:missile; }
+      .mobile-action[data-mobile-action="swap"] { grid-area:swap; }
+      .mobile-action[data-mobile-action="loadout"] { grid-area:loadout; }
       #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); min-width:56px; min-height:44px; padding:7px 8px; font-size:8px; }
       #chat-toggle { min-height:44px; }
       #weather-badge { min-height:36px; }
@@ -1190,34 +1316,42 @@
       #chat-messages { max-height:110px; }
     }
     @media (max-width:360px) and (orientation:portrait) {
-      #mobile-action-pad { grid-template-columns:repeat(2,minmax(60px,72px)); gap:8px; }
+      #mobile-action-pad { width:min(190px,60vw); grid-template-rows:repeat(4,44px); gap:4px; }
+      .mobile-action { min-height:44px; padding:4px 2px; font-size:8px; }
+      .mobile-action[data-mobile-action="fire"] { width:68px; height:68px; }
     }
     @media (pointer:coarse) and (orientation:landscape) and (max-height:520px) {
-      #mobile-stick { width:112px; height:112px; }
+      #mobile-stick { width:112px; height:112px; bottom:calc(76px + env(safe-area-inset-bottom)); }
       #mobile-stick-knob { width:50px; height:50px; }
-      #mobile-action-pad { grid-template-columns:repeat(5,minmax(54px,64px)); gap:6px; }
-      .mobile-action { min-height:48px; padding:5px; font-size:8px; }
+      #mobile-action-pad {
+        right:8px;
+        bottom:calc(76px + env(safe-area-inset-bottom));
+        width:min(196px,38vw);
+        grid-template-rows:repeat(4,42px);
+        gap:4px;
+      }
+      .mobile-action { min-height:42px; padding:4px 2px; font-size:8px; }
+      .mobile-action[data-mobile-action="fire"] { width:68px; height:68px; font-size:9px; }
     }
     @media (max-width:420px) {
       #top-hud { width:calc(100vw - 150px); }
       #weather-badge { display:none; }
-      #vitals-card { top:126px; }
-      #weapon-card { top:126px; }
       #mobile-stick { width:96px; height:96px; }
-      #mobile-action-pad { grid-template-columns:repeat(3,minmax(0,1fr)); width:min(204px,58vw); }
-      .mobile-action { min-height:48px; font-size:7px; }
+      #mobile-action-pad { grid-template-rows:repeat(4,clamp(44px,13vw,52px)); width:min(204px,58vw); }
+      .mobile-action { min-height:44px; font-size:clamp(8px,2.1vw,9px); }
+      .mobile-action[data-mobile-action="fire"] { width:clamp(68px,20vw,80px); height:clamp(68px,20vw,80px); }
       #chat-panel { bottom:calc(265px + env(safe-area-inset-bottom)); width:min(260px,calc(100vw - 16px)); }
       #chat-messages { max-height:95px; }
     }
     @media (max-width:900px) and (max-height:480px) {
       #radar-container, #players-online { display:none; }
-      #vitals-card, #weapon-card { top:52px; }
       #vitals-card { width:30vw; }
       #weapon-card { width:34vw; }
-      #mobile-stick { width:84px; height:84px; bottom:calc(8px + env(safe-area-inset-bottom)); left:8px; }
+      #mobile-stick { width:84px; height:84px; bottom:calc(76px + env(safe-area-inset-bottom)); left:8px; }
       #mobile-stick-knob { width:38px; height:38px; }
-      #mobile-action-pad { right:8px; bottom:calc(6px + env(safe-area-inset-bottom)); grid-template-columns:repeat(4,minmax(54px,64px)); gap:4px; }
-      .mobile-action { min-height:44px; font-size:7px; }
+      #mobile-action-pad { right:8px; bottom:calc(76px + env(safe-area-inset-bottom)); width:min(196px,48vw); grid-template-rows:repeat(4,42px); gap:4px; }
+      .mobile-action { min-height:42px; font-size:8px; }
+      .mobile-action[data-mobile-action="fire"] { width:68px; height:68px; }
       #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:8px; }
       #chat-panel { top:calc(48px + env(safe-area-inset-top)); bottom:auto; right:8px; width:min(230px, 38vw); }
       #chat-messages { max-height:80px; }
@@ -1229,7 +1363,12 @@
   <canvas id="hud-world-canvas"></canvas>
 
   <div id="loading-screen" role="status" aria-live="polite">
-    <div id="loading-caption">AH-64 APACHE · SUPPORTING FIRE</div>
+    <div class="loading-copy">
+      <div class="loading-kicker">MISSION 01 · OPERATION STEEL RAIN</div>
+      <h1 id="loading-caption">AH-64 APACHE</h1>
+      <div class="loading-subtitle">CLOSE AIR SUPPORT · HOSTILE ARMOR INBOUND</div>
+      <div class="loading-progress" aria-hidden="true"><span></span></div>
+    </div>
     <button type="button" id="skip-loading">SKIP INTRO</button>
   </div>
 
@@ -1288,7 +1427,7 @@
   <div class="menu-modal" id="main-menu-modal" style="display:none;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 1.00.00</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 1.1.0</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -1394,7 +1533,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 1.00.00">v1.00.00</div>
+    <div id="game-version" aria-label="Game version 1.1.0">v1.1.0</div>
   </div>
 
   <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
