@@ -1,13 +1,15 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer } from 'http';
 import { fileURLToPath } from 'url';
-import { randomInt } from 'crypto';
+import { randomInt, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { Server } from 'socket.io';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
+app.use(express.json());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   maxHttpBufferSize: 100_000,
@@ -22,7 +24,220 @@ const APPEARANCE_IDS = new Set(['cobalt', 'crimson', 'olive', 'sand', 'violet', 
 const rooms = new Map();
 let activePlayers = 0;
 
+/* -------------------------------------------------------------------------
+   PERSISTENT USER ACCOUNTS & LEADERBOARD STORAGE
+   ------------------------------------------------------------------------- */
+const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+const defaultLeaderboard = [
+  { username: 'Viper-Lead', kills: 342, deaths: 89, assists: 114, wins: 38, matches: 45, flagsCaptured: 24, combatScore: 47990, operatorLevel: 48, appearance: 'cobalt' },
+  { username: 'GhostOperator', kills: 289, deaths: 74, assists: 92, wins: 32, matches: 40, flagsCaptured: 19, combatScore: 40970, operatorLevel: 41, appearance: 'arctic' },
+  { username: 'Ironclad_99', kills: 231, deaths: 98, assists: 105, wins: 24, matches: 35, flagsCaptured: 15, combatScore: 35025, operatorLevel: 36, appearance: 'olive' },
+  { username: 'ReaperActual', kills: 184, deaths: 62, assists: 67, wins: 20, matches: 28, flagsCaptured: 12, combatScore: 27545, operatorLevel: 28, appearance: 'crimson' },
+  { username: 'ShadowStalker', kills: 146, deaths: 55, assists: 48, wins: 15, matches: 22, flagsCaptured: 8, combatScore: 21230, operatorLevel: 22, appearance: 'sand' }
+];
+
+const users = new Map();
+try {
+  if (fs.existsSync(USERS_FILE)) {
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    for (const [k, v] of Object.entries(parsed)) {
+      users.set(k.toLowerCase(), v);
+    }
+  }
+} catch (e) {
+  console.error('Error loading users.json:', e);
+}
+
+function saveUsers() {
+  try {
+    const obj = {};
+    for (const [k, v] of users.entries()) {
+      obj[k] = v;
+    }
+    fs.writeFileSync(USERS_FILE, JSON.stringify(obj, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Error saving users.json:', err);
+  }
+}
+
+if (users.size === 0) {
+  for (const bot of defaultLeaderboard) {
+    const salt = randomBytes(16).toString('hex');
+    const hash = scryptSync('operator_bot_pass', salt, 64).toString('hex');
+    users.set(bot.username.toLowerCase(), {
+      username: bot.username,
+      passwordHash: `${salt}:${hash}`,
+      createdAt: Date.now() - 86400000,
+      stats: {
+        kills: bot.kills,
+        deaths: bot.deaths,
+        assists: bot.assists,
+        wins: bot.wins,
+        matches: bot.matches,
+        flagsCaptured: bot.flagsCaptured,
+        combatScore: bot.combatScore,
+        operatorLevel: bot.operatorLevel,
+        appearance: bot.appearance
+      }
+    });
+  }
+  saveUsers();
+}
+
+const activeSessions = new Map();
+
+function hashPassword(password, salt = randomBytes(16).toString('hex')) {
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, storedHash) {
+  try {
+    const [salt, key] = storedHash.split(':');
+    if (!salt || !key) return false;
+    const hashedBuffer = scryptSync(password, salt, 64);
+    const keyBuffer = Buffer.from(key, 'hex');
+    return timingSafeEqual(hashedBuffer, keyBuffer);
+  } catch {
+    return false;
+  }
+}
+
+function getAuthUser(req) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.body?.token;
+  if (!token || !activeSessions.has(token)) return null;
+  const usernameKey = activeSessions.get(token);
+  return users.get(usernameKey) || null;
+}
+
+/* -------------------------------------------------------------------------
+   REST API ROUTES
+   ------------------------------------------------------------------------- */
 app.get('/healthz', (_req, res) => res.status(200).send('ok'));
+
+app.post('/api/auth/register', (req, res) => {
+  const username = (req.body?.username || '').trim();
+  const password = req.body?.password || '';
+  if (!username || username.length < 3 || username.length > 20 || !/^[\p{L}\p{N} _.-]+$/u.test(username)) {
+    return res.status(400).json({ error: 'Username must be 3-20 characters (letters, numbers, underscores).' });
+  }
+  if (!password || password.length < 4) {
+    return res.status(400).json({ error: 'Password must be at least 4 characters long.' });
+  }
+  const key = username.toLowerCase();
+  if (users.has(key)) {
+    return res.status(400).json({ error: 'Username is already taken. Please choose another.' });
+  }
+  const user = {
+    username,
+    passwordHash: hashPassword(password),
+    createdAt: Date.now(),
+    stats: {
+      kills: 0,
+      deaths: 0,
+      assists: 0,
+      wins: 0,
+      matches: 0,
+      flagsCaptured: 0,
+      combatScore: 0,
+      operatorLevel: 1,
+      appearance: 'cobalt'
+    }
+  };
+  users.set(key, user);
+  saveUsers();
+
+  const token = randomBytes(32).toString('hex');
+  activeSessions.set(token, key);
+  res.json({ ok: true, token, user: { username: user.username, stats: user.stats } });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const username = (req.body?.username || '').trim();
+  const password = req.body?.password || '';
+  const key = username.toLowerCase();
+  const user = users.get(key);
+  if (!user || !verifyPassword(password, user.passwordHash)) {
+    return res.status(401).json({ error: 'Invalid username or password.' });
+  }
+  const token = randomBytes(32).toString('hex');
+  activeSessions.set(token, key);
+  res.json({ ok: true, token, user: { username: user.username, stats: user.stats } });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated.' });
+  res.json({ ok: true, user: { username: user.username, stats: user.stats } });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.body?.token;
+  if (token) activeSessions.delete(token);
+  res.json({ ok: true });
+});
+
+app.post('/api/stats/sync', (req, res) => {
+  const user = getAuthUser(req);
+  if (!user) return res.status(401).json({ error: 'Not authenticated.' });
+  const { kills = 0, deaths = 0, assists = 0, wins = 0, matches = 0, flagsCaptured = 0, appearance } = req.body || {};
+  user.stats.kills = Math.max(user.stats.kills, Number(kills) || 0);
+  user.stats.deaths = Math.max(user.stats.deaths, Number(deaths) || 0);
+  user.stats.assists = Math.max(user.stats.assists, Number(assists) || 0);
+  user.stats.wins = Math.max(user.stats.wins, Number(wins) || 0);
+  user.stats.matches = Math.max(user.stats.matches, Number(matches) || 0);
+  user.stats.flagsCaptured = Math.max(user.stats.flagsCaptured, Number(flagsCaptured) || 0);
+  if (appearance && APPEARANCE_IDS.has(appearance)) {
+    user.stats.appearance = appearance;
+  }
+  user.stats.combatScore = (user.stats.kills * 100) + (user.stats.assists * 35) + (user.stats.wins * 250) + (user.stats.flagsCaptured * 150);
+  user.stats.operatorLevel = Math.max(1, Math.min(50, Math.floor(user.stats.combatScore / 1000) + 1));
+  saveUsers();
+  res.json({ ok: true, stats: user.stats });
+});
+
+app.get('/api/leaderboard', (_req, res) => {
+  const allUsers = [...users.values()].map(u => {
+    const kd = u.stats.deaths > 0 ? (u.stats.kills / u.stats.deaths).toFixed(2) : u.stats.kills.toFixed(2);
+    const winRate = u.stats.matches > 0 ? Math.round((u.stats.wins / u.stats.matches) * 100) : 0;
+    return {
+      username: u.username,
+      combatScore: u.stats.combatScore || 0,
+      operatorLevel: u.stats.operatorLevel || 1,
+      kills: u.stats.kills || 0,
+      deaths: u.stats.deaths || 0,
+      assists: u.stats.assists || 0,
+      wins: u.stats.wins || 0,
+      matches: u.stats.matches || 0,
+      flagsCaptured: u.stats.flagsCaptured || 0,
+      kd: Number(kd),
+      winRate,
+      appearance: u.stats.appearance || 'cobalt'
+    };
+  });
+  allUsers.sort((a, b) => b.combatScore - a.combatScore);
+  const ranked = allUsers.slice(0, 50).map((item, index) => ({ rank: index + 1, ...item }));
+  res.json({ ok: true, leaderboard: ranked });
+});
+
+app.post('/api/dev/verify', (req, res) => {
+  const password = String(req.body?.password || '').trim();
+  if (password === '816999') {
+    res.json({ ok: true, authorized: true });
+  } else {
+    res.status(403).json({ ok: false, error: 'Access Denied: Invalid Keycode' });
+  }
+});
+
 function sendApp(_req, res) {
   res.set('Cache-Control', 'no-store, max-age=0');
   res.sendFile(path.join(__dirname, 'index.html'));

@@ -322,33 +322,96 @@
       top: 56%;
       transform: translateX(-50%);
       font-family: var(--font-display);
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       letter-spacing: 2px;
-      color: #ef4444;
-      text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+      color: #f43f5e;
+      text-shadow: 0 0 12px rgba(244, 63, 94, 0.8);
+      background: rgba(10, 16, 26, 0.75);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      padding: 4px 16px;
+      border-radius: 4px;
+      backdrop-filter: blur(6px);
+      transition: all 0.15s ease-out;
+      pointer-events: none;
+    }
+    #lock-alert:empty {
+      display: none;
     }
 
-    /* CROSSHAIR & SCOPE */
+    /* CROSSHAIR & REALISTIC SCOPE */
     #crosshair {
       left: 50%;
       top: 50%;
-      width: 8px;
-      height: 8px;
-      margin: -4px;
-      border: 2px solid rgba(255, 255, 255, 0.75);
+      width: 10px;
+      height: 10px;
+      margin: -5px;
+      border: 2px solid rgba(255, 255, 255, 0.85);
       border-radius: 50%;
-      transition: transform 0.08s ease-out;
+      transition: transform 0.08s ease-out, opacity 0.12s ease-out;
+      pointer-events: none;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
     }
     #sniper-scope {
       inset: 0;
       display: none;
-      background:
-        radial-gradient(circle at center, transparent 28vmin, rgba(0, 0, 0, 0.98) 29vmin),
-        linear-gradient(to right, transparent calc(50% - 1px), #f43f5e calc(50% - 1px), #f43f5e calc(50% + 1px), transparent calc(50% + 1px)),
-        linear-gradient(to bottom, transparent calc(50% - 1px), #f43f5e calc(50% - 1px), #f43f5e calc(50% + 1px), transparent calc(50% + 1px));
       pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent min(35vmin, 320px), rgba(3, 7, 13, 0.96) min(36vmin, 335px), rgba(0, 0, 0, 0.99) min(45vmin, 420px));
+      box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9);
     }
+    .scope-housing {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .scope-lens {
+      position: relative;
+      width: min(72vmin, 680px);
+      height: min(72vmin, 680px);
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.22);
+      box-shadow:
+        inset 0 0 40px rgba(0, 0, 0, 0.85),
+        inset 0 0 15px rgba(56, 189, 248, 0.15),
+        0 0 0 2000px rgba(4, 7, 12, 0.97);
+      overflow: hidden;
+      background: radial-gradient(circle at 45% 45%, rgba(14, 34, 45, 0.25) 0%, rgba(4, 10, 16, 0.65) 100%);
+    }
+    .scope-reticle-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .scope-telemetry {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: rgba(244, 63, 94, 0.85);
+      text-shadow: 0 0 6px rgba(244, 63, 94, 0.6);
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .scope-compass {
+      position: absolute;
+      top: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-display);
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      color: #38bdf8;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+    }
+    .scope-stat-tl { position: absolute; top: 60px; left: 45px; }
+    .scope-stat-tr { position: absolute; top: 60px; right: 45px; text-align: right; }
+    .scope-stat-bl { position: absolute; bottom: 60px; left: 45px; color: #10b981; text-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+    .scope-stat-br { position: absolute; bottom: 60px; right: 45px; text-align: right; }
     #damage-flash {
       inset: 0;
       background: radial-gradient(circle, transparent 40%, rgba(220, 38, 38, 0.7) 100%);
@@ -1465,7 +1528,66 @@
   <div class="hud-layer" id="lock-alert"></div>
   <div class="hud-layer" id="crosshair"></div>
   <div class="hud-layer" id="hit-marker"></div>
-  <div class="hud-layer" id="sniper-scope"></div>
+  <div class="hud-layer" id="sniper-scope">
+    <div class="scope-housing">
+      <div class="scope-lens">
+        <svg class="scope-reticle-svg" viewBox="0 0 1000 1000">
+          <circle cx="500" cy="500" r="460" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" fill="none"/>
+          <circle cx="500" cy="500" r="320" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4 6" fill="none"/>
+          <!-- Primary fine crosshairs -->
+          <line x1="40" y1="500" x2="960" y2="500" stroke="rgba(244,63,94,0.92)" stroke-width="1.2"/>
+          <line x1="500" y1="40" x2="500" y2="960" stroke="rgba(244,63,94,0.92)" stroke-width="1.2"/>
+          <!-- Heavy outer guide posts -->
+          <line x1="40" y1="500" x2="260" y2="500" stroke="rgba(244,63,94,0.95)" stroke-width="4"/>
+          <line x1="740" y1="500" x2="960" y2="500" stroke="rgba(244,63,94,0.95)" stroke-width="4"/>
+          <line x1="500" y1="740" x2="500" y2="960" stroke="rgba(244,63,94,0.95)" stroke-width="4"/>
+          <line x1="500" y1="40" x2="500" y2="260" stroke="rgba(244,63,94,0.95)" stroke-width="4"/>
+          <!-- Center illuminated aiming pip -->
+          <circle cx="500" cy="500" r="2.5" fill="#f43f5e"/>
+          <!-- Milliradian elevation dots & hash marks -->
+          <circle cx="500" cy="460" r="1.8" fill="#f43f5e"/>
+          <circle cx="500" cy="420" r="1.8" fill="#f43f5e"/>
+          <circle cx="500" cy="380" r="1.8" fill="#f43f5e"/>
+          <circle cx="500" cy="340" r="1.8" fill="#f43f5e"/>
+          <circle cx="500" cy="540" r="1.8" fill="#f43f5e"/>
+          <circle cx="500" cy="580" r="1.8" fill="#f43f5e"/>
+          <circle cx="500" cy="620" r="1.8" fill="#f43f5e"/>
+          <circle cx="500" cy="660" r="1.8" fill="#f43f5e"/>
+          <!-- Milliradian windage dots & hash marks -->
+          <circle cx="460" cy="500" r="1.8" fill="#f43f5e"/>
+          <circle cx="420" cy="500" r="1.8" fill="#f43f5e"/>
+          <circle cx="380" cy="500" r="1.8" fill="#f43f5e"/>
+          <circle cx="340" cy="500" r="1.8" fill="#f43f5e"/>
+          <circle cx="540" cy="500" r="1.8" fill="#f43f5e"/>
+          <circle cx="580" cy="500" r="1.8" fill="#f43f5e"/>
+          <circle cx="620" cy="500" r="1.8" fill="#f43f5e"/>
+          <circle cx="660" cy="500" r="1.8" fill="#f43f5e"/>
+          <!-- BDC Ballistic Drop Hash Marks -->
+          <line x1="482" y1="560" x2="518" y2="560" stroke="#f43f5e" stroke-width="1.2"/>
+          <text x="526" y="563" fill="#f43f5e" font-size="9" font-family="'JetBrains Mono',monospace">100M</text>
+          <line x1="476" y1="610" x2="524" y2="610" stroke="#f43f5e" stroke-width="1.2"/>
+          <text x="532" y="613" fill="#f43f5e" font-size="9" font-family="'JetBrains Mono',monospace">200M</text>
+          <line x1="470" y1="670" x2="530" y2="670" stroke="#f43f5e" stroke-width="1.2"/>
+          <text x="538" y="673" fill="#f43f5e" font-size="9" font-family="'JetBrains Mono',monospace">300M</text>
+          <line x1="464" y1="730" x2="536" y2="730" stroke="#f43f5e" stroke-width="1.2"/>
+          <text x="544" y="733" fill="#f43f5e" font-size="9" font-family="'JetBrains Mono',monospace">400M</text>
+          <line x1="458" y1="790" x2="542" y2="790" stroke="#f43f5e" stroke-width="1.2"/>
+          <text x="550" y="793" fill="#f43f5e" font-size="9" font-family="'JetBrains Mono',monospace">500M</text>
+          <!-- Corner stadiametric rangefinder curve -->
+          <path d="M 280 680 Q 340 680 400 660" stroke="#f43f5e" stroke-width="1.2" fill="none"/>
+          <line x1="280" y1="680" x2="400" y2="680" stroke="#f43f5e" stroke-width="1.2"/>
+          <text x="320" y="700" fill="#f43f5e" font-size="9" font-family="'JetBrains Mono',monospace">1.7M TGT</text>
+        </svg>
+        <div class="scope-telemetry">
+          <div class="scope-compass" id="scope-compass">HDG 000° [N]</div>
+          <div class="scope-stat-tl" id="scope-mag-tag">7.0X MAGNIFICATION · MIL-SPEC</div>
+          <div class="scope-stat-tr" id="scope-wind-tag">WIND 2.4 M/S @ 045°</div>
+          <div class="scope-stat-bl" id="scope-range-val">RNG: --- M [LIDAR]</div>
+          <div class="scope-stat-br" id="scope-cal-val">CAL .50 BMG · ZERO 200M</div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="hud-layer" id="damage-flash"></div>
   <div class="hud-layer" id="damage-direction" aria-hidden="true"></div>
 
@@ -1493,10 +1615,13 @@
       </p>
       <div class="menu-home-actions">
         <button class="btn-action" id="btn-main-play">PLAY</button>
+        <button class="btn-secondary" id="btn-main-account">OPERATOR ACCOUNT</button>
+        <button class="btn-secondary" id="btn-main-leaderboard">LEADERBOARD</button>
         <button class="btn-secondary" id="btn-main-settings">SETTINGS</button>
         <button class="btn-secondary" id="btn-main-updates">UPDATES</button>
         <button class="btn-secondary" id="btn-main-customize">CUSTOMIZATION</button>
         <button class="btn-secondary" id="btn-main-stats">PLAYER STATISTICS</button>
+        <button class="btn-secondary" id="btn-main-dev" style="color:#10b981;border-color:rgba(16,185,129,0.4)">DEV PANEL (816999)</button>
       </div>
       <div class="menu-subtitle" style="margin-top:18px;color:#64748b;font-size:10px;">
         Local profile and progression are stored on this device. Multiplayer rooms are hosted in memory and reset when the service restarts.
@@ -1672,6 +1797,7 @@
       <p id="settings-status" role="status" aria-live="polite" style="min-height:18px;color:#94a3b8;font-size:11px;"></p>
       <div>
         <button type="button" class="btn-secondary" id="btn-settings-reset">RESTORE DEFAULTS</button>
+        <button type="button" class="btn-secondary" id="btn-settings-dev" style="color:#10b981;border-color:rgba(16,185,129,0.4)">DEV PANEL (816999)</button>
       </div>
     </div>
   </div>
@@ -1700,6 +1826,172 @@
     </div>
   </div>
 
+  <!-- Operator Account Modal (Cross-browser Username & Password) -->
+  <div class="menu-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title" style="display:none;">
+    <div class="modal-box" style="max-width:480px;">
+      <div class="menu-back-row">
+        <h2 class="modal-title" id="auth-title" style="font-size:26px;margin:0;">OPERATOR ACCOUNT</h2>
+        <button type="button" class="btn-secondary" id="btn-auth-close">CLOSE</button>
+      </div>
+      <div class="modal-subtitle">CROSS-BROWSER PERSISTENCE · USERNAME & PASSWORD ONLY</div>
+
+      <div id="auth-logged-out-view">
+        <div style="display:flex;gap:10px;margin-bottom:18px;">
+          <button type="button" class="btn-action" id="auth-tab-login" style="flex:1;padding:8px;">LOGIN</button>
+          <button type="button" class="btn-secondary" id="auth-tab-register" style="flex:1;padding:8px;">CREATE ACCOUNT</button>
+        </div>
+        <form id="auth-form" onsubmit="return false;" style="display:flex;flex-direction:column;gap:14px;text-align:left;">
+          <label style="font-size:12px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;">
+            OPERATOR USERNAME
+            <input type="text" id="auth-username" autocomplete="username" maxlength="20" placeholder="Enter operator callsign" style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.18);border-radius:4px;color:#f8fafc;padding:10px 12px;font-family:var(--font-mono);font-size:13px;">
+          </label>
+          <label style="font-size:12px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;">
+            PASSWORD
+            <input type="password" id="auth-password" autocomplete="current-password" placeholder="Enter password (min 4 chars)" style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.18);border-radius:4px;color:#f8fafc;padding:10px 12px;font-family:var(--font-mono);font-size:13px;">
+          </label>
+          <div id="auth-error-msg" style="min-height:16px;font-size:12px;color:#f43f5e;font-weight:600;"></div>
+          <button type="submit" class="btn-action" id="btn-auth-submit" style="width:100%;margin-top:6px;padding:12px;">LOGIN TO TERMINAL</button>
+        </form>
+      </div>
+
+      <div id="auth-logged-in-view" style="display:none;text-align:left;">
+        <div style="padding:14px;background:rgba(15,23,42,0.8);border:1px solid rgba(56,189,248,0.25);border-radius:6px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:#38bdf8;" id="auth-user-display">—</div>
+            <div style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.4);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">CLOUD SYNCED</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:#cbd5e1;">
+            <div>COMBAT SCORE: <b id="auth-stat-score" style="color:#f59e0b;">0</b></div>
+            <div>OPERATOR LEVEL: <b id="auth-stat-level" style="color:#38bdf8;">1</b></div>
+            <div>KILLS / DEATHS: <b id="auth-stat-kd">0 / 0</b></div>
+            <div>VICTORIES: <b id="auth-stat-wins">0</b></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn-action" id="btn-auth-sync" style="flex:1;">SYNC STATS NOW</button>
+          <button type="button" class="btn-secondary" id="btn-auth-logout" style="flex:1;">LOG OUT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Combat Leaderboard Modal -->
+  <div class="menu-modal" id="leaderboard-modal" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title" style="display:none;">
+    <div class="modal-box" style="max-width:780px;">
+      <div class="menu-back-row">
+        <h2 class="modal-title" id="leaderboard-title" style="font-size:28px;margin:0;">GLOBAL COMBAT LEADERBOARD</h2>
+        <button type="button" class="btn-secondary" id="btn-leaderboard-close">CLOSE</button>
+      </div>
+      <div class="modal-subtitle">RANKED OPERATORS · COMBAT SCORE = (KILLS × 100) + (ASSISTS × 35) + (WINS × 250) + (FLAGS × 150)</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:14px;justify-content:center;flex-wrap:wrap;">
+        <button type="button" class="btn-action" id="lb-tab-score" style="padding:6px 14px;font-size:11px;">COMBAT SCORE</button>
+        <button type="button" class="btn-secondary" id="lb-tab-kills" style="padding:6px 14px;font-size:11px;">MOST KILLS</button>
+        <button type="button" class="btn-secondary" id="lb-tab-wins" style="padding:6px 14px;font-size:11px;">VICTORIES</button>
+        <button type="button" class="btn-secondary" id="btn-leaderboard-refresh" style="padding:6px 14px;font-size:11px;margin-left:auto;">REFRESH</button>
+      </div>
+
+      <div style="max-height:360px;overflow-y:auto;border:1px solid rgba(255,255,255,0.1);border-radius:6px;background:rgba(10,16,26,0.6);">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+          <thead>
+            <tr style="background:rgba(15,23,42,0.95);color:#94a3b8;border-bottom:1px solid rgba(255,255,255,0.12);font-family:var(--font-display);letter-spacing:1px;font-size:11px;">
+              <th style="padding:10px 12px;width:65px;">RANK</th>
+              <th style="padding:10px 12px;">OPERATOR</th>
+              <th style="padding:10px 12px;text-align:right;">COMBAT SCORE</th>
+              <th style="padding:10px 12px;text-align:right;">K / D</th>
+              <th style="padding:10px 12px;text-align:right;">WINS / MATCHES</th>
+              <th style="padding:10px 12px;text-align:right;">FLAGS</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-table-body">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+      <div id="leaderboard-my-rank" style="margin-top:12px;padding:8px 12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span>YOUR OPERATOR STANDING: <b id="lb-my-username" style="color:#38bdf8;">GUEST</b></span>
+        <span>RANK: <b id="lb-my-rank" style="color:#f59e0b;">—</b> · SCORE: <b id="lb-my-score" style="color:#10b981;">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Commander Dev Panel Modal (Password 816999) -->
+  <div class="menu-modal" id="dev-panel-modal" role="dialog" aria-modal="true" aria-labelledby="dev-title" style="display:none;">
+    <div class="modal-box" style="max-width:640px;">
+      <div class="menu-back-row">
+        <h2 class="modal-title" id="dev-title" style="font-size:26px;margin:0;color:#10b981;">COMMANDER DEV PANEL</h2>
+        <button type="button" class="btn-secondary" id="btn-dev-close">CLOSE</button>
+      </div>
+      <div class="modal-subtitle">RESTRICTED ACCESS · LEVEL 5 AUTHORIZATION REQUIRED (KEY: 816999)</div>
+
+      <!-- Password Lock Screen -->
+      <div id="dev-lock-screen" style="padding:24px 16px;text-align:center;">
+        <div style="font-size:14px;color:#cbd5e1;margin-bottom:12px;">ENTER AUTHORIZATION KEYCODE TO PROCEED</div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:14px;">
+          <input type="password" id="dev-password-input" maxlength="12" placeholder="KEYCODE" autocomplete="off" style="width:180px;text-align:center;font-size:18px;letter-spacing:4px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.5);border-radius:4px;color:#10b981;padding:8px 12px;font-family:var(--font-mono);">
+          <button type="button" class="btn-action" id="btn-dev-unlock" style="background:#059669;border-color:#10b981;">UNLOCK</button>
+        </div>
+        <div id="dev-password-error" style="min-height:18px;color:#f43f5e;font-size:12px;font-weight:700;"></div>
+      </div>
+
+      <!-- Unlocked Dev Console Screen -->
+      <div id="dev-unlocked-screen" style="display:none;text-align:left;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:4px;margin-bottom:16px;font-size:12px;">
+          <span style="color:#10b981;font-weight:700;">● DEV MODE ACTIVE (KEYCODE 816999 VERIFIED)</span>
+          <button type="button" class="btn-secondary" id="btn-dev-relock" style="padding:2px 8px;font-size:10px;">RELOCK</button>
+        </div>
+
+        <!-- Combat & Survival Cheats -->
+        <div style="font-size:11px;font-weight:700;color:#38bdf8;letter-spacing:1px;margin-bottom:8px;">COMBAT & SURVIVAL PROTOCOLS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <button type="button" class="btn-secondary" id="btn-dev-godmode" style="justify-content:flex-start;padding:10px;">
+            <span>🛡️ GODMODE: <b id="dev-godmode-status" style="color:#f43f5e;">OFF</b></span>
+          </button>
+          <button type="button" class="btn-secondary" id="btn-dev-infinite-ammo" style="justify-content:flex-start;padding:10px;">
+            <span>⚡ INFINITE AMMO: <b id="dev-ammo-status" style="color:#f43f5e;">OFF</b></span>
+          </button>
+          <button type="button" class="btn-secondary" id="btn-dev-heal" style="justify-content:flex-start;padding:10px;">
+            <span>❤️ RESTORE HP + SHIELD</span>
+          </button>
+          <button type="button" class="btn-secondary" id="btn-dev-speed" style="justify-content:flex-start;padding:10px;">
+            <span>🏃 SPEED: <b id="dev-speed-status" style="color:#f59e0b;">1X</b></span>
+          </button>
+        </div>
+
+        <!-- Vehicle Spawner -->
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:1px;margin-bottom:8px;">TACTICAL VEHICLE AIRDROP</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <button type="button" class="btn-secondary" id="btn-dev-spawn-heli" style="padding:10px;">🚁 AH-64 APACHE</button>
+          <button type="button" class="btn-secondary" id="btn-dev-spawn-tank" style="padding:10px;">🛡️ M1A2 ABRAMS</button>
+          <button type="button" class="btn-secondary" id="btn-dev-spawn-apc" style="padding:10px;">🚚 COMMAND APC</button>
+          <button type="button" class="btn-secondary" id="btn-dev-spawn-sam" style="padding:10px;">🎯 M901 SAM TRUCK</button>
+        </div>
+
+        <!-- Tactical Teleportation -->
+        <div style="font-size:11px;font-weight:700;color:#a855f7;letter-spacing:1px;margin-bottom:8px;">QUANTUM TELEPORTATION</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+          <button type="button" class="btn-secondary" id="btn-dev-tp-blue" style="padding:8px 6px;font-size:11px;">BLUE BASE</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-red" style="padding:8px 6px;font-size:11px;">RED BASE</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-airfield" style="padding:8px 6px;font-size:11px;">AIRFIELD</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-helipad" style="padding:8px 6px;font-size:11px;">HELIPAD</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-tower" style="padding:8px 6px;font-size:11px;">WATCHTOWER</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-flag" style="padding:8px 6px;font-size:11px;">ENEMY FLAG</button>
+        </div>
+
+        <!-- Match Director -->
+        <div style="font-size:11px;font-weight:700;color:#ef4444;letter-spacing:1px;margin-bottom:8px;">MATCH DIRECTOR OVERRIDE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button type="button" class="btn-secondary" id="btn-dev-score-blue" style="padding:10px;color:#38bdf8;">+250 TEAM BLUE</button>
+          <button type="button" class="btn-secondary" id="btn-dev-score-red" style="padding:10px;color:#f43f5e;">+250 TEAM RED</button>
+          <button type="button" class="btn-secondary" id="btn-dev-win-now" style="padding:10px;">⚡ INSTANT VICTORY</button>
+          <button type="button" class="btn-secondary" id="btn-dev-toggle-bots" style="padding:10px;">🤖 TOGGLE BOTS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="dev-active-pill" style="display:none;position:fixed;top:16px;right:16px;background:rgba(16,185,129,0.25);border:1px solid #10b981;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:700;color:#10b981;letter-spacing:1px;z-index:99;pointer-events:none;">⚡ DEV CHEATS ACTIVE</div>
+
   <!-- In-game Pause Modal -->
   <div class="menu-modal" id="pause-modal" style="display:none;">
     <div class="modal-box" style="max-width: 620px;">
@@ -1724,6 +2016,7 @@
 
       <div>
         <button class="btn-action" id="btn-resume">RESUME BATTLE</button>
+        <button class="btn-secondary" id="btn-pause-dev" style="color:#10b981;border-color:rgba(16,185,129,0.4)">DEV PANEL (816999)</button>
         <button class="btn-secondary" id="btn-pause-settings">SETTINGS</button>
         <button class="btn-secondary" id="btn-quit-lobby">ABORT TO LOBBY</button>
       </div>
@@ -1951,6 +2244,369 @@
         $('settings-modal').style.display = 'flex';
         $('settings-status').textContent = '';
       }
+      /* -------------------------------------------------------------------------
+         DEVELOPER SUITE (PASSWORD: 816999) CONTROLLER
+         ------------------------------------------------------------------------- */
+      let isDevUnlocked = localStorage.getItem('cos_dev_unlocked') === '1';
+      let devBotsFrozen = false;
+
+      function updateDevUIState() {
+        $('dev-lock-screen').style.display = isDevUnlocked ? 'none' : 'block';
+        $('dev-unlocked-screen').style.display = isDevUnlocked ? 'block' : 'none';
+        $('dev-active-pill').style.display = (isDevUnlocked && (P.godmode || P.infAmmo || (P.speedMultiplier && P.speedMultiplier > 1))) ? 'block' : 'none';
+        if ($('dev-godmode-status')) {
+          $('dev-godmode-status').textContent = P.godmode ? 'ON' : 'OFF';
+          $('dev-godmode-status').style.color = P.godmode ? '#10b981' : '#f43f5e';
+        }
+        if ($('dev-ammo-status')) {
+          $('dev-ammo-status').textContent = P.infAmmo ? 'ON' : 'OFF';
+          $('dev-ammo-status').style.color = P.infAmmo ? '#10b981' : '#f43f5e';
+        }
+        if ($('dev-speed-status')) {
+          $('dev-speed-status').textContent = `${P.speedMultiplier || 1}X`;
+        }
+      }
+
+      function openDevModal() {
+        updateDevUIState();
+        $('dev-password-error').textContent = '';
+        $('dev-panel-modal').style.display = 'flex';
+        if (!isDevUnlocked) {
+          $('dev-password-input').value = '';
+          $('dev-password-input').focus();
+        }
+      }
+
+      function toggleDevPanel() {
+        if ($('dev-panel-modal').style.display === 'flex') {
+          $('dev-panel-modal').style.display = 'none';
+        } else {
+          leaveGameplayControls();
+          openDevModal();
+        }
+      }
+
+      function unlockDev() {
+        const pwd = $('dev-password-input').value.trim();
+        if (pwd === '816999') {
+          isDevUnlocked = true;
+          localStorage.setItem('cos_dev_unlocked', '1');
+          updateDevUIState();
+          bannerMsg('AUTHORIZATION GRANTED · DEV SUITE UNLOCKED');
+          playSnd(880, 0.2, 0.25, 'triangle');
+        } else {
+          $('dev-password-error').textContent = 'INVALID KEYCODE · ACCESS DENIED';
+          playSnd(140, 0.2, 0.3, 'sawtooth');
+        }
+      }
+
+      function relockDev() {
+        isDevUnlocked = false;
+        localStorage.removeItem('cos_dev_unlocked');
+        P.godmode = false;
+        P.infAmmo = false;
+        P.speedMultiplier = 1;
+        updateDevUIState();
+        bannerMsg('DEV SUITE RELOCKED');
+      }
+
+      function devSpawnVehicle(type) {
+        const forward = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
+        forward.y = 0;
+        forward.normalize();
+        const spawnPos = (P.veh ? P.veh.p : P.p).clone().addScaledVector(forward, 7);
+        const color = TC[P.tm] || 0x38bdf8;
+        const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : type === 'car' ? mkAPC : mkSAMTruck;
+        const hp = type === 'heli' ? 300 : type === 'tank' ? 450 : type === 'car' ? 550 : 450;
+        const mesh = makeMesh(color);
+        const entity = addEntity(type, mesh, spawnPos.x, spawnPos.z, hp, P.tm, type === 'heli' ? 1.0 : 0, 0);
+        entity.yaw = Math.atan2(forward.x, forward.z);
+        entity.m.rotation.y = entity.yaw;
+        bannerMsg(`DEV: AIRDROPPED ${type.toUpperCase()}`);
+        playSnd(440, 0.2, 0.2, 'sine');
+      }
+
+      function devTeleport(dest) {
+        let targetX = 0, targetY = 1.0, targetZ = 0;
+        if (dest === 'blue') {
+          targetX = B[0][0]; targetZ = B[0][1];
+        } else if (dest === 'red') {
+          targetX = B[1][0]; targetZ = B[1][1];
+        } else if (dest === 'airfield') {
+          targetX = 0; targetZ = 0;
+        } else if (dest === 'helipad') {
+          targetX = B[P.tm][0] + (P.tm ? 1 : -1) * 18;
+          targetZ = B[P.tm][1] - (P.tm ? 1 : -1) * 18;
+          targetY = 8.5;
+        } else if (dest === 'tower') {
+          targetX = 0; targetZ = 120; targetY = 10.5;
+        } else if (dest === 'flag') {
+          const enemyTeam = P.tm ? 0 : 1;
+          targetX = B[enemyTeam][0]; targetZ = B[enemyTeam][1];
+        }
+        if (P.veh) {
+          P.veh.p.set(targetX, targetY, targetZ);
+          P.veh.v = 0;
+          P.veh.m.position.copy(P.veh.p);
+        } else {
+          P.p.set(targetX, targetY, targetZ);
+          P.vy = 0;
+          camera.position.copy(P.p).add(new V3(0, 1.7, 0));
+        }
+        bannerMsg(`DEV: TELEPORTED TO ${dest.toUpperCase()}`);
+        playSnd(580, 0.15, 0.25, 'triangle');
+      }
+
+      function devAddScore(team, amount) {
+        if (typeof scores !== 'undefined' && scores) {
+          scores[team] = (scores[team] || 0) + amount;
+        }
+        bannerMsg(`DEV: +${amount} SCORE TO TEAM ${team ? 'RED' : 'BLUE'}`);
+        playSnd(660, 0.2, 0.2, 'triangle');
+      }
+
+      function devInstantWin() {
+        if (typeof onMatchVictory === 'function') {
+          onMatchVictory(P.tm);
+        } else if (typeof scores !== 'undefined' && scores) {
+          scores[P.tm] = 1000;
+        }
+        bannerMsg('DEV: INSTANT VICTORY TRIGGERED');
+        playSnd(880, 0.3, 0.3, 'sine');
+      }
+
+      function devToggleBots() {
+        devBotsFrozen = !devBotsFrozen;
+        bannerMsg(`DEV: BOTS ${devBotsFrozen ? 'FROZEN' : 'ACTIVE'}`);
+        playSnd(devBotsFrozen ? 330 : 660, 0.2, 0.2, 'sine');
+      }
+
+      /* -------------------------------------------------------------------------
+         CROSS-BROWSER ACCOUNT AUTHENTICATION CONTROLLER
+         ------------------------------------------------------------------------- */
+      let currentAuth = null;
+
+      async function checkSavedAuth() {
+        const token = localStorage.getItem('cos_auth_token');
+        if (!token) return;
+        try {
+          const res = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            currentAuth = { token, ...data.user };
+            onAuthSuccess(currentAuth);
+          } else {
+            localStorage.removeItem('cos_auth_token');
+          }
+        } catch (err) {
+          console.warn('Auth check error:', err);
+        }
+      }
+
+      function onAuthSuccess(auth) {
+        currentAuth = auth;
+        localStorage.setItem('cos_auth_token', auth.token);
+        operatorProfile.name = auth.username;
+        P.nm = auth.username;
+        if (auth.stats) {
+          operatorStats.kills = Math.max(operatorStats.kills, auth.stats.kills || 0);
+          operatorStats.deaths = Math.max(operatorStats.deaths, auth.stats.deaths || 0);
+          operatorStats.assists = Math.max(operatorStats.assists, auth.stats.assists || 0);
+          operatorStats.wins = Math.max(operatorStats.wins, auth.stats.wins || 0);
+          operatorStats.matches = Math.max(operatorStats.matches, auth.stats.matches || 0);
+          operatorStats.flagsCaptured = Math.max(operatorStats.flagsCaptured || 0, auth.stats.flagsCaptured || 0);
+          saveOperatorStats();
+        }
+        $('btn-main-account').textContent = `OPERATOR: ${auth.username.toUpperCase()}`;
+        updateAuthModalView();
+      }
+
+      function updateAuthModalView() {
+        if (currentAuth) {
+          $('auth-logged-out-view').style.display = 'none';
+          $('auth-logged-in-view').style.display = 'block';
+          $('auth-user-display').textContent = currentAuth.username.toUpperCase();
+          const s = currentAuth.stats || operatorStats;
+          const cScore = (s.kills * 100) + ((s.assists || 0) * 35) + (s.wins * 250) + ((s.flagsCaptured || 0) * 150);
+          const level = Math.max(1, Math.min(50, Math.floor(cScore / 1000) + 1));
+          $('auth-stat-score').textContent = cScore.toLocaleString();
+          $('auth-stat-level').textContent = String(level);
+          $('auth-stat-kd').textContent = `${s.kills} / ${s.deaths}`;
+          $('auth-stat-wins').textContent = `${s.wins} (${s.matches} MATCHES)`;
+        } else {
+          $('auth-logged-out-view').style.display = 'block';
+          $('auth-logged-in-view').style.display = 'none';
+          $('btn-main-account').textContent = 'OPERATOR ACCOUNT';
+        }
+      }
+
+      function openAuthModal() {
+        updateAuthModalView();
+        $('auth-error-msg').textContent = '';
+        $('auth-modal').style.display = 'flex';
+      }
+
+      async function handleAuthSubmit() {
+        const isLogin = $('auth-tab-login').classList.contains('btn-action');
+        const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+        const username = $('auth-username').value.trim();
+        const password = $('auth-password').value;
+        $('auth-error-msg').textContent = '';
+        if (!username) { $('auth-error-msg').textContent = 'Please enter an operator callsign.'; return; }
+        if (!password) { $('auth-error-msg').textContent = 'Please enter a password.'; return; }
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            $('auth-error-msg').textContent = data.error || 'Authentication failed.';
+            return;
+          }
+          onAuthSuccess({ token: data.token, ...data.user });
+          bannerMsg(`WELCOME, OPERATOR ${username.toUpperCase()}`);
+          syncStatsToServer();
+        } catch (err) {
+          $('auth-error-msg').textContent = 'Connection error. Please try again.';
+        }
+      }
+
+      async function syncStatsToServer() {
+        if (!currentAuth) return;
+        try {
+          const res = await fetch('/api/stats/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentAuth.token}`
+            },
+            body: JSON.stringify({
+              kills: operatorStats.kills,
+              deaths: operatorStats.deaths,
+              assists: operatorStats.assists || 0,
+              wins: operatorStats.wins,
+              matches: operatorStats.matches,
+              flagsCaptured: operatorStats.flagsCaptured || 0,
+              appearance: operatorProfile.appearance
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            currentAuth.stats = data.stats;
+            updateAuthModalView();
+            bannerMsg('PROFILE & STATS SYNCED TO CLOUD');
+          }
+        } catch (err) {
+          console.warn('Sync error:', err);
+        }
+      }
+
+      function handleAuthLogout() {
+        if (currentAuth) {
+          fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentAuth.token}`
+            }
+          }).catch(() => {});
+        }
+        currentAuth = null;
+        localStorage.removeItem('cos_auth_token');
+        updateAuthModalView();
+        bannerMsg('LOGGED OUT OF OPERATOR TERMINAL');
+      }
+
+      /* -------------------------------------------------------------------------
+         GLOBAL COMBAT LEADERBOARD CONTROLLER
+         ------------------------------------------------------------------------- */
+      let currentLeaderboardTab = 'score';
+
+      async function openLeaderboardModal() {
+        $('leaderboard-modal').style.display = 'flex';
+        await loadLeaderboard(currentLeaderboardTab);
+      }
+
+      async function loadLeaderboard(tab = 'score') {
+        currentLeaderboardTab = tab;
+        ['score', 'kills', 'wins'].forEach(t => {
+          const btn = $(`lb-tab-${t}`);
+          if (btn) btn.className = (t === tab) ? 'btn-action' : 'btn-secondary';
+        });
+        const tbody = $('leaderboard-table-body');
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:#94a3b8;">LOADING LIVE STANDINGS...</td></tr>';
+        try {
+          const res = await fetch('/api/leaderboard');
+          if (!res.ok) throw new Error('Fetch failed');
+          const data = await res.json();
+          const list = data.leaderboard || [];
+          if (tab === 'kills') {
+            list.sort((a, b) => b.kills - a.kills);
+          } else if (tab === 'wins') {
+            list.sort((a, b) => b.wins - a.wins);
+          } else {
+            list.sort((a, b) => b.combatScore - a.combatScore);
+          }
+          renderLeaderboardRows(list);
+        } catch (err) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:#f43f5e;">FAILED TO RETRIEVE LEADERBOARD DATA</td></tr>';
+        }
+      }
+
+      function renderLeaderboardRows(list) {
+        const tbody = $('leaderboard-table-body');
+        tbody.innerHTML = '';
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:#94a3b8;">NO OPERATOR RECORDS LOGGED YET</td></tr>';
+          return;
+        }
+        let myRankFound = null;
+        list.forEach((op, index) => {
+          const rank = index + 1;
+          const isMe = currentAuth && op.username.toLowerCase() === currentAuth.username.toLowerCase();
+          if (isMe) myRankFound = { rank, ...op };
+          const rankBadge = rank === 1 ? '🥇 #1' : rank === 2 ? '🥈 #2' : rank === 3 ? '🥉 #3' : `#${rank}`;
+          const rankColor = rank === 1 ? '#fbbf24' : rank === 2 ? '#cbd5e1' : rank === 3 ? '#d97706' : '#94a3b8';
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+          if (isMe) tr.style.background = 'rgba(56,189,248,0.12)';
+          tr.innerHTML = `
+            <td style="padding:9px 12px;font-weight:700;color:${rankColor};font-family:var(--font-display);">${rankBadge}</td>
+            <td style="padding:9px 12px;font-weight:600;color:${isMe ? '#38bdf8' : '#f8fafc'};">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;margin-right:6px;"></span>
+              ${op.username}
+              <span style="font-size:10px;color:#94a3b8;margin-left:6px;border:1px solid rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">LVL ${op.operatorLevel}</span>
+            </td>
+            <td style="padding:9px 12px;text-align:right;font-weight:700;color:#f59e0b;">${op.combatScore.toLocaleString()}</td>
+            <td style="padding:9px 12px;text-align:right;color:#cbd5e1;">${op.kills} / ${op.deaths} <span style="font-size:10px;color:#94a3b8;">(${op.kd})</span></td>
+            <td style="padding:9px 12px;text-align:right;color:#cbd5e1;">${op.wins} <span style="font-size:10px;color:#94a3b8;">(${op.winRate}%)</span></td>
+            <td style="padding:9px 12px;text-align:right;color:#cbd5e1;">${op.flagsCaptured || 0}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+        if (currentAuth) {
+          $('lb-my-username').textContent = currentAuth.username.toUpperCase();
+          if (myRankFound) {
+            $('lb-my-rank').textContent = `#${myRankFound.rank}`;
+            $('lb-my-score').textContent = myRankFound.combatScore.toLocaleString();
+          } else {
+            const myScore = (operatorStats.kills * 100) + ((operatorStats.assists || 0) * 35) + (operatorStats.wins * 250);
+            $('lb-my-rank').textContent = 'UNRANKED';
+            $('lb-my-score').textContent = myScore.toLocaleString();
+          }
+        } else {
+          $('lb-my-username').textContent = 'GUEST (LOGIN TO RANK)';
+          $('lb-my-rank').textContent = '—';
+          $('lb-my-score').textContent = '0';
+        }
+      }
+
+      checkSavedAuth();
+
       function updateProfileDisplay() {
         $('profile-callsign').textContent = `${operatorProfile.name} · ${getAppearance(operatorProfile.appearance).name} FINISH`;
         $('profile-level').textContent = String(1 + Math.floor(operatorStats.xp / 100));
@@ -1980,6 +2636,83 @@
         $('chat-panel').style.display = networked ? 'block' : 'none';
         buildLobbyUI();
       };
+      $('btn-main-account').onclick = openAuthModal;
+      $('btn-main-leaderboard').onclick = openLeaderboardModal;
+      $('btn-main-dev').onclick = openDevModal;
+      $('btn-settings-dev').onclick = openDevModal;
+      $('btn-pause-dev').onclick = openDevModal;
+
+      $('btn-auth-close').onclick = () => { $('auth-modal').style.display = 'none'; };
+      $('auth-tab-login').onclick = () => {
+        $('auth-tab-login').className = 'btn-action';
+        $('auth-tab-register').className = 'btn-secondary';
+        $('btn-auth-submit').textContent = 'LOGIN TO TERMINAL';
+        $('auth-error-msg').textContent = '';
+      };
+      $('auth-tab-register').onclick = () => {
+        $('auth-tab-register').className = 'btn-action';
+        $('auth-tab-login').className = 'btn-secondary';
+        $('btn-auth-submit').textContent = 'CREATE ACCOUNT';
+        $('auth-error-msg').textContent = '';
+      };
+      $('btn-auth-submit').onclick = handleAuthSubmit;
+      $('btn-auth-sync').onclick = syncStatsToServer;
+      $('btn-auth-logout').onclick = handleAuthLogout;
+
+      $('btn-leaderboard-close').onclick = () => { $('leaderboard-modal').style.display = 'none'; };
+      $('lb-tab-score').onclick = () => loadLeaderboard('score');
+      $('lb-tab-kills').onclick = () => loadLeaderboard('kills');
+      $('lb-tab-wins').onclick = () => loadLeaderboard('wins');
+      $('btn-leaderboard-refresh').onclick = () => loadLeaderboard(currentLeaderboardTab);
+
+      $('btn-dev-close').onclick = () => { $('dev-panel-modal').style.display = 'none'; };
+      $('btn-dev-unlock').onclick = unlockDev;
+      $('dev-password-input').onkeydown = e => { if (e.key === 'Enter') unlockDev(); };
+      $('btn-dev-relock').onclick = relockDev;
+
+      $('btn-dev-godmode').onclick = () => {
+        P.godmode = !P.godmode;
+        if (P.godmode) { P.hp = 100; P.sh = 50; if (P.veh) P.veh.hp = P.veh.mhp; }
+        updateDevUIState();
+        bannerMsg(`GODMODE ${P.godmode ? 'ENABLED' : 'DISABLED'}`);
+        playSnd(P.godmode ? 880 : 330, 0.2, 0.2, 'triangle');
+      };
+      $('btn-dev-infinite-ammo').onclick = () => {
+        P.infAmmo = !P.infAmmo;
+        W.forEach(w => { w.a = w.mag; w.rl = 0; w.cd = 0; });
+        if (P.veh) { P.veh.ammo = P.veh.mag; P.veh.mAmmo = P.veh.mMag; P.veh.reloading = 0; P.veh.mReloading = 0; }
+        updateDevUIState();
+        bannerMsg(`INFINITE AMMO ${P.infAmmo ? 'ENABLED' : 'DISABLED'}`);
+        playSnd(P.infAmmo ? 880 : 330, 0.2, 0.2, 'triangle');
+      };
+      $('btn-dev-heal').onclick = () => {
+        P.hp = 100;
+        P.sh = 50;
+        if (P.veh) P.veh.hp = P.veh.mhp;
+        bannerMsg('HEALTH & SHIELD FULLY RESTORED');
+        playSnd(620, 0.2, 0.25, 'sine');
+      };
+      $('btn-dev-speed').onclick = () => {
+        P.speedMultiplier = P.speedMultiplier === 1 ? 2 : P.speedMultiplier === 2 ? 3 : 1;
+        updateDevUIState();
+        bannerMsg(`SPEED MULTIPLIER: ${P.speedMultiplier}X`);
+        playSnd(540, 0.15, 0.2, 'sine');
+      };
+      $('btn-dev-spawn-heli').onclick = () => devSpawnVehicle('heli');
+      $('btn-dev-spawn-tank').onclick = () => devSpawnVehicle('tank');
+      $('btn-dev-spawn-apc').onclick = () => devSpawnVehicle('car');
+      $('btn-dev-spawn-sam').onclick = () => devSpawnVehicle('sam');
+      $('btn-dev-tp-blue').onclick = () => devTeleport('blue');
+      $('btn-dev-tp-red').onclick = () => devTeleport('red');
+      $('btn-dev-tp-airfield').onclick = () => devTeleport('airfield');
+      $('btn-dev-tp-helipad').onclick = () => devTeleport('helipad');
+      $('btn-dev-tp-tower').onclick = () => devTeleport('tower');
+      $('btn-dev-tp-flag').onclick = () => devTeleport('flag');
+      $('btn-dev-score-blue').onclick = () => devAddScore(0, 250);
+      $('btn-dev-score-red').onclick = () => devAddScore(1, 250);
+      $('btn-dev-win-now').onclick = devInstantWin;
+      $('btn-dev-toggle-bots').onclick = devToggleBots;
+
       $('btn-main-settings').onclick = openSettings;
       $('btn-main-updates').onclick = () => { $('updates-modal').style.display = 'flex'; };
       $('btn-main-customize').onclick = () => {
@@ -2464,6 +3197,39 @@
     mkRoad(36, 680, 0, 0, Math.PI / 4);
     [-125, 125].forEach(z => mkRoad(16, 620, 0, z));
     [-125, 125].forEach(x => mkRoad(16, 620, x, 0, Math.PI / 2));
+
+    // Tactical Airfield Runway Markings & Elevated Edge Guidance Lights
+    const runwayGroup = new THREE.Group();
+    runwayGroup.rotation.y = -Math.PI / 4;
+    const runwayStripeMat = new THREE.MeshBasicMaterial({ color: 0xf1f5f9 });
+    for (let l = -310; l <= 310; l += 24) {
+      const stripe = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 14), runwayStripeMat);
+      stripe.rotation.x = -Math.PI / 2;
+      stripe.position.set(0, 0.045, l);
+      runwayGroup.add(stripe);
+    }
+    for (const endZ of [-320, 320]) {
+      for (let k = -14; k <= 14; k += 3.5) {
+        const key = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 16), runwayStripeMat);
+        key.rotation.x = -Math.PI / 2;
+        key.position.set(k, 0.045, endZ + (endZ < 0 ? 8 : -8));
+        runwayGroup.add(key);
+      }
+    }
+    const edgeLightMatAmber = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const edgeLightMatGreen = new THREE.MeshBasicMaterial({ color: 0x34d399 });
+    for (let l = -330; l <= 330; l += 30) {
+      for (const edgeX of [-17.2, 17.2]) {
+        const isThreshold = Math.abs(l) >= 300;
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.5, 6), mats.steelDark);
+        post.position.set(edgeX, 0.25, l);
+        runwayGroup.add(post);
+        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 6), isThreshold ? edgeLightMatGreen : edgeLightMatAmber);
+        bulb.position.set(edgeX, 0.55, l);
+        runwayGroup.add(bulb);
+      }
+    }
+    scene.add(runwayGroup);
 
     function mkTree(x, z, scale = 1) {
       const g = new THREE.Group();
@@ -3898,6 +4664,9 @@
     const fpGunRig = new THREE.Group();
     camera.add(fpGunRig);
     fpGunRig.position.set(0.24, -0.24, -0.45);
+    const fpMuzzleLight = new THREE.PointLight(0xffaa44, 0, 9, 2);
+    fpMuzzleLight.position.set(0, 0.05, -0.6);
+    fpGunRig.add(fpMuzzleLight);
 
     function makeWeaponModel(weapon, index) {
       const model = new THREE.Group();
@@ -4105,7 +4874,8 @@
       swayX: 0,
       swayY: 0,
       bobTimer: 0,
-      muzzleTimer: 0
+      muzzleTimer: 0,
+      ads: 0
     };
 
     /* -------------------------------------------------------------------------
@@ -4432,6 +5202,11 @@
         return;
       }
       K[e.code] = 1;
+      if ((e.code === 'Backquote' || e.code === 'F1') && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        toggleDevPanel();
+        return;
+      }
       const bindingAction = Object.keys(keyBindings).find(action => keyBindings[action] === e.code);
       if (e.code === 'Enter' && networked && !inLobby && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         e.preventDefault();
@@ -4635,6 +5410,7 @@
 
     function applyDamage(target, amount, attacker, sourcePosition = null) {
       if (target.dead) return;
+      if (P.godmode && (target === P.veh || target.localPlayerProxy || target === P)) return;
       if (target.localPlayerProxy) {
         hurtPlayer(amount, attacker);
         return;
@@ -4684,6 +5460,7 @@
     }
 
     function hurtPlayer(amount, by) {
+      if (P.godmode) return;
       P.by = by;
       showDamageDirection(by);
       if (P.veh) {
@@ -4823,6 +5600,54 @@
       bullet.headshots = false;
     }
 
+    function createMissileMesh(type, origin) {
+      const g = new THREE.Group();
+      const isSam = type === 'sam';
+      const isAA = type === 'aa';
+      const isAGM = type === 'agm';
+      const len = isSam ? 2.5 : isAGM ? 2.1 : 1.7;
+      const r = isSam ? 0.22 : 0.16;
+      const bodyColor = isSam ? 0x2e4a3d : isAA ? 0xd1d5db : isAGM ? 0x334155 : 0x78350f;
+      const finColor = 0x111827;
+      const noseColor = isSam ? 0xef4444 : isAA ? 0x0284c7 : 0xf59e0b;
+
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len * 0.72, 8), new THREE.MeshLambertMaterial({ color: bodyColor }));
+      body.rotation.x = Math.PI / 2;
+      g.add(body);
+
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(r, len * 0.28, 8), new THREE.MeshLambertMaterial({ color: noseColor }));
+      nose.rotation.x = Math.PI / 2;
+      nose.position.z = len * 0.5;
+      g.add(nose);
+
+      const finMat = new THREE.MeshLambertMaterial({ color: finColor });
+      const finGeom = new THREE.BoxGeometry(r * 3.4, r * 0.14, len * 0.22);
+      const f1 = new THREE.Mesh(finGeom, finMat);
+      f1.position.z = -len * 0.32;
+      g.add(f1);
+      const f2 = new THREE.Mesh(finGeom, finMat);
+      f2.position.z = -len * 0.32;
+      f2.rotation.z = Math.PI / 2;
+      g.add(f2);
+
+      const canardGeom = new THREE.BoxGeometry(r * 2.2, r * 0.12, len * 0.14);
+      const c1 = new THREE.Mesh(canardGeom, finMat);
+      c1.position.z = len * 0.22;
+      g.add(c1);
+      const c2 = new THREE.Mesh(canardGeom, finMat);
+      c2.position.z = len * 0.22;
+      c2.rotation.z = Math.PI / 2;
+      g.add(c2);
+
+      const flame = new THREE.Mesh(new THREE.SphereGeometry(r * 0.75, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffedd5 }));
+      flame.position.z = -len * 0.38;
+      g.add(flame);
+
+      g.position.copy(origin);
+      scene.add(g);
+      return g;
+    }
+
     const MISSILES = [];
     function launchMissile(type, origin, dir, target, team = P.tm, attacker = 1, networkId = null, fromSnapshot = false) {
       if (networked && !networkHost && !fromSnapshot) {
@@ -4837,8 +5662,7 @@
         });
         return null;
       }
-      const col = type === 'sam' ? 0x10b981 : type === 'aa' ? 0xe2e8f0 : 0xf97316;
-      const mMesh = box(type === 'sam' ? 0.42 : 0.35, type === 'sam' ? 0.42 : 0.35, type === 'sam' ? 2.4 : 1.8, new THREE.MeshLambertMaterial({ color: col }), origin.x, origin.y, origin.z);
+      const mMesh = createMissileMesh(type, origin);
       const id = networkId || `${networkPlayerId || 'local'}:${++networkMissileSequence}`;
       MISSILES.push({ id, m: mMesh, p: origin.clone(), d: dir.clone(), type, target, team, attacker, life: 7 });
       playSnd(type === 'sam' ? 110 : 140, 0.45, 0.35, 'sawtooth', 30);
@@ -4881,7 +5705,23 @@
       return target.p.clone().add(new V3(0, height, 0));
     }
 
-    function lockTarget(origin, dir, maxDist = 320, maxAngle = 0.35, team = P.tm) {
+    const activeMissileLock = {
+      target: null,
+      time: 0,
+      solid: false,
+      beepTimer: 0,
+      kind: null
+    };
+
+    function playLockChirp(solid) {
+      if (solid) {
+        playSnd(1400, 0.08, 0.12, 'sine', 1400);
+      } else {
+        playSnd(880, 0.05, 0.08, 'sine', 880);
+      }
+    }
+
+    function lockTarget(origin, dir, maxDist = 340, maxAngle = 0.38, team = P.tm, missileKind = null) {
       let best = null, bestAngle = maxAngle;
       E.forEach(e => {
         if (!e.team || e.dead || e.tm === team) return;
@@ -4890,7 +5730,17 @@
         if (dist > maxDist) return;
         const a = v.angleTo(dir);
         let effAngle = a;
-        if (e.type === 'heli' || e.displayType === 'heli') effAngle *= 0.6;
+        if (missileKind === 'at') {
+          // Anti-tank launcher prioritizes armored ground vehicles (tanks, APCs, SAM)
+          if (isVehicleEntity(e) || ['tank', 'car', 'sam'].includes(e.displayType)) effAngle *= 0.45;
+          else effAngle *= 0.9;
+        } else if (missileKind === 'aa' || missileKind === 'sam') {
+          // Anti-air launcher prioritizes helicopters
+          if (e.type === 'heli' || e.displayType === 'heli') effAngle *= 0.4;
+          else effAngle *= 1.15;
+        } else {
+          if (e.type === 'heli' || e.displayType === 'heli') effAngle *= 0.6;
+        }
         if (effAngle < bestAngle) {
           bestAngle = effAngle;
           best = e;
@@ -4942,10 +5792,14 @@
 
     function firePlayerWeapon() {
       const w = W[P.w];
-      if (w.rl > 0 || w.cd > 0) return;
+      if (P.infAmmo) {
+        w.a = w.mag;
+        w.rl = 0;
+      }
+      if (w.rl > 0 || (!P.infAmmo && w.cd > 0)) return;
       if (w.a <= 0) { reloadActiveWeapon(); return; }
-      w.cd = w.rate;
-      w.a--;
+      w.cd = P.infAmmo ? Math.min(0.08, w.rate) : w.rate;
+      if (!P.infAmmo) w.a--;
       playSnd(w.m ? 110 : w.dmg > 40 ? 190 : 340, 0.12, 0.2);
 
       // Trigger Weapon Recoil Animation & Muzzle Flash
@@ -4955,12 +5809,16 @@
       gunAnim.muzzleTimer = 0.05;
       const weaponModel = weaponModels[P.w];
       if (weaponModel.flash) weaponModel.flash.material.opacity = 0.9;
+      fpMuzzleLight.intensity = w.m ? 3.4 : w.dmg > 50 ? 2.8 : 1.9;
 
       const o = camera.position.clone();
       const d = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
 
       if (w.m) {
-        launchMissile(w.m, o.clone().addScaledVector(d, 1.8), d, w.m === 'aa' ? lockTarget(o, d) : null);
+        const lock = (activeMissileLock.kind === w.m && activeMissileLock.target && !activeMissileLock.target.dead)
+          ? activeMissileLock.target
+          : lockTarget(o, d, w.m === 'aa' ? 380 : 340, 0.42, P.tm, w.m);
+        launchMissile(w.m, o.clone().addScaledVector(d, 1.8), d, lock);
         return;
       }
 
@@ -4980,19 +5838,25 @@
     function fireHeliMissile() {
       const v = P.veh;
       if (!v || v.type !== 'heli') return;
-      if (v.mReloading > 0 || v.mCd > 0) return;
+      if (P.infAmmo) {
+        v.mAmmo = v.mMag;
+        v.mReloading = 0;
+      }
+      if (v.mReloading > 0 || (!P.infAmmo && v.mCd > 0)) return;
       if (v.mAmmo <= 0) {
         v.mReloading = v.mReloadTime;
         bannerMsg('MISSILE POD RELOADING...');
         return;
       }
-      v.mAmmo--;
-      v.mCd = 0.8;
+      if (!P.infAmmo) v.mAmmo--;
+      v.mCd = P.infAmmo ? 0.25 : 0.8;
       if (v.mAmmo <= 0) v.mReloading = v.mReloadTime;
 
       const o = getMuzzlePos(v);
       const f = getVehicleAimDir(v, o);
-      const lock = lockTarget(o, f, 420, 0.48, v.tm);
+      const lock = (activeMissileLock.kind === 'agm' && activeMissileLock.target && !activeMissileLock.target.dead)
+        ? activeMissileLock.target
+        : lockTarget(o, f, 440, 0.48, v.tm, 'agm');
       const missileType = lock ? (lock.type === 'heli' || lock.displayType === 'heli' ? 'aa' : 'agm') : 'at';
       launchMissile(missileType, o.addScaledVector(f, 4), f, lock);
     }
@@ -5173,6 +6037,9 @@
       gunAnim.recoilZ = THREE.MathUtils.damp(gunAnim.recoilZ, 0, 16, dt);
       gunAnim.recoilRotX = THREE.MathUtils.damp(gunAnim.recoilRotX, 0, 16, dt);
       gunAnim.recoilRotY = THREE.MathUtils.damp(gunAnim.recoilRotY, 0, 16, dt);
+      if (fpMuzzleLight.intensity > 0) {
+        fpMuzzleLight.intensity = Math.max(0, fpMuzzleLight.intensity - dt * 26);
+      }
 
       // Multi-stage Tactical Reload Animation
       let reloadOffsetY = 0, reloadRotZ = 0;
@@ -5202,10 +6069,29 @@
         }
       }
 
-      // Set Rig Transform
+      // Set Rig Transform with Smooth True Aim-Down-Sights (ADS)
       const slideGunTilt = P.sliding ? -0.28 : 0;
-      fpGunRig.position.set(0.24 + bobX + gunAnim.swayX, -0.24 + bobY + gunAnim.swayY - (P.sliding ? 0.08 : 0), -0.45 + gunAnim.recoilZ);
-      fpGunRig.rotation.set(gunAnim.recoilRotX, gunAnim.swayX + gunAnim.recoilRotY, reloadRotZ + slideGunTilt);
+      const isAimingDownSights = scoped() && !w.scope;
+      gunAnim.ads = THREE.MathUtils.damp(gunAnim.ads || 0, isAimingDownSights ? 1 : 0, 16, dt);
+      
+      const isSidearm = w.type === 'pistol' || w.cls === 'Auto Pistol';
+      const isLauncher = w.type === 'rocket';
+      const adsX = isSidearm ? 0.0 : isLauncher ? -0.05 : 0.0;
+      const adsY = isSidearm ? -0.178 : isLauncher ? -0.16 : -0.162;
+      const adsZ = isSidearm ? -0.38 : isLauncher ? -0.42 : -0.35;
+      
+      const adsBlend = gunAnim.ads;
+      const motionDamp = 1 - adsBlend * 0.72;
+      const finalX = THREE.MathUtils.lerp(0.24, adsX, adsBlend) + (bobX + gunAnim.swayX) * motionDamp;
+      const finalY = THREE.MathUtils.lerp(-0.24, adsY, adsBlend) + (bobY + gunAnim.swayY) * motionDamp - (P.sliding ? 0.08 : 0);
+      const finalZ = THREE.MathUtils.lerp(-0.45, adsZ, adsBlend) + gunAnim.recoilZ * (1 - adsBlend * 0.35);
+      
+      fpGunRig.position.set(finalX, finalY, finalZ);
+      fpGunRig.rotation.set(
+        gunAnim.recoilRotX * (1 - adsBlend * 0.4),
+        (gunAnim.swayX + gunAnim.recoilRotY) * motionDamp,
+        (reloadRotZ + slideGunTilt) * (1 - adsBlend * 0.8)
+      );
     }
 
     function updateVehicle(v, dt) {
@@ -5311,9 +6197,9 @@
           if (v.mAmmo > 0) {
             v.mAmmo--;
             v.mCd = 0.55;
-            const o = getMuzzlePos(v);
-            const d = getVehicleAimDir(v, o);
-            const tgtLock = lockTarget(o, d, 340, 0.45);
+            const tgtLock = (activeMissileLock.kind === 'sam' && activeMissileLock.target && !activeMissileLock.target.dead)
+              ? activeMissileLock.target
+              : lockTarget(o, d, 440, 0.45, v.tm, 'sam');
             launchMissile('sam', o.addScaledVector(d, 3.2), d, tgtLock);
             bannerMsg(tgtLock ? 'SAM MISSILE LAUNCHED · RADAR TRACKING ACTIVE' : 'SAM MISSILE LAUNCHED');
             if (v.mAmmo <= 0) v.mReloading = v.mReloadTime;
@@ -5432,7 +6318,7 @@
     /* -------------------------------------------------------------------------
        30-SECOND UNUSED VEHICLE RESPAWN SYSTEM
        ------------------------------------------------------------------------- */
-    const isVehicleEntity = entity => ['car', 'heli', 'tank', 'sam'].includes(entity.type);
+    const isVehicleEntity = veh => !veh ? false : (veh.type === 'car' || veh.type === 'heli' || veh.type === 'tank' || veh.type === 'sam');
 
     function restoreVehicleAtBase(v) {
       if (v.driver?.drivingVeh === v) v.driver.drivingVeh = null;
@@ -5819,9 +6705,10 @@
         e.los = bestTarget ? (isHeli || bestTarget.type === 'heli' || hasLineOfSight(e.p, bestTarget.p)) : 0;
 
         if (isInf) {
-          const committedVehicle = e.aiState === 'board_veh' && e.targetVeh
-            && !e.targetVeh.dead && !e.targetVeh.driver && P.veh !== e.targetVeh
-            && (currentMode === 'ffa' || e.targetVeh.tm === e.tm);
+          const veh = e.targetVeh;
+          const committedVehicle = e.aiState === 'board_veh' && veh
+            && !veh.dead && !veh.driver && P.veh !== veh
+            && (currentMode === 'ffa' || veh.tm === e.tm);
           if (!committedVehicle) {
             if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
             e.targetVeh = null;
@@ -6428,6 +7315,16 @@
       if (P.veh && isLocked) {
         drawVehicleAirReticles(hwCtx, P.veh, innerWidth, innerHeight);
       }
+
+      // Universal Lock-On HUD for all missiles (Handheld AT-4, Stinger AA, Heli AGM, SAM)
+      if (isLocked) {
+        drawUnifiedMissileLockHUD(hwCtx, innerWidth, innerHeight);
+      }
+
+      // Tactical ADS sight overlay when aiming down sights
+      if (isLocked && !P.veh && (gunAnim.ads || 0) > 0.05) {
+        drawTacticalADSReticle(hwCtx, innerWidth, innerHeight);
+      }
     }
 
     function drawVehicleAirReticles(ctx, v, w, h) {
@@ -6727,6 +7624,213 @@
 
         ctx.restore();
       }
+    }
+
+    function drawUnifiedMissileLockHUD(ctx, w, h) {
+      const v = P.veh;
+      const curW = W[P.w];
+      const hasMissile = (v && (v.type === 'heli' || v.type === 'sam')) || (!v && (curW.m === 'at' || curW.m === 'aa'));
+      if (!hasMissile) return;
+
+      const cx = w * 0.5, cy = h * 0.5;
+      const now = performance.now() * 0.001;
+      const missileKind = v ? (v.type === 'heli' ? 'agm' : 'sam') : curW.m;
+      const weaponTitle = v
+        ? (v.type === 'heli' ? 'AH-64 AGM-114 HELLFIRE' : 'M901 MIM-23 SAM AIR DEFENSE')
+        : (curW.m === 'at' ? 'AT-4 WIRE-GUIDED ANTI-ARMOR' : 'FIM-92 STINGER ALL-ASPECT IR');
+      const themeColor = missileKind === 'at' ? '#f59e0b' : missileKind === 'sam' ? '#10b981' : '#38bdf8';
+
+      ctx.save();
+
+      // Only draw center seeker circle if on foot (vehicles have their own custom cockpits)
+      if (!v) {
+        ctx.strokeStyle = themeColor;
+        ctx.fillStyle = themeColor;
+        ctx.lineWidth = 1.5;
+
+        const seekerRadius = missileKind === 'aa' ? 76 : 64;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, seekerRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Seeker Rotating Gimbals
+        const rot = now * 1.8;
+        for (let i = 0; i < 4; i++) {
+          const ang = rot + i * (Math.PI / 2);
+          ctx.beginPath();
+          ctx.arc(cx + Math.cos(ang) * seekerRadius, cy + Math.sin(ang) * seekerRadius, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Center Aiming Reticle
+        ctx.beginPath();
+        ctx.moveTo(cx - 12, cy); ctx.lineTo(cx - 4, cy);
+        ctx.moveTo(cx + 4, cy); ctx.lineTo(cx + 12, cy);
+        ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy - 4);
+        ctx.moveTo(cx, cy + 4); ctx.lineTo(cx, cy + 12);
+        ctx.stroke();
+
+        ctx.font = '700 10px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`[ ${weaponTitle} // SEEKER ACTIVE ]`, cx, cy + seekerRadius + 20);
+      }
+
+      // Draw Dynamic 3D Target Lock Brackets on Screen
+      if (activeMissileLock.target && !activeMissileLock.target.dead) {
+        const tgt = activeMissileLock.target;
+        projVec.copy(missileTargetPoint(tgt));
+        projVec.project(camera);
+
+        if (projVec.z < 1.0) {
+          const tx = (projVec.x + 1) * 0.5 * w;
+          const ty = (1 - projVec.y) * 0.5 * h;
+          const dist = (v ? v.p : P.p).distanceTo(tgt.p);
+          const isSolid = activeMissileLock.solid;
+          const lockColor = isSolid ? '#10b981' : '#f59e0b';
+
+          ctx.strokeStyle = lockColor;
+          ctx.fillStyle = lockColor;
+
+          // Target line from center
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = isSolid ? 'rgba(16, 185, 129, 0.5)' : 'rgba(245, 158, 11, 0.4)';
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(tx, ty);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.strokeStyle = lockColor;
+          ctx.lineWidth = isSolid ? 2.5 : 1.5;
+
+          const boxSize = isSolid ? 36 : Math.max(34, 52 - (activeMissileLock.time / 0.22) * 18);
+          const bLen = boxSize * 0.35;
+
+          // 4 Corner brackets around target
+          ctx.beginPath();
+          ctx.moveTo(tx - boxSize / 2, ty - boxSize / 2 + bLen);
+          ctx.lineTo(tx - boxSize / 2, ty - boxSize / 2);
+          ctx.lineTo(tx - boxSize / 2 + bLen, ty - boxSize / 2);
+
+          ctx.moveTo(tx + boxSize / 2 - bLen, ty - boxSize / 2);
+          ctx.lineTo(tx + boxSize / 2, ty - boxSize / 2);
+          ctx.lineTo(tx + boxSize / 2, ty - boxSize / 2 + bLen);
+
+          ctx.moveTo(tx + boxSize / 2, ty + boxSize / 2 - bLen);
+          ctx.lineTo(tx + boxSize / 2, ty + boxSize / 2);
+          ctx.lineTo(tx + boxSize / 2 - bLen, ty + boxSize / 2);
+
+          ctx.moveTo(tx - boxSize / 2 + bLen, ty + boxSize / 2);
+          ctx.lineTo(tx - boxSize / 2, ty + boxSize / 2);
+          ctx.lineTo(tx - boxSize / 2, ty + boxSize / 2 - bLen);
+          ctx.stroke();
+
+          // Target identification
+          const isAir = tgt.type === 'heli' || tgt.displayType === 'heli';
+          const isArmor = ['tank', 'car', 'sam'].includes(tgt.type) || ['tank', 'car', 'sam'].includes(tgt.displayType);
+          const tgtClass = isAir ? 'AIR: AIRCRAFT' : isArmor ? `ARMOR: ${tgt.type.toUpperCase()}` : 'HOSTILE INFANTRY';
+
+          if (isSolid) {
+            // Rotating diamond pip in center
+            const dia = 8;
+            ctx.beginPath();
+            ctx.moveTo(tx, ty - dia);
+            ctx.lineTo(tx + dia, ty);
+            ctx.lineTo(tx, ty + dia);
+            ctx.lineTo(tx - dia, ty);
+            ctx.closePath();
+            ctx.stroke();
+
+            ctx.font = '700 12px "Chakra Petch", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`⚡ LOCKED [ ${dist.toFixed(0)}M // ${tgtClass} ] ⚡`, tx, ty - boxSize / 2 - 8);
+
+            ctx.font = '700 10px "JetBrains Mono", monospace';
+            const fireKey = v?.type === 'heli' ? keyLabel(keyBindings.missile) : 'LMB';
+            ctx.fillText(`PRESS [${fireKey}] TO LAUNCH MISSILE`, tx, ty + boxSize / 2 + 16);
+          } else {
+            const pct = Math.round(Math.min(100, (activeMissileLock.time / 0.22) * 100));
+            ctx.font = '700 10px "JetBrains Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`ACQUIRING [${pct}%] · ${dist.toFixed(0)}M · ${tgtClass}`, tx, ty - boxSize / 2 - 6);
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawTacticalADSReticle(ctx, w, h) {
+      const cx = w * 0.5, cy = h * 0.5;
+      const ads = gunAnim.ads || 0;
+      if (ads < 0.05) return;
+      const curW = W[P.w];
+      if (curW.scope) return; // Fullscreen sniper scope handles scoped rifles
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, ads * 1.25);
+
+      if (curW.type === 'rifle' || curW.type === 'smg' || curW.cls === 'Assault Rifle') {
+        // Holographic Red-Dot / Reflex Reticle (EOTech circle dot)
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.95)';
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = 'rgba(239, 68, 68, 0.85)';
+        ctx.shadowBlur = 8;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 32, 0.16, Math.PI / 2 - 0.16);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, 32, Math.PI / 2 + 0.16, Math.PI - 0.16);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, 32, Math.PI + 0.16, Math.PI * 1.5 - 0.16);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, 32, Math.PI * 1.5 + 0.16, Math.PI * 2 - 0.16);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(cx - 44, cy); ctx.lineTo(cx - 32, cy);
+        ctx.moveTo(cx + 32, cy); ctx.lineTo(cx + 44, cy);
+        ctx.moveTo(cx, cy - 44); ctx.lineTo(cx, cy - 32);
+        ctx.moveTo(cx, cy + 32); ctx.lineTo(cx, cy + 44);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ff4d4d';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (curW.type === 'pistol') {
+        // Tritium 3-Dot Combat Night Sights
+        ctx.fillStyle = '#10b981';
+        ctx.shadowColor = '#10b981';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx - 22, cy + 5, 2.0, 0, Math.PI * 2);
+        ctx.arc(cx + 22, cy + 5, 2.0, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (curW.type === 'shotgun') {
+        // Ghost Ring Tactical Sight
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     /* -------------------------------------------------------------------------
@@ -8177,9 +9281,32 @@
         }
       }
 
-      fpGunRig.visible = !v && !isSc;
+      fpGunRig.visible = !v && (!isSc || !w.scope);
       $('sniper-scope').style.display = isSc && w.scope ? 'block' : 'none';
-      $('crosshair').style.display = (isSc && w.scope) || v ? 'none' : 'block';
+      $('crosshair').style.display = (isSc && w.scope) || v || ((gunAnim.ads || 0) > 0.85) ? 'none' : 'block';
+      $('crosshair').style.opacity = isSc && !w.scope ? `${Math.max(0, 1 - (gunAnim.ads || 0) * 1.5)}` : '1';
+
+      if (isSc && w.scope) {
+        // Laser Rangefinder computation for realistic sniper optic
+        const rayDir = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
+        RC.set(camera.position, rayDir);
+        RC.far = 600;
+        const hits = RC.intersectObjects(E.filter(e => !e.dead).map(e => e.m).concat(OM), true);
+        const distM = hits[0] ? hits[0].distance : 420;
+        const scopeRng = $('scope-range-val');
+        if (scopeRng) scopeRng.textContent = `RNG: ${distM.toFixed(0)} M [LIDAR]`;
+
+        const deg = Math.round(((P.yaw % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)) * (180 / Math.PI));
+        const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+        const card = dirs[Math.round(deg / 45) % 8];
+        const scopeComp = $('scope-compass');
+        if (scopeComp) scopeComp.textContent = `HDG ${String(deg).padStart(3, '0')}° [${card}]`;
+
+        const scopeMag = $('scope-mag-tag');
+        if (scopeMag) scopeMag.textContent = `${w.zoom.toFixed(1)}X MAGNIFICATION · MIL-SPEC`;
+        const scopeCal = $('scope-cal-val');
+        if (scopeCal) scopeCal.textContent = `${w.dmg > 100 ? 'CAL .50 BMG' : 'CAL 7.62 NATO'} · ZERO 200M`;
+      }
 
       const targetFov = isSc ? 75 / w.zoom : (v ? 70 : 75);
       if (Math.abs(camera.fov - targetFov) > 0.1) {
@@ -8189,9 +9316,33 @@
 
       const vDir = v ? new V3(Math.sin(v.yaw), -0.08, Math.cos(v.yaw)) : new V3(0, 0, -1).applyQuaternion(camera.quaternion);
       const vOrigin = v ? v.p : camera.position;
+      const hasMissileWeapon = (v && (v.type === 'heli' || v.type === 'sam')) || (!v && (w.m === 'aa' || w.m === 'at'));
+      const missileKind = v ? (v.type === 'heli' ? 'agm' : 'sam') : (w.m || null);
       const targetLock = v && v.type === 'heli'
         ? getHeliTargetLock(v)
-        : ((v && v.type === 'sam') || (!v && w.m === 'aa')) ? lockTarget(vOrigin, vDir) : null;
+        : ((v && v.type === 'sam') || (!v && (w.m === 'aa' || w.m === 'at'))) ? lockTarget(vOrigin, vDir, missileKind === 'aa' ? 380 : missileKind === 'sam' ? 440 : 340, 0.42, v ? v.tm : P.tm, missileKind) : null;
+
+      if (hasMissileWeapon && targetLock) {
+        if (activeMissileLock.target === targetLock) {
+          activeMissileLock.time += 0.035;
+        } else {
+          activeMissileLock.target = targetLock;
+          activeMissileLock.time = 0;
+        }
+        activeMissileLock.solid = activeMissileLock.time >= 0.22;
+        activeMissileLock.kind = missileKind;
+        activeMissileLock.beepTimer -= 0.035;
+        if (activeMissileLock.beepTimer <= 0) {
+          playLockChirp(activeMissileLock.solid);
+          activeMissileLock.beepTimer = activeMissileLock.solid ? 0.09 : 0.22;
+        }
+      } else {
+        activeMissileLock.target = null;
+        activeMissileLock.time = 0;
+        activeMissileLock.solid = false;
+        activeMissileLock.kind = null;
+      }
+
       $('lock-alert').textContent = targetLock
         ? v && v.type === 'heli'
           ? `[ ${targetLock.type === 'heli' ? 'AIR' : 'GROUND'} TARGET LOCKED ]`
@@ -8307,15 +9458,23 @@
         if (!networked || networkHost) for (let i = MISSILES.length - 1; i >= 0; i--) {
           const k = MISSILES[i];
           k.life -= dt;
-          if ((k.type === 'aa' || k.type === 'agm' || k.type === 'sam') && k.target && !k.target.dead) {
-            const turnSpeed = k.type === 'sam' ? 5.2 : 3.8;
+          if ((k.type === 'aa' || k.type === 'agm' || k.type === 'sam' || k.type === 'at') && k.target && !k.target.dead) {
+            const turnSpeed = k.type === 'sam' ? 5.4 : k.type === 'aa' ? 4.6 : k.type === 'agm' ? 4.0 : 3.2;
             k.d.lerp(missileTargetPoint(k.target).sub(k.p).normalize(), Math.min(1, turnSpeed * dt)).normalize();
+          } else if (k.type === 'at') {
+            k.d.y -= (BULLET_GRAVITY / 80) * dt;
           }
-          if (k.type === 'at') k.d.y -= (BULLET_GRAVITY / 72) * dt;
           k.d.normalize();
-          k.p.addScaledVector(k.d, (k.type === 'sam' ? 105 : k.type === 'aa' ? 95 : k.type === 'agm' ? 80 : 72) * dt);
+          k.p.addScaledVector(k.d, (k.type === 'sam' ? 105 : k.type === 'aa' ? 95 : k.type === 'agm' ? 80 : 76) * dt);
           k.m.position.copy(k.p);
           k.m.lookAt(k.p.clone().add(k.d));
+
+          k.smokeTimer = (k.smokeTimer || 0) + dt;
+          if (k.smokeTimer >= 0.04) {
+            k.smokeTimer = 0;
+            const exhaustPos = k.p.clone().sub(k.d.clone().multiplyScalar(k.type === 'sam' ? 1.6 : 1.2));
+            spawnExplosion(exhaustPos, k.type === 'sam' ? 0.75 : 0.55, k.type === 'sam' ? 0x94a3b8 : 0xfbbf24, 0.2);
+          }
 
           if (
             k.life <= 0 ||

@@ -1,0 +1,98 @@
+{
+  "viper-lead": {
+    "username": "Viper-Lead",
+    "passwordHash": "f2c1848fcd194354d15aacb3d1a679f8:0d1bf2502624fdef26ab52489b1cf91ee3b946d950a9a7096d37875357b36c237e21ecfedd5c18391754b9aacffcc80222ddc4e047106e10108974c8ccbe0193",
+    "createdAt": 1793984060802,
+    "stats": {
+      "kills": 342,
+      "deaths": 89,
+      "assists": 114,
+      "wins": 38,
+      "matches": 45,
+      "flagsCaptured": 24,
+      "combatScore": 47990,
+      "operatorLevel": 48,
+      "appearance": "cobalt"
+    }
+  },
+  "ghostoperator": {
+    "username": "GhostOperator",
+    "passwordHash": "5778079cc3e1f8c41d3b266a516acdaa:8f97ebe9a3e01c0bf9cbf2f34c86d2860275d937f907d2b0d231831d3eba00a5f6189cf7c8eaa0604ba050eb547c967a53a9aaf3df565c59f3d18684b89d6c1e",
+    "createdAt": 1793984060864,
+    "stats": {
+      "kills": 289,
+      "deaths": 74,
+      "assists": 92,
+      "wins": 32,
+      "matches": 40,
+      "flagsCaptured": 19,
+      "combatScore": 40970,
+      "operatorLevel": 41,
+      "appearance": "arctic"
+    }
+  },
+  "ironclad_99": {
+    "username": "Ironclad_99",
+    "passwordHash": "57f05f98897cda9049f08065567e270c:61292d24f5c451d097319ce84b97557328027de9d961dde3278bc754149c68e51a4e9597b9a78aa8ec14591edd920cc838ae265ef6f2a389b4aab35aaade3d90",
+    "createdAt": 1793984060908,
+    "stats": {
+      "kills": 231,
+      "deaths": 98,
+      "assists": 105,
+      "wins": 24,
+      "matches": 35,
+      "flagsCaptured": 15,
+      "combatScore": 35025,
+      "operatorLevel": 36,
+      "appearance": "olive"
+    }
+  },
+  "reaperactual": {
+    "username": "ReaperActual",
+    "passwordHash": "35a9a0a0341cacc4640fb57d2f87cb55:b856fab3cefd7fb5b4f626ca88cdf8fd04c93cb2b00d41e7b22a71ff61c3b08a667a770310f37c51f5c9303c64b08c74026c82e232a0bd5c81fd0d549fdf4228",
+    "createdAt": 1793984060952,
+    "stats": {
+      "kills": 184,
+      "deaths": 62,
+      "assists": 67,
+      "wins": 20,
+      "matches": 28,
+      "flagsCaptured": 12,
+      "combatScore": 27545,
+      "operatorLevel": 28,
+      "appearance": "crimson"
+    }
+  },
+  "shadowstalker": {
+    "username": "ShadowStalker",
+    "passwordHash": "37a7f81ffc68a2916e541e3b9dddd5dc:f662092c54fa2ced1118240d09054646fe2414448b4cf5452af8c39f2db469c1a6546debd6cafc82df81ed621f98e6767b78e631df733b7849b1b5eacb902b9b",
+    "createdAt": 1793984060996,
+    "stats": {
+      "kills": 146,
+      "deaths": 55,
+      "assists": 48,
+      "wins": 15,
+      "matches": 22,
+      "flagsCaptured": 8,
+      "combatScore": 21230,
+      "operatorLevel": 22,
+      "appearance": "sand"
+    }
+  },
+  "testsoldier_1": {
+    "username": "TestSoldier_1",
+    "passwordHash": "c6846b64e67f2e63986f1e4c2df210f6:989dc9763293a6f85f4ba7fb1de82a3d81b610604a2ea4fc67eea87293a6c07a7a7072254d06c1729c0b26f61d91ebddef83d4dfd111f103b1caf058ef5292ed",
+    "createdAt": 1794070474785,
+    "stats": {
+      "kills": 0,
+      "deaths": 0,
+      "assists": 0,
+      "wins": 0,
+      "matches": 0,
+      "flagsCaptured": 0,
+      "combatScore": 0,
+      "operatorLevel": 1,
+      "appearance": "cobalt"
+    }
+  }
+}
