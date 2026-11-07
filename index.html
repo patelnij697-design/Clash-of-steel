@@ -1246,7 +1246,7 @@
   <div class="menu-modal" id="main-menu-modal" style="display:flex;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 0.9.00.1</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 0.9.00.2</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -1352,7 +1352,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 0.9.00.1">v0.9.00.1</div>
+    <div id="game-version" aria-label="Game version 0.9.00.2">v0.9.00.2</div>
   </div>
 
   <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -4707,8 +4707,9 @@
             // Secure an available ground vehicle before considering combat or patrol behavior.
             let bestVeh = null, bestScore = -Infinity;
             E.forEach(veh => {
-              if ((veh.type === 'car' || veh.type === 'tank' || veh.type === 'sam')
-                  && !veh.dead && !veh.driver && P.veh !== veh) {
+                if ((veh.type === 'car' || veh.type === 'tank' || veh.type === 'sam')
+                  && !veh.dead && !veh.driver && P.veh !== veh
+                  && (currentMode === 'ffa' || veh.tm === e.tm)) {
                 // If another bot is already claiming this vehicle, skip so bots distribute across all vehicles!
                 if (veh.boardingBot && veh.boardingBot !== e && veh.boardingBot.hp > 0 && !veh.boardingBot.dead) {
                   return;
