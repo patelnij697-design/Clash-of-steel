@@ -115,7 +115,14 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /const muzzleSleeve = new THREE\.Mesh/);
   assert.match(html, /if \(type === 'med'\)/);
   assert.match(html, /const flagMat = t \? mats\.teamRed : mats\.teamBlue/);
-  assert.match(html, /Secure an available vehicle before considering combat or patrol behavior/);
+  assert.match(html, /function claimNearestTeamVehicle\(bot\) \{[\s\S]*?vehicle\.tm !== bot\.tm/);
+  assert.match(html, /bot\.aiState = 'board_veh';[\s\S]*?bestVehicle\.boardingBot = bot;/);
+  assert.match(html, /claimNearestTeamVehicle\(bot\);/);
+  assert.match(html, /claimNearestTeamVehicle\(e\);/);
+  assert.match(html, /const index = \(slot \* 17 \+ visit \* 13\) % patrolCount/);
+  assert.match(html, /currentMode === 'ffa' \|\| other\.tm === e\.tm/);
+  assert.match(html, /const squadSize = currentMode === 'ffa' \? 12 : 7/);
+  assert.match(html, /findBotVehiclePath\(e\.p\.x, e\.p\.z, targetX, targetZ, navRadius\)/);
   assert.match(html, /for \(const z of \[-2\.7, -1\.62, -0\.54, 0\.54, 1\.62, 2\.7\]\)/);
   assert.match(html, /function getBaseWalkableHeight\(pos\)/);
   assert.match(html, /function getHelipadStairTarget\(vehicle, pos\)/);

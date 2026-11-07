@@ -2843,6 +2843,12 @@
     ].forEach(([x, z, width, depth, height, color]) => {
       mkTerrainMound(x, z, width, depth, height, color);
     });
+    const moundColors = [0x77734f, 0x8c805b, 0x6d7652, 0x827b59, 0x727653, 0x97845c];
+    for (let i = 0; i < 30; i++) {
+      const mx = rnd(-230, 230), mz = rnd(-230, 230);
+      if (Math.hypot(mx, mz) < 28 || Math.hypot(mx + 215, mz + 215) < 62 || Math.hypot(mx - 215, mz - 215) < 62) continue;
+      mkTerrainMound(mx, mz, rnd(12, 32), rnd(12, 34), rnd(1.2, 4.2), moundColors[i % moundColors.length]);
+    }
     for (let i = 0; i < 20; i++) {
       const cx = rnd(-230, 230), cz = rnd(-230, 230);
       if (Math.hypot(cx, cz) < 24 || Math.hypot(cx + 215, cz + 215) < 60 || Math.hypot(cx - 215, cz - 215) < 60) continue;
@@ -5525,36 +5531,70 @@
     const botNavGrids = new Map();
     const BOT_PATROL_COORDINATES = [-260, -186, -112, -38, 38, 112, 186, 260];
 
+    function claimNearestTeamVehicle(bot) {
+      let bestVehicle = null;
+      let bestDistance = Infinity;
+      E.forEach(vehicle => {
+        if (!isVehicleEntity(vehicle) || vehicle.dead || vehicle.driver || P.veh === vehicle
+          || (currentMode !== 'ffa' && vehicle.tm !== bot.tm)) return;
+        const claimant = vehicle.boardingBot;
+        if (claimant && claimant !== bot && !claimant.dead && claimant.hp > 0
+          && claimant.aiState === 'board_veh' && claimant.targetVeh === vehicle) return;
+        const distance = Math.hypot(bot.p.x - vehicle.p.x, bot.p.z - vehicle.p.z);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestVehicle = vehicle;
+        }
+      });
+
+      if (!bestVehicle) return null;
+      bot.targetVeh = bestVehicle;
+      bot.aiState = 'board_veh';
+      bot.boardTimer = 0;
+      bestVehicle.boardingBot = bot;
+      return bestVehicle;
+    }
+
     function getBotPatrolWaypoint(e) {
       const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
       const visit = e.patrolVisit || 0;
-      let x, z;
-
-      if (currentMode === 'ffa' || e.tm > 1) {
-        const index = (slot + visit * 11) % (BOT_PATROL_COORDINATES.length ** 2);
-        x = BOT_PATROL_COORDINATES[index % BOT_PATROL_COORDINATES.length];
-        z = BOT_PATROL_COORDINATES[Math.floor(index / BOT_PATROL_COORDINATES.length)];
-      } else {
-        const patrolCount = BOT_PATROL_COORDINATES.length ** 2;
-        const index = (slot * 17 + visit * 13) % patrolCount;
-        const routeIndex = e.tm === 0 ? index : patrolCount - index - 1;
-        x = BOT_PATROL_COORDINATES[routeIndex % BOT_PATROL_COORDINATES.length];
-        z = BOT_PATROL_COORDINATES[Math.floor(routeIndex / BOT_PATROL_COORDINATES.length)];
-      }
-
+      const patrolCount = BOT_PATROL_COORDINATES.length ** 2;
+      const allies = E.filter(other => other !== e && other.type === 'inf' && !other.dead
+        && !other.drivingVeh && !other.remote && other.team
+        && (currentMode === 'ffa' || other.tm === e.tm));
+      let bestPoint = null, bestScore = -Infinity;
       e.patrolVisit = visit + 1;
-      for (let attempt = 0; attempt < 12; attempt++) {
+      const index = (slot * 17 + visit * 13) % patrolCount;
+      const routeIndex = e.tm === 1 ? patrolCount - index - 1 : index;
+      const x = BOT_PATROL_COORDINATES[routeIndex % BOT_PATROL_COORDINATES.length];
+      const z = BOT_PATROL_COORDINATES[Math.floor(routeIndex / BOT_PATROL_COORDINATES.length)];
+
+      for (let attempt = 0; attempt < 8; attempt++) {
         const angle = attempt * 2.4;
-        const radius = attempt * 5;
-        const candidateX = THREE.MathUtils.clamp(x + Math.cos(angle) * radius, -260, 260);
-        const candidateZ = THREE.MathUtils.clamp(z + Math.sin(angle) * radius, -260, 260);
-        if (!OB.some(o => o.h > 0
+        const radius = attempt * 4;
+        const candidateX = THREE.MathUtils.clamp(x + Math.cos(angle) * radius, -268, 268);
+        const candidateZ = THREE.MathUtils.clamp(z + Math.sin(angle) * radius, -268, 268);
+        if (OB.some(o => o.h > 0
           && Math.abs(candidateX - o.x) < o.hw + 5
-          && Math.abs(candidateZ - o.z) < o.hd + 5)) {
-          return [candidateX, candidateZ];
+          && Math.abs(candidateZ - o.z) < o.hd + 5)) continue;
+
+        let nearestAllySq = Infinity;
+        allies.forEach(ally => {
+          const positionDistanceSq = (candidateX - ally.p.x) ** 2 + (candidateZ - ally.p.z) ** 2;
+          nearestAllySq = Math.min(nearestAllySq, positionDistanceSq);
+          if (ally.wp) {
+            const goalDistanceSq = (candidateX - ally.wp[0]) ** 2 + (candidateZ - ally.wp[1]) ** 2;
+            nearestAllySq = Math.min(nearestAllySq, goalDistanceSq);
+          }
+        });
+        const travelDistance = Math.hypot(candidateX - e.p.x, candidateZ - e.p.z);
+        const score = Math.min(nearestAllySq, 1600) + travelDistance * 8 - attempt * 0.05;
+        if (score > bestScore) {
+          bestScore = score;
+          bestPoint = [candidateX, candidateZ];
         }
       }
-      return [x, z];
+      return bestPoint || [x, z];
     }
 
     function getBotNavGrid(radius) {
@@ -5779,43 +5819,20 @@
         e.los = bestTarget ? (isHeli || bestTarget.type === 'heli' || hasLineOfSight(e.p, bestTarget.p)) : 0;
 
         if (isInf) {
-          // If already en-route to an unoccupied vehicle, maintain commitment!
-          if (e.aiState === 'board_veh' && e.targetVeh && !e.targetVeh.dead && !e.targetVeh.driver && P.veh !== e.targetVeh) {
-            // Stay committed to boarding vehicle!
-          } else {
+          const committedVehicle = e.aiState === 'board_veh' && e.targetVeh
+            && !e.targetVeh.dead && !e.targetVeh.driver && P.veh !== e.targetVeh
+            && (currentMode === 'ffa' || e.targetVeh.tm === e.tm);
+          if (!committedVehicle) {
             if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
             e.targetVeh = null;
+            e.aiState = 'patrol';
             e.boardTimer = 0;
-            // Secure an available vehicle before considering combat or patrol behavior.
-            let bestVeh = null, bestScore = -Infinity;
-            E.forEach(veh => {
-                if ((veh.type === 'car' || veh.type === 'heli' || veh.type === 'tank' || veh.type === 'sam')
-                  && !veh.dead && !veh.driver && P.veh !== veh
-                  && (currentMode === 'ffa' || veh.tm === e.tm)) {
-                // If another bot is already claiming this vehicle, skip so bots distribute across all vehicles!
-                if (veh.boardingBot && veh.boardingBot !== e && veh.boardingBot.hp > 0 && !veh.boardingBot.dead) {
-                  return;
-                }
-                const dist = e.p.distanceTo(veh.p);
-                const typeBonus = veh.type === 'tank' ? 12 : veh.type === 'heli' ? 9 : veh.type === 'car' ? 6 : 0;
-                const score = typeBonus - dist;
-                if (score > bestScore) {
-                  bestScore = score;
-                  bestVeh = veh;
-                }
-              }
-            });
-
-            if (bestVeh) {
-              e.aiState = 'board_veh';
-              e.targetVeh = bestVeh;
-              bestVeh.boardingBot = e;
-            } else if (e.hp < e.mhp * 0.4 || e.underFireTimer > 0) {
+            if (!claimNearestTeamVehicle(e) && (e.hp < e.mhp * 0.4 || e.underFireTimer > 0)) {
               e.aiState = 'seek_cover';
               if (bestTarget) e.coverPt = findBestCoverPoint(e.p, bestTarget.p);
-            } else if (bestTarget && e.los && Math.random() < 0.45) {
+            } else if (e.aiState !== 'board_veh' && bestTarget && e.los && Math.random() < 0.45) {
               e.aiState = 'flank';
-            } else {
+            } else if (e.aiState !== 'board_veh') {
               e.aiState = 'assault';
             }
           }
@@ -5911,13 +5928,15 @@
         targetZ = e.coverPt.z;
         e.hp = Math.min(e.mhp, e.hp + 6 * dt);
       }
-      // Tactical Flanking
-      else if (isInf && e.aiState === 'flank' && tp) {
-        const dx = tp.x - e.p.x, dz = tp.z - e.p.z;
-        const len = Math.hypot(dx, dz) || 1;
-        const flankSign = (e.role === 0 ? 1 : -1);
-        targetX = tp.x + (-dz / len) * flankSign * 24;
-        targetZ = tp.z + (dx / len) * flankSign * 24;
+      // Distribute infantry around contacts instead of sending the squad to one point.
+      else if (isInf && (e.aiState === 'flank' || e.aiState === 'assault') && tp) {
+        const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
+        const squadSize = currentMode === 'ffa' ? 12 : 7;
+        const teamOffset = currentMode === 'ffa' ? 0 : e.tm * Math.PI / 7;
+        const angle = slot * (Math.PI * 2 / squadSize) + teamOffset;
+        const radius = e.aiState === 'flank' ? 34 : 24;
+        targetX = tp.x + Math.cos(angle) * radius;
+        targetZ = tp.z + Math.sin(angle) * radius;
       }
       // Helicopter combat strafing & Anti-Collision System
       else if (isHeli) {
@@ -6047,6 +6066,26 @@
           e.baseExitGoal = exits[0];
           targetX = e.baseExitGoal.x;
           targetZ = e.baseExitGoal.z;
+        }
+      }
+
+      if (isInf && e.aiState === 'board_veh' && targetX != null) {
+        const navRadius = 0.6;
+        e.navTimer = (e.navTimer || 0) - dt;
+        const targetChanged = !e.navGoal || Math.hypot(targetX - e.navGoal.x, targetZ - e.navGoal.z) > 8;
+        if (!e.navPath || targetChanged || e.navTimer <= 0) {
+          e.navPath = findBotVehiclePath(e.p.x, e.p.z, targetX, targetZ, navRadius) || [];
+          e.navIndex = 0;
+          e.navGoal = { x: targetX, z: targetZ };
+          e.navTimer = 0.75;
+        }
+        while (e.navIndex < e.navPath.length
+          && Math.hypot(e.p.x - e.navPath[e.navIndex].x, e.p.z - e.navPath[e.navIndex].z) < 3) {
+          e.navIndex++;
+        }
+        if (e.navIndex < e.navPath.length) {
+          targetX = e.navPath[e.navIndex].x;
+          targetZ = e.navPath[e.navIndex].z;
         }
       }
 
@@ -6247,6 +6286,7 @@
       e.v = 0;
       e.driver = null;
       e.drivingVeh = null;
+      if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
       e.targetVeh = null;
       e.tg = null;
       e.wp = null;
@@ -6263,6 +6303,7 @@
       if (e.type === 'inf' && e.team) {
         const pt = getSpawnPoint(e.tm);
         e.p.set(pt[0], 0, pt[1]);
+        claimNearestTeamVehicle(e);
       } else {
         e.team = 0;
         e.p.copy(e.sp);
@@ -7020,6 +7061,7 @@
           bot.role = i % 2;
           bot.patrolSlot = isFFA ? i : i % 7;
           bot.nm = BOT_NAMES[i % BOT_NAMES.length];
+          claimNearestTeamVehicle(bot);
         }
       }
 
