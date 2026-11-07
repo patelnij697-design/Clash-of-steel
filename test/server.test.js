@@ -70,6 +70,11 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="btn-join-public"/);
   assert.match(html, /id="mobile-controls"/);
   assert.match(html, /id="main-menu-modal"/);
+  assert.match(html, /id="loading-screen"/);
+  assert.match(html, /id="skip-loading"/);
+  assert.match(html, /function updateLoadingIntro/);
+  assert.match(html, /const introApache = mkHeli/);
+  assert.match(html, /const introTank = mkTank/);
   assert.match(html, /const weaponModels = W\.map\(makeWeaponModel\)/);
   assert.match(html, /function updateHeliChinGun/);
   assert.match(html, /barrelAssembly\.flash/);
@@ -86,17 +91,15 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="settings-keyboard-reference"/);
   assert.match(html, /id="room-player-list"/);
   assert.match(html, /id="active-player-count">—/);
-  assert.match(html, /VERSION 0\.9\.00\.2/);
-  assert.match(html, /Game version 0\.9\.00\.2/);
-  assert.match(html, /v0\.9\.00\.2/);
-  assert.match(html, /veh\.type === 'car' \|\| veh\.type === 'tank' \|\| veh\.type === 'sam'/);
+  assert.match(html, /veh\.type === 'car' \|\| veh\.type === 'heli' \|\| veh\.type === 'tank' \|\| veh\.type === 'sam'/);
   assert.match(html, /currentMode === 'ffa' \|\| veh\.tm === e\.tm/);
-  assert.doesNotMatch(html, /veh\.type === 'car' \|\| veh\.type === 'heli' \|\| veh\.type === 'tank'/);
+  assert.match(html, /VERSION 1\.00\.00/);
+  assert.match(html, /Game version 1\.00\.00/);
   assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(packageInfo.version, '0.9.0+00.2');
+  assert.equal(packageInfo.version, '1.0.0');
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
   assert.equal(sourcePath.status, 200);

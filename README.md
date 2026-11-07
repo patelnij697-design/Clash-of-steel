@@ -1,6 +1,6 @@
 # Clash-of-steel
 
-Version 0.9.00.2 keeps bots on their team's vehicle fleet in team modes, so both sides can board vehicles even when they are outside the player's render distance. It also includes a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. The settings/profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
+Version 1.00.00 opens with an animated Apache-versus-tank intro, and infantry bots can now board helicopters as well as ground vehicles. The game also includes a separate main menu, deployment lobby, local settings, editable keyboard bindings, and an operator record stored in the browser. Settings, profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
 
 ## Run locally
 
