@@ -1,6 +1,6 @@
 # Clash-of-steel
 
-Version 1.1.5 adds an in-game field updates panel, expanded bot patrol coverage, rooftop Apache helipads with stairs and lighting, richer vehicle details, and more varied rolling terrain. The game also features a cinematic Apache-versus-tank intro, with infantry bots that can board helicopters as well as ground vehicles. The separate main menu, deployment lobby, local settings, editable keyboard bindings, and operator record remain available. Settings, profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
+Version 1.1.10 sends enemy infantry for available vehicles immediately after spawning, and expands patrol routes across an 8 × 8 grid covering the battlefield. It also refreshes the soldier, vehicle, weapon, structure, prop, and terrain models. The in-game field updates panel records this release alongside the 1.1.5 battlefield expansion. Rooftop Apache helipads with stairs and lighting, the cinematic Apache-versus-tank intro, and multiplayer vehicle boarding remain available. Settings, profile data, XP, and match history are device-local and are not authenticated or synchronized by the multiplayer service.
 
 ## Run locally
 
