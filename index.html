@@ -3079,8 +3079,8 @@
     introScene.background = new THREE.Color(0x8db8da);
     introScene.fog = new THREE.Fog(0xb3c6c6, 58, 190);
     const introCamera = new THREE.PerspectiveCamera(43, innerWidth / innerHeight, 0.1, 260);
-    introCamera.position.set(0, 7.2, 28);
-    introCamera.lookAt(0, 2.8, -5);
+    introCamera.position.set(-16, 2.8, 14);
+    introCamera.lookAt(-8, 2.2, 1);
     introScene.add(new THREE.HemisphereLight(0xd9edff, 0x4b4d35, 1.8));
     const introSun = new THREE.DirectionalLight(0xffe6bd, 2.25);
     introSun.position.set(-16, 24, 10);
@@ -3235,7 +3235,12 @@
       rocket.visible = false;
       introScene.add(rocket);
       return rocket;
-    })].map((mesh, index) => ({ mesh, fireAt: 5.65 + index * 0.32, start: null }));
+    })].map((mesh, index) => ({
+      mesh,
+      target: [introTank, introTankTwo, introTankThree][index],
+      fireAt: 5.65 + index * 0.32,
+      start: null
+    }));
 
     const introBlast = new THREE.Mesh(
       new THREE.SphereGeometry(1, 20, 14),
@@ -3258,6 +3263,38 @@
     introSmoke.position.copy(introBlast.position);
     introSmoke.visible = false;
     introScene.add(introSmoke);
+    const introAdditionalBlasts = [introTankTwo, introTankThree].map((tank, index) => {
+      const group = new THREE.Group();
+      group.position.copy(tank.position);
+      const flame = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 14, 10),
+        new THREE.MeshBasicMaterial({ color: 0xff6b1a, transparent: true, opacity: 0, depthWrite: false })
+      );
+      const smoke = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 12, 9),
+        new THREE.MeshBasicMaterial({ color: 0x343936, transparent: true, opacity: 0, depthWrite: false })
+      );
+      flame.position.y = 0.8;
+      smoke.position.y = 0.8;
+      group.add(flame, smoke);
+      group.visible = false;
+      introScene.add(group);
+      return { tank, group, flame, smoke, impactAt: 6.92 + index * 0.32 };
+    });
+    const introDebris = Array.from({ length: 6 }, (_, index) => {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.24 + index % 2 * 0.12, 0.16, 0.32),
+        new THREE.MeshStandardMaterial({ color: index % 2 ? 0x45483f : 0x8b6a3b, roughness: 0.9 })
+      );
+      mesh.visible = false;
+      introScene.add(mesh);
+      return {
+        mesh,
+        origin: introTank.position.clone().add(new V3((index % 3 - 1) * 0.45, 0.2 + (index % 2) * 0.25, (index % 2 - 0.5) * 0.7)),
+        velocity: new V3((index - 2.5) * 1.25, 2.2 + (index % 3) * 0.65, (index % 2 ? 1 : -1) * (1.3 + index * 0.12)),
+        spin: new V3(2 + index * 0.2, 1.4 + index * 0.15, 2.2 - index * 0.1)
+      };
+    });
 
     let introAudioEnabled = false;
     let introMusic = null;
@@ -3337,6 +3374,8 @@
       introBlast.visible = false;
       introBlastCore.visible = false;
       introSmoke.visible = false;
+      introAdditionalBlasts.forEach(({ group }) => { group.visible = false; });
+      introDebris.forEach(({ mesh }) => { mesh.visible = false; });
       setIntroAudio(false);
       menuVehicles[menuVehicleIndex].model.visible = true;
       $('main-menu-modal').style.display = 'flex';
@@ -3376,8 +3415,23 @@
       });
       dustPositionsAttribute.needsUpdate = true;
 
-      introCamera.position.x = Math.sin(t * 0.2) * 1.2 + Math.max(0, t - 4.2) * 0.22;
-      introCamera.lookAt(introCamera.position.x * 0.42, 2.65, -5);
+      const cameraBlend = (value, start, end) => THREE.MathUtils.smoothstep(value, start, end);
+      const transition = cameraBlend(t, 2.2, 5.8);
+      const cameraX = THREE.MathUtils.lerp(-16 + travel * 2, apacheX - 4.2, transition);
+      const cameraY = THREE.MathUtils.lerp(2.8, 3.3, transition);
+      const cameraZ = THREE.MathUtils.lerp(14, 8.5, transition);
+      const impactBlend = cameraBlend(t, 5.8, 7.1);
+      const impactCamera = new V3(1.3, 3.2, 4.5);
+      const trackedCamera = new V3(cameraX, cameraY, cameraZ).lerp(impactCamera, impactBlend);
+      const shake = t >= 6.75 ? Math.max(0, 1 - (t - 6.75) / 1.1) : 0;
+      introCamera.position.set(
+        trackedCamera.x + Math.sin(t * 43) * shake * 0.13,
+        trackedCamera.y + Math.cos(t * 51) * shake * 0.08,
+        trackedCamera.z
+      );
+      const apacheFocus = new V3(apacheX + 1.3, 2.1, -0.5);
+      const targetFocus = new V3(8, 0.8, -8);
+      introCamera.lookAt(apacheFocus.lerp(targetFocus, impactBlend));
 
       introRockets.forEach(rocket => {
         const elapsed = t - rocket.fireAt;
@@ -3389,14 +3443,14 @@
         rocket.mesh.visible = firing;
         if (firing) {
           const progress = THREE.MathUtils.clamp(elapsed / 0.95, 0, 1);
-          const end = new V3(8, 0.75, -8 - (rocket.fireAt - 5.65) * 7);
+          const end = rocket.target.position.clone().add(new V3(0, 0.75, 0));
           const direction = end.clone().sub(rocket.start);
           rocket.mesh.position.copy(rocket.start).addScaledVector(direction, progress);
           rocket.mesh.quaternion.setFromUnitVectors(new V3(0, 1, 0), direction.normalize());
         }
       });
 
-      const blastProgress = t - 6.75;
+      const blastProgress = t - 6.6;
       introBlast.visible = blastProgress >= 0 && blastProgress < 2.7;
       introBlastCore.visible = introBlast.visible && blastProgress < 0.9;
       introSmoke.visible = blastProgress >= 0.22 && blastProgress < 3.4;
@@ -3410,7 +3464,32 @@
         introSmoke.scale.set(0.5 + blastProgress * 1.0, 0.6 + blastProgress * 0.9, 0.5 + blastProgress * 0.8);
         introSmoke.material.opacity = Math.max(0, Math.min(0.6, blastProgress * 0.7) * (1 - Math.max(0, blastProgress - 1) / 2.4));
       }
-      if (introPreviousElapsed < 6.75 && t >= 6.75) playIntroSound('impact');
+      if (blastProgress >= 0) introTank.visible = false;
+      introAdditionalBlasts.forEach(({ tank, group, flame, smoke, impactAt }) => {
+        const progress = t - impactAt;
+        group.visible = progress >= 0 && progress < 2.7;
+        if (progress < 0) return;
+        if (introPreviousElapsed < impactAt && t >= impactAt) playIntroSound('impact');
+        tank.visible = false;
+        const growth = Math.min(1, progress / 0.2);
+        flame.scale.set(0.18 + growth * 1.8, 0.18 + growth * 1.5, 0.18 + growth * 1.5);
+        flame.material.opacity = Math.max(0, 0.82 * (1 - progress / 2.7));
+        smoke.position.y = 0.8 + Math.max(0, progress - 0.2) * 0.9;
+        smoke.scale.set(0.35 + progress * 0.75, 0.4 + progress * 0.75, 0.35 + progress * 0.7);
+        smoke.material.opacity = Math.max(0, Math.min(0.58, progress * 0.7) * (1 - Math.max(0, progress - 1) / 2.4));
+      });
+      introDebris.forEach(({ mesh, origin, velocity, spin }) => {
+        const debrisLife = blastProgress;
+        mesh.visible = debrisLife >= 0 && debrisLife < 2.2;
+        if (!mesh.visible) return;
+        mesh.position.set(
+          origin.x + velocity.x * debrisLife,
+          Math.max(-0.75, origin.y + velocity.y * debrisLife - 4.9 * debrisLife * debrisLife),
+          origin.z + velocity.z * debrisLife
+        );
+        mesh.rotation.set(spin.x * debrisLife, spin.y * debrisLife, spin.z * debrisLife);
+      });
+      if (introPreviousElapsed < 6.6 && t >= 6.6) playIntroSound('impact');
       introPreviousElapsed = t;
 
       if (t < 2.5) $('intro-beat').textContent = 'LOW-LEVEL HOVER // DUST OFF';
@@ -4104,6 +4183,41 @@
       FX.push({ m, life, maxLife: life, size });
     }
 
+    function spawnVehicleExplosion(pos, size = 3.8) {
+      const group = new THREE.Group();
+      group.position.copy(pos);
+      const makeBlastPart = (geometry, color, opacity) => {
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+          color, transparent: true, opacity, depthWrite: false
+        }));
+        group.add(mesh);
+        return mesh;
+      };
+      const fireball = makeBlastPart(new THREE.SphereGeometry(1, 16, 12), 0xff5a1f, 0.95);
+      const core = makeBlastPart(new THREE.SphereGeometry(1, 12, 10), 0xffe6a3, 0.9);
+      const smoke = Array.from({ length: 3 }, (_, index) => {
+        const mesh = makeBlastPart(new THREE.SphereGeometry(1, 12, 10), index ? 0x343936 : 0x51483c, 0);
+        mesh.position.set((index - 1) * 0.35, 0.4 + index * 0.25, 0);
+        return mesh;
+      });
+      const debris = Array.from({ length: 6 }, (_, index) => {
+        const mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(0.25 + index % 2 * 0.16, 0.16, 0.35),
+          new THREE.MeshBasicMaterial({ color: index % 2 ? 0x343a36 : 0x8b6740, transparent: true, depthWrite: false })
+        );
+        mesh.position.set(0, 0.45, 0);
+        group.add(mesh);
+        return {
+          mesh,
+          floorY: -pos.y + 0.08,
+          velocity: new V3((index - 2.5) * 1.65, 3.2 + (index % 3) * 0.7, (index % 2 ? 1 : -1) * (1.8 + index * 0.18)),
+          spin: new V3(2 + index * 0.2, 1.5 + index * 0.15, 2.4 - index * 0.12)
+        };
+      });
+      scene.add(group);
+      FX.push({ m: group, life: 2.15, maxLife: 2.15, size, kind: 'vehicle-explosion', fireball, core, smoke, debris });
+    }
+
     const TRACERS = [];
     function drawTracer(start, end, color = 0xfde047) {
       const len = start.distanceTo(end);
@@ -4159,7 +4273,8 @@
         target.dead = 1;
         target.m.visible = false;
         target.rs = target.type === 'inf' ? 5 : target.team ? 16 : 22;
-        spawnExplosion(target.p, target.type === 'inf' ? 2 : 7, 0xf97316, 0.7);
+        if (isVehicleEntity(target)) spawnVehicleExplosion(target.p, target.type === 'tank' ? 4.6 : 3.8);
+        else spawnExplosion(target.p, target.type === 'inf' ? 2 : 7, 0xf97316, 0.7);
         onKill(target, attacker);
         if (target.targetVeh?.boardingBot === target) target.targetVeh.boardingBot = null;
         target.targetVeh = null;
@@ -6797,10 +6912,14 @@
       (state.entities || []).forEach(item => {
         const entity = E.find(candidate => candidate.nid === item.id);
         if (!entity || entity.remote || entity === P.veh) return;
+        const becameDead = !entity.dead && item.dead;
         entity.p.set(item.x, item.y, item.z);
         entity.yaw = item.yaw;
         entity.hp = item.hp;
         entity.dead = item.dead;
+        if (becameDead && isVehicleEntity(entity)) {
+          spawnVehicleExplosion(entity.p, entity.type === 'tank' ? 4.6 : 3.8);
+        }
         if (Number.isInteger(item.team)) entity.team = item.team;
         if (Number.isInteger(item.tm)) entity.tm = item.tm;
         entity.boardingTime = Number.isFinite(item.boardingTime)
@@ -7813,11 +7932,46 @@
         f.life -= dt;
         if (f.life <= 0) {
           scene.remove(f.m);
+          if (f.kind === 'vehicle-explosion') {
+            f.m.traverse(object => {
+              if (!object.isMesh) return;
+              object.geometry.dispose();
+              object.material.dispose();
+            });
+          }
           FX.splice(i, 1);
           continue;
         }
-        f.m.scale.setScalar(f.size * (1 + (1 - f.life / f.maxLife) * 0.6));
-        f.m.material.opacity = f.life / f.maxLife;
+        if (f.kind === 'vehicle-explosion') {
+          const age = 1 - f.life / f.maxLife;
+          const fireGrowth = Math.min(1, age * 5);
+          f.fireball.scale.setScalar(f.size * (0.18 + fireGrowth * 0.72));
+          f.fireball.material.opacity = Math.max(0, 0.95 * (1 - age * 1.8));
+          f.core.scale.setScalar(f.size * (0.08 + fireGrowth * 0.32));
+          f.core.material.opacity = Math.max(0, 0.9 * (1 - age * 5));
+          f.smoke.forEach((smoke, index) => {
+            smoke.position.y += dt * (0.55 + index * 0.12);
+            smoke.scale.setScalar(f.size * (0.18 + age * (0.55 + index * 0.12)));
+            smoke.material.opacity = Math.max(0, Math.min(0.58, age * 2.8) * (1 - age));
+          });
+          f.debris.forEach(({ mesh, velocity, spin, floorY }) => {
+            mesh.position.addScaledVector(velocity, dt);
+            velocity.y -= 9.8 * dt;
+            if (mesh.position.y < floorY) {
+              mesh.position.y = floorY;
+              velocity.y = Math.abs(velocity.y) * 0.3;
+              velocity.x *= 0.7;
+              velocity.z *= 0.7;
+            }
+            mesh.rotation.x += spin.x * dt;
+            mesh.rotation.y += spin.y * dt;
+            mesh.rotation.z += spin.z * dt;
+            mesh.material.opacity = Math.max(0, 1 - age * 1.4);
+          });
+        } else {
+          f.m.scale.setScalar(f.size * (1 + (1 - f.life / f.maxLife) * 0.6));
+          f.m.material.opacity = f.life / f.maxLife;
+        }
       }
       for (let i = TRACERS.length - 1; i >= 0; i--) {
         const t = TRACERS[i];
