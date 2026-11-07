@@ -72,6 +72,7 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="main-menu-modal"/);
   assert.match(html, /id="updates-modal"/);
   assert.match(html, /id="btn-main-updates"/);
+  assert.match(html, /VERSION 1\.1\.10 · COMBAT AI & MODEL OVERHAUL/);
   assert.match(html, /VERSION 1\.1\.5 · BATTLEFIELD EXPANSION/);
   assert.match(html, /id="loading-screen"/);
   assert.match(html, /id="skip-loading"/);
@@ -98,9 +99,23 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /f\.kind === 'vehicle-explosion'/);
   assert.match(html, /const stairSteps = 14/);
   assert.match(html, /new THREE\.PointLight\(0xffc56e, 7, 42, 2\)/);
+  assert.match(html, /const BOT_PATROL_COORDINATES = \[-260, -186, -112, -38, 38, 112, 186, 260\]/);
   assert.match(html, /const patrolCount = BOT_PATROL_COORDINATES\.length \*\* 2/);
+  assert.doesNotMatch(html, /baseStayTimer/);
+  assert.match(html, /e\.ct = 0;[\s\S]*if \(e\.type === 'inf' && e\.team\)/);
   assert.match(html, /rnd\(-250, 250\)/);
-  assert.match(html, /const variation = 1 \+ 0\.1 \* Math\.sin/);
+  assert.match(html, /new THREE\.IcosahedronGeometry\(1, 2\)/);
+  assert.match(html, /const variation = 1 \+ 0\.14 \* Math\.sin/);
+  assert.match(html, /const makeVehiclePaint = color => new THREE\.MeshStandardMaterial/);
+  assert.match(html, /function mkInf\(colorHex\)/);
+  assert.match(html, /new THREE\.SphereGeometry\(0\.23, 12, 10\)/);
+  assert.match(html, /function mkContainer\(x, z, rot = 0, colorIdx = 0\)/);
+  assert.match(html, /function mkAbandonedBuilding\(x, z\)/);
+  assert.match(html, /new THREE\.DodecahedronGeometry\(s \* rnd\(0\.18, 0\.32\), 0\)/);
+  assert.match(html, /const muzzleSleeve = new THREE\.Mesh/);
+  assert.match(html, /if \(type === 'med'\)/);
+  assert.match(html, /const flagMat = t \? mats\.teamRed : mats\.teamBlue/);
+  assert.match(html, /Secure an available vehicle before considering combat or patrol behavior/);
   assert.match(html, /for \(const z of \[-2\.7, -1\.62, -0\.54, 0\.54, 1\.62, 2\.7\]\)/);
   assert.match(html, /function getBaseWalkableHeight\(pos\)/);
   assert.match(html, /function getHelipadStairTarget\(vehicle, pos\)/);
@@ -124,16 +139,16 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="active-player-count">—/);
   assert.match(html, /veh\.type === 'car' \|\| veh\.type === 'heli' \|\| veh\.type === 'tank' \|\| veh\.type === 'sam'/);
   assert.match(html, /currentMode === 'ffa' \|\| veh\.tm === e\.tm/);
-  assert.match(html, /VERSION 1\.1\.5/);
-  assert.match(html, /Game version 1\.1\.5/);
+  assert.match(html, /VERSION 1\.1\.10/);
+  assert.match(html, /Game version 1\.1\.10/);
   assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(packageInfo.version, '1.1.5');
+  assert.equal(packageInfo.version, '1.1.10');
   const lockInfo = JSON.parse(await readFile(path.join(root, 'package-lock.json'), 'utf8'));
-  assert.equal(lockInfo.version, '1.1.5');
-  assert.equal(lockInfo.packages[''].version, '1.1.5');
+  assert.equal(lockInfo.version, '1.1.10');
+  assert.equal(lockInfo.packages[''].version, '1.1.10');
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
   assert.equal(sourcePath.status, 200);

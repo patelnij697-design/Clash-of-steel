@@ -1420,7 +1420,7 @@
       <h1 id="loading-caption">AH-64 APACHE</h1>
       <div class="loading-subtitle">CLOSE AIR SUPPORT · HOSTILE ARMOR INBOUND</div>
       <div class="loading-progress" aria-hidden="true"><span></span></div>
-      <div class="loading-version">CINEMATIC INTRO // VERSION 1.1.5</div>
+      <div class="loading-version">CINEMATIC INTRO // VERSION 1.1.10</div>
     </div>
     <div class="loading-controls">
       <button type="button" id="toggle-intro-audio" aria-pressed="false">AUDIO OFF</button>
@@ -1483,7 +1483,7 @@
   <div class="menu-modal" id="main-menu-modal" style="display:none;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 1.1.5</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 1.1.10</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -1512,6 +1512,14 @@
         <button type="button" class="btn-secondary" id="btn-updates-close">CLOSE</button>
       </div>
       <div class="modal-subtitle">CLASH OF STEEL · RELEASE NOTES</div>
+      <section class="update-release" aria-label="Version 1.1.10 updates">
+        <h3>VERSION 1.1.10 · COMBAT AI & MODEL OVERHAUL</h3>
+        <ul>
+          <li>Enemy infantry now head for an available team vehicle as soon as they spawn or respawn.</li>
+          <li>Expanded bot patrol lanes to an 8 × 8 grid covering the full battlefield.</li>
+          <li>Rebuilt infantry and refreshed vehicle, terrain, building, tree, rock, and supply models.</li>
+        </ul>
+      </section>
       <section class="update-release" aria-label="Version 1.1.5 updates">
         <h3>VERSION 1.1.5 · BATTLEFIELD EXPANSION</h3>
         <ul>
@@ -1609,7 +1617,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 1.1.5">v1.1.5</div>
+    <div id="game-version" aria-label="Game version 1.1.10">v1.1.10</div>
   </div>
 
   <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -2460,6 +2468,12 @@
     function mkTree(x, z, scale = 1) {
       const g = new THREE.Group();
       cyl(0.3 * scale, 0.5 * scale, 3 * scale, 6, mats.treeWood, 0, 1.5 * scale, 0, g);
+      for (const [side, height] of [[-1, 2.8], [1, 3.7], [-1, 4.7], [1, 5.5]]) {
+        const branch = cyl(0.1 * scale, 0.2 * scale, 2.1 * scale, 5, mats.treeWood,
+          side * 0.45 * scale, height * scale, 0, g);
+        branch.rotation.z = side * 0.58;
+        branch.rotation.x = side * 0.18;
+      }
       const layers = [
         { r: 2.2 * scale, h: 2.5 * scale, y: 3.5 * scale },
         { r: 1.7 * scale, h: 2.2 * scale, y: 5.0 * scale },
@@ -2468,6 +2482,7 @@
       layers.forEach(l => {
         const cone = new THREE.Mesh(new THREE.ConeGeometry(l.r, l.h, 6), mats.pineNeedles);
         cone.position.y = l.y;
+        cone.rotation.y = rnd(0, Math.PI);
         cone.castShadow = true;
         cone.receiveShadow = true;
         g.add(cone);
@@ -2490,6 +2505,22 @@
       m.castShadow = true;
       m.receiveShadow = true;
       scene.add(m);
+      for (let shard = 0; shard < 3; shard++) {
+        const fragment = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(s * rnd(0.18, 0.32), 0),
+          mats.rockGrey
+        );
+        const angle = shard * Math.PI * 2 / 3 + rnd(-0.3, 0.3);
+        fragment.position.set(
+          x + Math.cos(angle) * s * 0.8,
+          s * rnd(0.12, 0.28),
+          z + Math.sin(angle) * s * 0.8
+        );
+        fragment.rotation.set(rnd(0, 3), rnd(0, 3), rnd(0, 3));
+        fragment.castShadow = true;
+        fragment.receiveShadow = true;
+        scene.add(fragment);
+      }
       OB.push({ x, z, hw: s * 0.9, hd: s * 0.9, h: s * 1.3 });
 
       const body = new CANNON.Body({ mass: 0 });
@@ -2499,13 +2530,14 @@
     }
 
     function mkTerrainMound(x, z, width, depth, height, color) {
-      const geometry = new THREE.SphereGeometry(1, 12, 8);
+      const geometry = new THREE.IcosahedronGeometry(1, 2);
       const positions = geometry.attributes.position;
       for (let vertex = 0; vertex < positions.count; vertex++) {
         const px = positions.getX(vertex);
         const py = positions.getY(vertex);
         const pz = positions.getZ(vertex);
-        const variation = 1 + 0.1 * Math.sin(px * 5 + pz * 3) * Math.cos(py * 4 - px * 2);
+        const variation = 1 + 0.14 * Math.sin(px * 5 + pz * 3) * Math.cos(py * 4 - px * 2)
+          + 0.055 * Math.sin(pz * 9 + py * 7);
         positions.setXYZ(vertex, px * variation, py * variation, pz * variation);
       }
       positions.needsUpdate = true;
@@ -2532,6 +2564,19 @@
       box(3.2, 3.2, 8, mat, 0, 1.6, 0, g);
       box(3.25, 0.2, 8.05, mats.steelDark, 0, 3.1, 0, g);
       box(3.25, 0.2, 8.05, mats.steelDark, 0, 0.1, 0, g);
+      for (const side of [-1, 1]) {
+        for (const x of [-1.2, -0.6, 0, 0.6, 1.2]) {
+          box(0.08, 2.65, 0.07, mats.steelDark, x, 1.6, side * 4.03, g);
+        }
+        for (const z of [-3.1, -1.55, 0, 1.55, 3.1]) {
+          box(0.07, 2.65, 0.08, mats.steelDark, side * 1.63, 1.6, z, g);
+        }
+      }
+      for (const x of [-1.55, 1.55]) {
+        for (const z of [-3.9, 3.9]) {
+          box(0.12, 3.0, 0.12, mats.steelLight, x, 1.6, z, g);
+        }
+      }
       box(0.1, 2.8, 0.1, mats.hazardStripe, 1.55, 1.6, 3.9, g);
       g.position.set(x, 0, z);
       g.rotation.y = rot;
@@ -2555,6 +2600,20 @@
       addObstacle(4, 1.8, 1.2, mats.concrete, x + 4, z + 6, 0.9);
       addObstacle(7, 0.7, 5, mats.steelDark, x + 1.5, z - 1.5, 3.2);
       addObstacle(3, 0.8, 2.5, mats.rockGrey, x - 2, z + 2, 0.4);
+      for (const side of [-1, 1]) {
+        box(2.4, 1.1, 0.12, mats.visor, x + side * 2.7, 1.8, z - 6.08);
+        box(0.08, 1.15, 0.16, mats.steelDark, x + side * 2.7, 1.8, z - 6.16);
+        box(0.9, 1.4, 0.12, mats.steelDark, x + side * 4.7, 0.9, z + 6.08);
+      }
+      box(3.2, 0.18, 0.18, mats.steelDark, x, 3.0, z - 6.08);
+      box(2.1, 0.12, 0.16, mats.hazardStripe, x + 1.5, 2.25, z + 6.08);
+      for (const offset of [-2, 2]) {
+        const rubble = new THREE.Mesh(new THREE.DodecahedronGeometry(0.7, 0), mats.rockGrey);
+        rubble.position.set(x + offset, 0.45, z + 7.1);
+        rubble.rotation.set(rnd(0, 2), rnd(0, 3), rnd(0, 2));
+        rubble.castShadow = true;
+        scene.add(rubble);
+      }
     }
 
     function mkWatchtower(x, z) {
@@ -2571,6 +2630,18 @@
       box(0.2, 1.0, 5.0, mats.steelDark, -2.5, 10.6, 0, g);
       box(4.0, 3.0, 4.0, mats.camoGreen, 0, 12.5, 0, g);
       box(0.6, 0.6, 0.8, mats.hazardStripe, 0, 10.8, 2.6, g);
+      for (const lx of [-2.7, 2.7]) {
+        const brace = box(0.14, 6.2, 0.14, mats.steelLight, lx * 0.5, 7.0, 0, g);
+        brace.rotation.z = lx < 0 ? 0.55 : -0.55;
+        box(0.22, 0.18, 0.22, mats.hazardStripe, lx, 11.4, 0, g);
+      }
+      for (const lx of [-1.7, 1.7]) {
+        box(0.12, 0.45, 0.12, mats.steelDark, lx, 13.9, -1.7, g);
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), baseLightMaterial);
+        lamp.position.set(lx, 12.7, 2.05);
+        g.add(lamp);
+      }
+      cyl(0.06, 0.06, 2.4, 6, mats.steelLight, 0, 14.7, 0, g);
       g.position.set(x, 0, z);
       scene.add(g);
       OB.push({ x, z, hw: 3.0, hd: 3.0, h: 14 });
@@ -2596,6 +2667,11 @@
       dish.rotation.x = -Math.PI / 3;
       dishGroup.add(dish);
       cyl(0.15, 0.15, 3, 4, mats.hazardStripe, 0, 1.5, 1, dishGroup);
+      box(2.8, 0.08, 0.08, mats.hazardStripe, 0, 5.2, 0, g);
+      for (const side of [-1, 1]) {
+        box(0.12, 0.28, 0.12, mats.steelDark, side * 5.8, 4.4, 0, g);
+        box(1.0, 0.08, 0.08, mats.hazardStripe, side * 5.8, 4.5, 0, g);
+      }
       g.add(dishGroup);
       radarDishMesh = dishGroup;
 
@@ -2615,6 +2691,9 @@
     const TC = [0x2563eb, 0xd9383a];
     const baseLightMaterial = new THREE.MeshStandardMaterial({
       color: 0xffe6a3, emissive: 0xffb84d, emissiveIntensity: 2.4, roughness: 0.35
+    });
+    const makeVehiclePaint = color => new THREE.MeshStandardMaterial({
+      color, metalness: 0.24, roughness: 0.68
     });
 
     function mkBase(teamIdx) {
@@ -2778,21 +2857,64 @@
        ------------------------------------------------------------------------- */
     function mkInf(colorHex) {
       const g = new THREE.Group();
-      const teamMat = new THREE.MeshLambertMaterial({ color: colorHex || 0x2563eb });
-      const leftLeg = box(0.24, 0.85, 0.28, mats.steelDark, -0.22, 0.42, 0, g);
-      const rightLeg = box(0.24, 0.85, 0.28, mats.steelDark, 0.22, 0.42, 0, g);
-      box(0.7, 0.8, 0.45, teamMat, 0, 1.25, 0, g);
-      box(0.65, 0.65, 0.52, mats.steelDark, 0, 1.28, 0, g);
-      const head = box(0.38, 0.38, 0.38, mats.skin, 0, 1.82, 0, g);
+      const uniform = new THREE.MeshStandardMaterial({ color: colorHex || 0x2563eb, roughness: 0.88 });
+      const armor = new THREE.MeshStandardMaterial({ color: 0x4b5148, roughness: 0.72, metalness: 0.08 });
+      const cloth = new THREE.MeshStandardMaterial({ color: 0x363b34, roughness: 0.95 });
+      const bootMat = new THREE.MeshStandardMaterial({ color: 0x1e2322, roughness: 0.9 });
+      const leftLeg = new THREE.Group();
+      const rightLeg = new THREE.Group();
+      leftLeg.position.set(-0.2, 0.82, 0);
+      rightLeg.position.set(0.2, 0.82, 0);
+      g.add(leftLeg, rightLeg);
+      box(0.28, 0.66, 0.31, cloth, 0, -0.05, 0, leftLeg);
+      box(0.28, 0.66, 0.31, cloth, 0, -0.05, 0, rightLeg);
+      box(0.32, 0.22, 0.48, bootMat, 0, -0.45, 0.08, leftLeg);
+      box(0.32, 0.22, 0.48, bootMat, 0, -0.45, 0.08, rightLeg);
+      box(0.31, 0.18, 0.34, armor, 0, -0.05, 0.02, leftLeg);
+      box(0.31, 0.18, 0.34, armor, 0, -0.05, 0.02, rightLeg);
+
+      box(0.48, 0.34, 0.3, cloth, 0, 0.92, 0, g);
+      box(0.76, 0.7, 0.44, uniform, 0, 1.34, 0, g);
+      box(0.66, 0.44, 0.5, armor, 0, 1.34, 0.015, g);
+      box(0.7, 0.12, 0.48, mats.steelDark, 0, 1.0, 0, g);
+      for (const side of [-1, 1]) {
+        box(0.16, 0.52, 0.3, armor, side * 0.43, 1.32, 0.02, g);
+        box(0.19, 0.22, 0.22, uniform, side * 0.39, 1.05, 0.02, g);
+        box(0.16, 0.19, 0.18, mats.hazardStripe, side * 0.43, 1.48, 0.05, g);
+      }
+      const pack = box(0.52, 0.62, 0.24, cloth, 0, 1.35, -0.34, g);
+      pack.rotation.x = -0.12;
+      box(0.58, 0.12, 0.28, armor, 0, 1.12, -0.36, g);
+
+      cyl(0.15, 0.15, 0.18, 8, cloth, 0, 1.72, 0, g);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 12, 10), mats.skin);
+      head.position.set(0, 1.91, 0);
       head.userData.head = 1;
-      box(0.44, 0.26, 0.44, teamMat, 0, 1.96, 0, g);
-      box(0.36, 0.12, 0.42, mats.visor, 0, 1.82, 0.03, g);
+      head.castShadow = true;
+      g.add(head);
+      const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.29, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), uniform);
+      helmet.position.set(0, 2.03, -0.01);
+      helmet.castShadow = true;
+      g.add(helmet);
+      box(0.46, 0.08, 0.48, armor, 0, 1.98, 0.01, g);
+      box(0.42, 0.12, 0.12, mats.visor, 0, 1.91, 0.2, g);
+      for (const side of [-1, 1]) {
+        cyl(0.07, 0.07, 0.12, 8, mats.steelLight, side * 0.28, 1.94, 0, g).rotation.z = Math.PI / 2;
+        const lens = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), mats.opticLens || mats.visor);
+        lens.position.set(side * 0.105, 1.91, 0.255);
+        g.add(lens);
+      }
+      cyl(0.045, 0.045, 0.48, 6, mats.steelDark, 0.17, 2.23, -0.25, g).rotation.z = -0.12;
 
       const weaponG = new THREE.Group();
-      weaponG.position.set(0.26, 1.2, 0.35);
-      box(0.1, 0.14, 0.7, mats.steelDark, 0, 0, 0, weaponG);
-      box(0.06, 0.06, 0.4, mats.steelLight, 0, 0.04, 0.4, weaponG);
-      box(0.08, 0.25, 0.12, mats.steelDark, 0, -0.15, 0.1, weaponG);
+      weaponG.position.set(0.28, 1.23, 0.34);
+      box(0.14, 0.18, 0.46, mats.steelDark, 0, 0, -0.06, weaponG);
+      box(0.12, 0.1, 0.36, mats.camoGreen, 0, 0.01, 0.4, weaponG);
+      const barrel = cyl(0.035, 0.035, 0.7, 8, mats.steelLight, 0, 0.015, 0.86, weaponG);
+      barrel.rotation.x = Math.PI / 2;
+      box(0.1, 0.18, 0.12, mats.steelDark, 0, -0.16, 0.16, weaponG);
+      box(0.1, 0.3, 0.14, mats.camoTan, 0, -0.19, -0.12, weaponG);
+      box(0.08, 0.1, 0.15, mats.steelLight, 0, 0.12, 0.18, weaponG);
       g.add(weaponG);
 
       g.legs = [leftLeg, rightLeg];
@@ -2801,11 +2923,19 @@
 
     function mkAPC(teamColor) {
       const g = new THREE.Group();
-      const bodyMat = teamColor ? new THREE.MeshLambertMaterial({ color: teamColor }) : mats.camoGreen;
+      const bodyMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
       box(2.8, 1.2, 6.2, bodyMat, 0, 1.1, 0, g);
       const hood = box(2.6, 0.7, 2.0, bodyMat, 0, 1.55, 2.2, g);
       hood.rotation.x = 0.28;
+      const glacis = box(2.55, 0.28, 2.45, bodyMat, 0, 1.2, 2.75, g);
+      glacis.rotation.x = 0.35;
       box(2.6, 0.9, 3.8, bodyMat, 0, 1.7, -0.6, g);
+      box(2.25, 0.18, 2.0, mats.steelDark, 0, 2.2, -1.35, g);
+      for (const side of [-1, 1]) {
+        box(0.18, 0.72, 1.2, mats.visor, side * 1.32, 1.55, 1.65, g);
+        box(0.12, 0.82, 0.9, mats.steelDark, side * 1.43, 1.15, -1.5, g);
+        box(0.12, 0.2, 0.68, mats.hazardStripe, side * 1.5, 1.58, -1.5, g);
+      }
       box(2.9, 0.32, 0.45, mats.steelDark, 0, 0.55, 3.0, g);
       box(1.7, 0.12, 0.12, mats.steelLight, 0, 1.05, 3.13, g);
       for (const x of [-1.0, 1.0]) {
@@ -2820,9 +2950,18 @@
           cyl(0.25, 0.25, 0.52, 8, mats.hazardStripe, x, 0.6, z, g).rotation.z = Math.PI / 2;
         }
       }
+      for (const side of [-1, 1]) {
+        for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
+          box(0.12, 0.13, 0.82, mats.steelLight, side * 1.88, 0.62, z, g);
+        }
+      }
       box(0.14, 0.1, 1.3, mats.steelDark, 0, 2.2, -2.35, g);
       cyl(0.06, 0.06, 2.2, 6, mats.steelDark, 0.95, 2.45, -1.0, g);
       box(1.7, 0.12, 1.0, mats.steelLight, 0, 2.05, -1.95, g);
+      for (const side of [-1, 1]) {
+        const antenna = cyl(0.025, 0.025, 1.15, 6, mats.steelDark, side * 0.85, 2.72, -2.3, g);
+        antenna.rotation.z = side * 0.08;
+      }
       const tu = new THREE.Group();
       tu.position.set(0, 2.3, -0.5);
       box(1.2, 0.6, 1.4, mats.steelDark, 0, 0.3, 0, tu);
@@ -2836,16 +2975,22 @@
 
     function mkTank(teamColor) {
       const g = new THREE.Group();
-      const armorMat = teamColor ? new THREE.MeshLambertMaterial({ color: teamColor }) : mats.steelDark;
+      const armorMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
       const chassis = new THREE.Group();
       g.add(chassis);
       g.chassis = chassis;
 
       box(3.8, 1.1, 7.2, armorMat, 0, 1.0, 0, chassis);
       box(3.6, 0.6, 2.5, armorMat, 0, 1.45, 2.4, chassis).rotation.x = 0.32;
+      const glacis = box(3.5, 0.34, 2.2, armorMat, 0, 1.35, 2.82, chassis);
+      glacis.rotation.x = 0.42;
+      box(2.5, 0.16, 0.45, mats.steelDark, 0, 0.9, 3.65, chassis);
       for (const x of [-1.95, 1.95]) {
         box(0.65, 1.1, 7.4, mats.steelDark, x, 0.65, 0, chassis);
         box(0.15, 0.8, 6.8, armorMat, x + (x > 0 ? 0.35 : -0.35), 0.9, 0, chassis);
+        for (const z of [-2.7, -1.62, -0.54, 0.54, 1.62, 2.7]) {
+          box(0.12, 0.12, 0.5, mats.steelLight, x + (x > 0 ? 0.42 : -0.42), 0.62, z, chassis);
+        }
         for (const z of [-2.7, -1.62, -0.54, 0.54, 1.62, 2.7]) {
           const wheel = cyl(0.43, 0.43, 0.22, 14, mats.steelDark, x * 1.08, 0.62, z, chassis);
           wheel.rotation.z = Math.PI / 2;
@@ -2860,6 +3005,11 @@
         box(0.5, 0.32, 0.12, baseLightMaterial, x, 1.15, 3.65, chassis);
         box(0.35, 0.16, 0.12, mats.hazardStripe, x, 1.12, 3.72, chassis);
       }
+      for (const side of [-1, 1]) {
+        const smokeLauncher = cyl(0.08, 0.1, 0.38, 8, mats.steelDark, side * 1.4, 1.72, -0.65, chassis);
+        smokeLauncher.rotation.z = side * 0.38;
+        box(0.66, 0.2, 0.8, mats.camoTan, side * 1.45, 1.45, -1.3, chassis);
+      }
       const tu = new THREE.Group();
       tu.position.set(0, 1.8, -0.2);
       box(2.8, 1.0, 3.4, armorMat, 0, 0.5, 0, tu);
@@ -2871,6 +3021,10 @@
         box(0.12, 0.28, 0.55, mats.steelDark, side * 1.35, 0.35, -0.15, tu);
       }
       cyl(0.055, 0.055, 2.0, 6, mats.steelDark, -0.95, 1.05, -0.55, tu);
+      box(0.62, 0.18, 0.75, mats.camoTan, 0, 1.04, -1.0, tu);
+      for (const side of [-1, 1]) {
+        cyl(0.12, 0.12, 0.2, 8, mats.steelLight, side * 1.32, 0.52, -0.55, tu).rotation.z = Math.PI / 2;
+      }
 
       // Heavy 120mm Cannon with recoil sleeve
       const cannonAssembly = new THREE.Group();
@@ -2893,7 +3047,7 @@
     function mkHeli(teamColor) {
       const g = new THREE.Group();
       g.rotation.order = 'YXZ';
-      const hullMat = teamColor ? new THREE.MeshLambertMaterial({ color: teamColor }) : mats.camoGreen;
+      const hullMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
       const trimMat = mats.steelDark;
       const canopyMat = mats.glassCanopy;
 
@@ -3080,13 +3234,24 @@
       box(0.1, 0.6, 0.1, trimMat, 0, -0.15, -6.8, g).rotation.x = -0.35;
       const tailWheel = cyl(0.2, 0.2, 0.16, 10, mats.steelDark, 0, -0.42, -6.95, g);
       tailWheel.rotation.z = Math.PI / 2;
+      for (const side of [-1, 1]) {
+        const navLight = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12, 8, 6),
+          new THREE.MeshStandardMaterial({ color: side < 0 ? 0xff4040 : 0x37b8ff, emissive: side < 0 ? 0x701010 : 0x073f70 })
+        );
+        navLight.position.set(side * 2.9, 0.12, 0.15);
+        g.add(navLight);
+        const aerial = cyl(0.025, 0.025, 1.0, 6, trimMat, side * 0.7, 1.85, -1.75, g);
+        aerial.rotation.z = side * 0.12;
+      }
+      box(0.34, 0.12, 0.46, mats.hazardStripe, 0, 1.54, -0.1, g);
 
       return g;
     }
 
     function mkSAMTruck(teamColor) {
       const g = new THREE.Group();
-      const bodyMat = teamColor ? new THREE.MeshLambertMaterial({ color: teamColor }) : mats.camoTan;
+      const bodyMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x767553);
       
       // Heavy 6x6 Military Truck Cab & Hood
       box(2.8, 1.3, 2.6, bodyMat, 0, 1.45, 2.2, g);
@@ -3132,6 +3297,11 @@
           cyl(0.28, 0.28, 0.57, 8, mats.hazardStripe, x, 0.65, z, g).rotation.z = Math.PI / 2;
         }
       }
+      for (const side of [-1, 1]) {
+        box(0.12, 0.48, 0.9, mats.steelLight, side * 1.9, 1.45, 2.15, g);
+        const mirror = box(0.12, 0.16, 0.38, mats.steelDark, side * 1.58, 2.1, 2.65, g);
+        mirror.rotation.x = -0.2;
+      }
 
       // Hydraulic Outriggers
       for (const z of [0.8, -3.4]) {
@@ -3167,6 +3337,7 @@
         box(0.68, 0.68, 4.0, mats.steelDark, tx, ty, 0.5, launcher);
         const tube = cyl(0.25, 0.25, 4.02, 10, bodyMat, tx, ty, 0.5, launcher);
         tube.rotation.x = Math.PI / 2;
+        cyl(0.29, 0.29, 0.12, 12, mats.steelLight, tx, ty, -1.5, launcher).rotation.x = Math.PI / 2;
         const nose = cyl(0.18, 0.02, 0.65, 8, mats.pureWhite, tx, ty, 2.5, launcher);
         nose.rotation.x = Math.PI / 2;
         box(0.16, 0.16, 0.12, mats.hazardStripe, tx, ty, 2.75, launcher);
@@ -3664,7 +3835,7 @@
       else if (t < 6.75) $('intro-beat').textContent = 'WEAPONS RELEASE // ROCKET SALVO';
       else if (t < 9.5) $('intro-beat').textContent = 'TARGET DESTROYED // BREAKING CONTACT';
       else {
-        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1.1.5';
+        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1.1.10';
         $('loading-caption').textContent = 'CLASH OF STEEL';
       }
       if (t >= 12) finishLoadingIntro();
@@ -3846,6 +4017,19 @@
 
       if (index === 0) addSight(0.16);
       const muzzleZ = [-0.42, -1.02, -0.4, -1.16, -1.22, -0.48, -1.45, -0.92, -1.7, -0.92, -1.42][index];
+      const muzzleSleeve = new THREE.Mesh(
+        new THREE.CylinderGeometry(index === 8 ? 0.06 : 0.04, index === 8 ? 0.07 : 0.05, 0.11, 10),
+        steel
+      );
+      muzzleSleeve.rotation.x = Math.PI / 2;
+      muzzleSleeve.position.set(0, 0.025, muzzleZ);
+      model.add(muzzleSleeve);
+      for (const side of [-1, 1]) {
+        const fastener = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.025, 8), steel);
+        fastener.rotation.z = Math.PI / 2;
+        fastener.position.set(side * 0.082, 0.055, -0.12);
+        model.add(fastener);
+      }
       const flash = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 1), glow.clone());
       flash.position.set(0, 0.03, muzzleZ);
       model.add(flash);
@@ -3948,7 +4132,6 @@
         idleTimer: 0, // 30s inactivity auto-respawn
         driver: null,
         drivingVeh: null,
-        baseStayTimer: (type === 'inf' && team) ? 1.0 : 0,
         stuckTimer: 0,
         stuckDir: 1,
         lastPos: new V3(x, y, z),
@@ -4028,10 +4211,39 @@
     };
     function mkPickup(type, x, z) {
       const g = new THREE.Group();
-      const pmat = new THREE.MeshLambertMaterial({ color: PT[type].c });
+      const pmat = new THREE.MeshStandardMaterial({ color: PT[type].c, roughness: 0.62, metalness: 0.12 });
       box(1.2, 0.8, 1.2, pmat, 0, 1.2, 0, g);
       box(1.25, 0.1, 1.25, mats.steelDark, 0, 1.6, 0, g);
-      cyl(0.08, 0.08, 8, 4, pmat, 0, 4.8, 0, g);
+      for (const side of [-1, 1]) {
+        box(0.12, 0.52, 0.08, mats.steelLight, side * 0.52, 1.2, 0.62, g);
+      }
+      if (type === 'med') {
+        box(0.2, 0.62, 0.08, mats.pureWhite, 0, 1.2, 0.67, g);
+        box(0.62, 0.2, 0.08, mats.pureWhite, 0, 1.2, 0.67, g);
+      } else if (type === 'shield') {
+        const emblem = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), mats.pureWhite);
+        emblem.position.set(0, 1.2, 0.68);
+        emblem.scale.set(0.75, 1.1, 0.35);
+        g.add(emblem);
+      } else if (type === 'ammo') {
+        for (const xOffset of [-0.22, 0, 0.22]) {
+          const round = cyl(0.07, 0.07, 0.46, 8, mats.hazardStripe, xOffset, 1.2, 0.67, g);
+          round.rotation.z = Math.PI / 2;
+        }
+      } else if (type === 'repair') {
+        const wrench = cyl(0.06, 0.06, 0.48, 8, mats.pureWhite, 0, 1.2, 0.67, g);
+        wrench.rotation.z = Math.PI / 4;
+        box(0.38, 0.1, 0.08, mats.pureWhite, 0.2, 1.35, 0.67, g).rotation.z = -0.55;
+      } else {
+        for (const side of [-1, 1]) {
+          const chevron = box(0.16, 0.5, 0.08, mats.pureWhite, side * 0.16, 1.2, 0.67, g);
+          chevron.rotation.z = side * 0.34;
+        }
+      }
+      for (const side of [-1, 1]) {
+        box(0.08, 0.16, 0.08, mats.steelLight, side * 0.4, 1.78, side * 0.4, g);
+      }
+      cyl(0.08, 0.08, 0.16, 8, pmat, 0, 4.8, 0, g);
       g.position.set(x, 0, z);
       scene.add(g);
       PK.push({ m: g, type, p: new V3(x, 0, z), t: 0, on: 1, c: '#' + PT[type].c.toString(16).padStart(6, '0') });
@@ -5311,7 +5523,7 @@
     const BOT_NAV_SIZE = 93;
     const BOT_BOARDING_DELAY = 2;
     const botNavGrids = new Map();
-    const BOT_PATROL_COORDINATES = [-240, -160, -80, 0, 80, 160, 240];
+    const BOT_PATROL_COORDINATES = [-260, -186, -112, -38, 38, 112, 186, 260];
 
     function getBotPatrolWaypoint(e) {
       const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
@@ -5538,18 +5750,6 @@
           e.m.position.copy(e.p);
           return;
         }
-      }
-
-      if (isInf && e.baseStayTimer > 0) {
-        e.baseStayTimer -= dt;
-        e.v = 0;
-        e.p.copy(e.sp);
-        e.m.position.copy(e.p);
-        if (e.legs) {
-          e.legs[0].rotation.x = 0;
-          e.legs[1].rotation.x = 0;
-        }
-        return;
       }
 
       e.t -= dt;
@@ -6052,6 +6252,7 @@
       e.wp = null;
       e.coverPt = null;
       e.aiState = 'patrol';
+      e.ct = 0;
       e.boardTimer = 0;
       e.boardingVeh = null;
       e.stuckTimer = 0;
@@ -6060,7 +6261,6 @@
       e.navIndex = 0;
       e.navTimer = 0;
       if (e.type === 'inf' && e.team) {
-        e.baseStayTimer = 1.0;
         const pt = getSpawnPoint(e.tm);
         e.p.set(pt[0], 0, pt[1]);
       } else {
@@ -6837,7 +7037,15 @@
         FLAGS = [0, 1].map(t => {
           const g = new THREE.Group();
           cyl(0.12, 0.12, 6.5, 8, mats.steelLight, 0, 3.25, 0, g);
-          box(2.4, 1.4, 0.1, t ? mats.teamRed : mats.teamBlue, 1.2, 5.6, 0, g);
+          cyl(0.19, 0.22, 0.16, 10, mats.hazardStripe, 0, 6.55, 0, g);
+          const flagMat = t ? mats.teamRed : mats.teamBlue;
+          box(2.4, 1.4, 0.1, flagMat, 1.2, 5.6, 0, g);
+          for (const stripeY of [5.1, 5.42, 5.74, 6.06]) {
+            box(2.1, 0.08, 0.12, mats.pureWhite, 1.2, stripeY, 0.06, g);
+          }
+          const emblem = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 0), mats.pureWhite);
+          emblem.position.set(1.15, 5.6, 0.12);
+          g.add(emblem);
           scene.add(g);
           const homeV3 = new V3(B[t][0], 0, B[t][1]);
           return { m: g, home: homeV3, p: homeV3.clone(), carrier: null };
