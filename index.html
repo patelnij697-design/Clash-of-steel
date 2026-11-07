@@ -454,6 +454,26 @@
       letter-spacing: 1px;
       margin-bottom: 20px;
     }
+    .update-release {
+      padding:14px 0;
+      border-top:1px solid rgba(148,163,184,.16);
+      text-align:left;
+    }
+    .update-release:first-of-type { border-top:0; }
+    .update-release h3 {
+      margin:0 0 8px;
+      color:#fbbf24;
+      font:700 12px var(--font-mono);
+      letter-spacing:1px;
+    }
+    .update-release ul {
+      margin:0;
+      padding-left:20px;
+      color:#cbd5e1;
+      font-size:12px;
+      line-height:1.75;
+    }
+    .update-release li::marker { color:#38bdf8; }
     .menu-guide {
       max-width:680px;
       margin:0 auto 16px;
@@ -881,7 +901,7 @@
       .modal-box { max-height:calc(100vh - 16px); overflow-y:auto; overscroll-behavior:contain; }
       @supports (height: 100dvh) { .modal-box { max-height:calc(100dvh - 16px); } }
     }
-    #lobby-modal, #settings-modal, #profile-modal { display:none; }
+    #lobby-modal, #settings-modal, #profile-modal, #updates-modal { display:none; }
     #main-menu-modal { display:flex; }
     .menu-home {
       max-width:760px;
@@ -1400,7 +1420,7 @@
       <h1 id="loading-caption">AH-64 APACHE</h1>
       <div class="loading-subtitle">CLOSE AIR SUPPORT · HOSTILE ARMOR INBOUND</div>
       <div class="loading-progress" aria-hidden="true"><span></span></div>
-      <div class="loading-version">CINEMATIC INTRO // VERSION 1</div>
+      <div class="loading-version">CINEMATIC INTRO // VERSION 1.1.5</div>
     </div>
     <div class="loading-controls">
       <button type="button" id="toggle-intro-audio" aria-pressed="false">AUDIO OFF</button>
@@ -1463,7 +1483,7 @@
   <div class="menu-modal" id="main-menu-modal" style="display:none;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 1.1.0</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 1.1.5</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -1474,6 +1494,7 @@
       <div class="menu-home-actions">
         <button class="btn-action" id="btn-main-play">PLAY</button>
         <button class="btn-secondary" id="btn-main-settings">SETTINGS</button>
+        <button class="btn-secondary" id="btn-main-updates">UPDATES</button>
         <button class="btn-secondary" id="btn-main-customize">CUSTOMIZATION</button>
         <button class="btn-secondary" id="btn-main-stats">PLAYER STATISTICS</button>
       </div>
@@ -1482,6 +1503,25 @@
       </div>
     </div>
     <div id="menu-vehicle-caption" aria-hidden="true">AH-64 APACHE</div>
+  </div>
+
+  <div class="menu-modal" id="updates-modal" role="dialog" aria-modal="true" aria-labelledby="updates-title">
+    <div class="modal-box" style="max-width:680px;">
+      <div class="menu-back-row">
+        <h2 class="modal-title" id="updates-title" style="font-size:30px;margin:0;">FIELD UPDATES</h2>
+        <button type="button" class="btn-secondary" id="btn-updates-close">CLOSE</button>
+      </div>
+      <div class="modal-subtitle">CLASH OF STEEL · RELEASE NOTES</div>
+      <section class="update-release" aria-label="Version 1.1.5 updates">
+        <h3>VERSION 1.1.5 · BATTLEFIELD EXPANSION</h3>
+        <ul>
+          <li>Added rooftop Apache pads, stair access, covered base structures, and perimeter lighting.</li>
+          <li>Improved vehicle detailing and expanded rolling terrain across the map.</li>
+          <li>Bot patrol routes now sweep a wider grid of battlefield sectors.</li>
+          <li>Vehicle destruction and the cinematic intro now feature enhanced explosions and camera work.</li>
+        </ul>
+      </section>
+    </div>
   </div>
 
   <!-- Pause / Deployment Lobby Modal -->
@@ -1569,7 +1609,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 1.1.0">v1.1.0</div>
+    <div id="game-version" aria-label="Game version 1.1.5">v1.1.5</div>
   </div>
 
   <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -1933,6 +1973,7 @@
         buildLobbyUI();
       };
       $('btn-main-settings').onclick = openSettings;
+      $('btn-main-updates').onclick = () => { $('updates-modal').style.display = 'flex'; };
       $('btn-main-customize').onclick = () => {
         $('main-menu-modal').style.display = 'none';
         $('lobby-modal').style.display = 'flex';
@@ -1956,6 +1997,7 @@
         $('settings-modal').style.display = 'none';
       };
       $('btn-profile-close').onclick = () => { $('profile-modal').style.display = 'none'; };
+      $('btn-updates-close').onclick = () => { $('updates-modal').style.display = 'none'; };
       $('settings-modal').addEventListener('click', event => {
         const button = event.target.closest('[data-bind]');
         if (!button) return;
@@ -2458,7 +2500,17 @@
 
     function mkTerrainMound(x, z, width, depth, height, color) {
       const geometry = new THREE.SphereGeometry(1, 12, 8);
+      const positions = geometry.attributes.position;
+      for (let vertex = 0; vertex < positions.count; vertex++) {
+        const px = positions.getX(vertex);
+        const py = positions.getY(vertex);
+        const pz = positions.getZ(vertex);
+        const variation = 1 + 0.1 * Math.sin(px * 5 + pz * 3) * Math.cos(py * 4 - px * 2);
+        positions.setXYZ(vertex, px * variation, py * variation, pz * variation);
+      }
+      positions.needsUpdate = true;
       geometry.scale(width / 2, height / 2, depth / 2);
+      geometry.computeVertexNormals();
       const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color }));
       mesh.position.set(x, height / 2, z);
       mesh.castShadow = true;
@@ -2561,6 +2613,9 @@
 
     const B = [[-215, -215], [215, 215]];
     const TC = [0x2563eb, 0xd9383a];
+    const baseLightMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffe6a3, emissive: 0xffb84d, emissiveIntensity: 2.4, roughness: 0.35
+    });
 
     function mkBase(teamIdx) {
       const b = B[teamIdx];
@@ -2590,6 +2645,61 @@
       cyl(0.3, 0.3, 7, 6, mats.steelDark, gantryX - 7, 3.5, gantryZ + 6);
       cyl(0.3, 0.3, 7, 6, mats.steelDark, gantryX + 7, 3.5, gantryZ + 6);
       box(15, 0.5, 13, mats.steelLight, gantryX, 7.2, gantryZ);
+      const roofPad = new THREE.Mesh(
+        new THREE.CylinderGeometry(7.5, 7.5, 0.12, 32),
+        mats.asphalt
+      );
+      roofPad.position.set(gantryX, 7.52, gantryZ);
+      roofPad.receiveShadow = true;
+      scene.add(roofPad);
+      const roofRing = new THREE.Mesh(
+        new THREE.RingGeometry(7.1, 7.35, 32),
+        mats.hazardStripe
+      );
+      roofRing.rotation.x = -Math.PI / 2;
+      roofRing.position.set(gantryX, 7.59, gantryZ);
+      scene.add(roofRing);
+      box(0.65, 0.04, 4.2, mats.whitePaint, gantryX, 7.62, gantryZ);
+      box(3.2, 0.04, 0.65, mats.whitePaint, gantryX, 7.62, gantryZ);
+
+      const stairSteps = 14;
+      for (let step = 0; step < stairSteps; step++) {
+        const stairZ = gantryZ + sign * (12 - step * 0.9);
+        const stairY = 0.28 + step * 0.51;
+        box(3.2, 0.42, 0.92, mats.steelDark, gantryX - sign * 5.3, stairY, stairZ);
+        if (step % 3 === 0) {
+          box(2.8, 0.045, 0.08, baseLightMaterial, gantryX - sign * 5.3, stairY + 0.23, stairZ + sign * 0.3);
+        }
+      }
+      const stairRailAngle = Math.atan2(7.0, stairSteps * 0.9);
+      for (const side of [-1, 1]) {
+        const rail = box(0.12, 0.12, 14.4, mats.steelLight,
+          gantryX - sign * 5.3 + side * 1.8, 3.8, gantryZ + sign * 6, scene);
+        rail.rotation.x = sign * stairRailAngle;
+        for (let post = 0; post <= 4; post++) {
+          const progress = post / 4;
+          const postZ = gantryZ + sign * (12 - progress * 12);
+          const postY = 0.8 + progress * 6.5;
+          cyl(0.08, 0.08, 0.9, 6, mats.steelDark,
+            gantryX - sign * 5.3 + side * 1.8, postY, postZ);
+        }
+      }
+      for (const side of [-1, 1]) {
+        const lampX = gantryX + side * 5.2;
+        const lampZ = gantryZ;
+        cyl(0.12, 0.16, 1.2, 8, mats.steelDark, lampX, 8.15, lampZ);
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 8), baseLightMaterial);
+        lamp.position.set(lampX, 8.8, lampZ);
+        scene.add(lamp);
+        const floodlight = new THREE.PointLight(0xffc56e, 7, 42, 2);
+        floodlight.position.set(lampX, 8.6, lampZ);
+        scene.add(floodlight);
+      }
+      for (const side of [-1, 1]) {
+        const marker = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.8), baseLightMaterial);
+        marker.position.set(gantryX + side * 7.1, 7.62, gantryZ);
+        scene.add(marker);
+      }
 
       addObstacle(2, 5, 68, mats.concrete, b[0] + sign * 38, b[1]);
       addObstacle(68, 5, 2, mats.concrete, b[0], b[1] + sign * 38);
@@ -2640,6 +2750,20 @@
     ].forEach(([x, z, width, depth, height, color]) => {
       mkTerrainMound(x, z, width, depth, height, color);
     });
+    [
+      [-190, -65, 24, 18, 2.4, 0x77734f],
+      [-185, 90, 30, 20, 3.2, 0x8c805b],
+      [-70, -205, 18, 30, 2.1, 0x6d7652],
+      [75, -205, 28, 20, 2.8, 0x827b59],
+      [195, -65, 24, 30, 3.5, 0x727653],
+      [190, 85, 20, 26, 2.3, 0x97845c],
+      [-65, 205, 30, 18, 3.1, 0x7d7957],
+      [70, 205, 22, 28, 2.5, 0x687450],
+      [-215, 65, 26, 18, 2.6, 0x8b7b56],
+      [215, -80, 18, 26, 2.2, 0x767553]
+    ].forEach(([x, z, width, depth, height, color]) => {
+      mkTerrainMound(x, z, width, depth, height, color);
+    });
     for (let i = 0; i < 20; i++) {
       const cx = rnd(-230, 230), cz = rnd(-230, 230);
       if (Math.hypot(cx, cz) < 24 || Math.hypot(cx + 215, cz + 215) < 60 || Math.hypot(cx - 215, cz - 215) < 60) continue;
@@ -2682,6 +2806,13 @@
       const hood = box(2.6, 0.7, 2.0, bodyMat, 0, 1.55, 2.2, g);
       hood.rotation.x = 0.28;
       box(2.6, 0.9, 3.8, bodyMat, 0, 1.7, -0.6, g);
+      box(2.9, 0.32, 0.45, mats.steelDark, 0, 0.55, 3.0, g);
+      box(1.7, 0.12, 0.12, mats.steelLight, 0, 1.05, 3.13, g);
+      for (const x of [-1.0, 1.0]) {
+        box(0.42, 0.32, 0.12, baseLightMaterial, x, 1.45, 3.17, g);
+        box(0.36, 0.16, 0.12, mats.hazardStripe, x, 1.18, 3.12, g);
+        box(0.72, 0.85, 0.18, mats.steelDark, x * 1.6, 1.55, -0.75, g);
+      }
       for (const z of [-2.0, 0, 2.0]) {
         for (const x of [-1.55, 1.55]) {
           const w = cyl(0.6, 0.6, 0.5, 12, mats.steelDark, x, 0.6, z, g);
@@ -2689,6 +2820,9 @@
           cyl(0.25, 0.25, 0.52, 8, mats.hazardStripe, x, 0.6, z, g).rotation.z = Math.PI / 2;
         }
       }
+      box(0.14, 0.1, 1.3, mats.steelDark, 0, 2.2, -2.35, g);
+      cyl(0.06, 0.06, 2.2, 6, mats.steelDark, 0.95, 2.45, -1.0, g);
+      box(1.7, 0.12, 1.0, mats.steelLight, 0, 2.05, -1.95, g);
       const tu = new THREE.Group();
       tu.position.set(0, 2.3, -0.5);
       box(1.2, 0.6, 1.4, mats.steelDark, 0, 0.3, 0, tu);
@@ -2712,12 +2846,31 @@
       for (const x of [-1.95, 1.95]) {
         box(0.65, 1.1, 7.4, mats.steelDark, x, 0.65, 0, chassis);
         box(0.15, 0.8, 6.8, armorMat, x + (x > 0 ? 0.35 : -0.35), 0.9, 0, chassis);
+        for (const z of [-2.7, -1.62, -0.54, 0.54, 1.62, 2.7]) {
+          const wheel = cyl(0.43, 0.43, 0.22, 14, mats.steelDark, x * 1.08, 0.62, z, chassis);
+          wheel.rotation.z = Math.PI / 2;
+          const hub = cyl(0.18, 0.18, 0.24, 10, mats.steelLight, x * 1.08, 0.62, z, chassis);
+          hub.rotation.z = Math.PI / 2;
+        }
+        for (const z of [-2.4, -1.2, 0, 1.2, 2.4]) {
+          box(0.12, 0.68, 0.86, armorMat, x * 1.2, 1.0, z, chassis);
+        }
+      }
+      for (const x of [-0.75, 0.75]) {
+        box(0.5, 0.32, 0.12, baseLightMaterial, x, 1.15, 3.65, chassis);
+        box(0.35, 0.16, 0.12, mats.hazardStripe, x, 1.12, 3.72, chassis);
       }
       const tu = new THREE.Group();
       tu.position.set(0, 1.8, -0.2);
       box(2.8, 1.0, 3.4, armorMat, 0, 0.5, 0, tu);
       box(2.2, 0.8, 1.6, mats.steelDark, 0, 0.6, -1.8, tu);
       cyl(0.5, 0.5, 0.3, 8, mats.steelDark, 0.7, 1.1, -0.4, tu);
+      box(0.8, 0.26, 0.7, mats.steelLight, 0, 1.1, -0.45, tu);
+      for (const side of [-1, 1]) {
+        box(0.52, 0.38, 0.48, mats.hazardStripe, side * 0.95, 0.45, -0.35, tu);
+        box(0.12, 0.28, 0.55, mats.steelDark, side * 1.35, 0.35, -0.15, tu);
+      }
+      cyl(0.055, 0.055, 2.0, 6, mats.steelDark, -0.95, 1.05, -0.55, tu);
 
       // Heavy 120mm Cannon with recoil sleeve
       const cannonAssembly = new THREE.Group();
@@ -2946,8 +3099,16 @@
       
       // Front Bumper & Tow Hooks & Headlights
       box(3.0, 0.45, 0.4, mats.steelDark, 0, 0.7, 4.6, g);
-      box(0.35, 0.25, 0.1, mats.pureWhite, -1.05, 0.8, 4.75, g);
-      box(0.35, 0.25, 0.1, mats.pureWhite, 1.05, 0.8, 4.75, g);
+      box(0.35, 0.25, 0.1, baseLightMaterial, -1.05, 0.8, 4.75, g);
+      box(0.35, 0.25, 0.1, baseLightMaterial, 1.05, 0.8, 4.75, g);
+      box(1.2, 0.62, 0.12, mats.steelDark, 0, 1.25, 4.72, g);
+      for (let vent = 0; vent < 5; vent++) {
+        box(0.08, 0.42, 0.04, mats.steelLight, -0.32 + vent * 0.16, 1.25, 4.8, g);
+      }
+      for (const side of [-1, 1]) {
+        box(0.12, 0.8, 0.35, mats.hazardStripe, side * 1.45, 1.1, 4.5, g);
+        box(0.12, 1.1, 0.16, mats.steelLight, side * 1.42, 1.35, 1.65, g);
+      }
       
       // Vertical Exhaust Stack & Snorkel
       cyl(0.1, 0.1, 2.2, 6, mats.steelDark, 1.42, 2.2, 1.1, g);
@@ -2956,6 +3117,12 @@
       // Rear Flatbed Deck & Power Generator Block
       box(2.9, 0.6, 5.6, mats.steelDark, 0, 0.95, -1.4, g);
       box(2.6, 0.75, 1.4, bodyMat, 0, 1.5, 0.5, g);
+      for (const side of [-1, 1]) {
+        box(0.12, 0.65, 4.2, mats.steelLight, side * 1.45, 1.35, -1.5, g);
+        for (const z of [-2.7, -1.5, -0.3]) {
+          box(0.1, 0.1, 0.16, mats.hazardStripe, side * 1.52, 1.45, z, g);
+        }
+      }
       
       // 6 Heavy Off-Road All-Terrain Wheels
       for (const z of [3.2, -0.6, -2.8]) {
@@ -3497,7 +3664,7 @@
       else if (t < 6.75) $('intro-beat').textContent = 'WEAPONS RELEASE // ROCKET SALVO';
       else if (t < 9.5) $('intro-beat').textContent = 'TARGET DESTROYED // BREAKING CONTACT';
       else {
-        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1';
+        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1.1.5';
         $('loading-caption').textContent = 'CLASH OF STEEL';
       }
       if (t >= 12) finishLoadingIntro();
@@ -4679,6 +4846,38 @@
       }
     }
 
+    function getBaseWalkableHeight(pos) {
+      for (let team = 0; team < B.length; team++) {
+        const sign = team ? 1 : -1;
+        const gantryX = B[team][0] + sign * 18;
+        const gantryZ = B[team][1] - sign * 18;
+        const stairX = gantryX - sign * 5.3;
+        const progress = ((pos.z - (gantryZ + sign * 12)) * -sign) / 12;
+        if (Math.abs(pos.x - stairX) <= 1.6 && progress >= 0 && progress <= 1) {
+          return 0.5 + progress * 7.1;
+        }
+        if (Math.abs(pos.x - gantryX) <= 7.5 && Math.abs(pos.z - gantryZ) <= 6.5) return 7.6;
+      }
+      return 0;
+    }
+
+    function getHelipadStairTarget(vehicle, pos) {
+      if (vehicle.p.y < 7) return null;
+      for (let team = 0; team < B.length; team++) {
+        const sign = team ? 1 : -1;
+        const gantryX = B[team][0] + sign * 18;
+        const gantryZ = B[team][1] - sign * 18;
+        if (Math.hypot(vehicle.p.x - gantryX, vehicle.p.z - gantryZ) > 2) continue;
+        if (pos.y >= 7 && Math.hypot(pos.x - gantryX, pos.z - gantryZ) <= 7) return null;
+        const stairX = gantryX - sign * 5.3;
+        const startZ = gantryZ + sign * 12;
+        const progress = THREE.MathUtils.clamp(((pos.z - startZ) * -sign) / 12, 0, 1);
+        const nextProgress = Math.min(1, progress + 0.18);
+        return { x: stairX, z: startZ - sign * nextProgress * 12 };
+      }
+      return null;
+    }
+
     function exitVehicle() {
       const v = P.veh;
       if (!v) return;
@@ -4717,11 +4916,12 @@
         P.slideEyeHeight = THREE.MathUtils.damp(P.slideEyeHeight, 1.7, 12, dt);
       }
 
+      const groundHeight = getBaseWalkableHeight(P.p);
       P.vy -= 30 * dt;
       P.p.y += P.vy * dt;
-      if (P.p.y <= 0) {
+      if (P.p.y <= groundHeight) {
         if (P.vy < -22) P.hp -= (-P.vy - 22) * 4;
-        P.p.y = 0;
+        P.p.y = groundHeight;
         P.vy = 0;
         if (K[keyBindings.jump]) {
           if (P.sliding) {
@@ -5111,7 +5311,7 @@
     const BOT_NAV_SIZE = 93;
     const BOT_BOARDING_DELAY = 2;
     const botNavGrids = new Map();
-    const BOT_PATROL_COORDINATES = [-240, -144, -48, 48, 144, 240];
+    const BOT_PATROL_COORDINATES = [-240, -160, -80, 0, 80, 160, 240];
 
     function getBotPatrolWaypoint(e) {
       const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
@@ -5123,12 +5323,11 @@
         x = BOT_PATROL_COORDINATES[index % BOT_PATROL_COORDINATES.length];
         z = BOT_PATROL_COORDINATES[Math.floor(index / BOT_PATROL_COORDINATES.length)];
       } else {
-        const progressSteps = [0.18, 0.42, 0.62, 0.82];
-        const progress = progressSteps[(visit + slot % progressSteps.length) % progressSteps.length];
-        const directedProgress = e.tm === 0 ? progress : 1 - progress;
-        const lane = (slot % 7 - 3) * 28;
-        x = -220 + directedProgress * 440 - lane * Math.SQRT1_2;
-        z = -220 + directedProgress * 440 + lane * Math.SQRT1_2;
+        const patrolCount = BOT_PATROL_COORDINATES.length ** 2;
+        const index = (slot * 17 + visit * 13) % patrolCount;
+        const routeIndex = e.tm === 0 ? index : patrolCount - index - 1;
+        x = BOT_PATROL_COORDINATES[routeIndex % BOT_PATROL_COORDINATES.length];
+        z = BOT_PATROL_COORDINATES[Math.floor(routeIndex / BOT_PATROL_COORDINATES.length)];
       }
 
       e.patrolVisit = visit + 1;
@@ -5459,8 +5658,15 @@
           e.targetVeh = null;
           e.boardTimer = 0;
         } else {
-          const vDist = e.p.distanceTo(e.targetVeh.p);
-          if (vDist > 5.5) {
+          const vDist = e.targetVeh.type === 'heli'
+            ? Math.hypot(e.p.x - e.targetVeh.p.x, e.p.z - e.targetVeh.p.z)
+            : e.p.distanceTo(e.targetVeh.p);
+          const stairTarget = getHelipadStairTarget(e.targetVeh, e.p);
+          if (stairTarget) {
+            targetX = stairTarget.x;
+            targetZ = stairTarget.z;
+            e.boardTimer = 0;
+          } else if (vDist > 5.5) {
             targetX = e.targetVeh.p.x;
             targetZ = e.targetVeh.p.z;
             e.boardTimer = 0;
@@ -5495,8 +5701,9 @@
 
       // Keep vehicle boarding ahead of mode-specific movement objectives.
       if (isInf && e.aiState === 'board_veh' && e.targetVeh && !e.targetVeh.dead && !e.targetVeh.driver) {
-        targetX = e.targetVeh.p.x;
-        targetZ = e.targetVeh.p.z;
+        const stairTarget = getHelipadStairTarget(e.targetVeh, e.p);
+        targetX = stairTarget ? stairTarget.x : e.targetVeh.p.x;
+        targetZ = stairTarget ? stairTarget.z : e.targetVeh.p.z;
       }
       // Smart Cover Seeking
       else if (isInf && e.aiState === 'seek_cover' && e.coverPt) {
@@ -5534,7 +5741,7 @@
           }
         } else {
           if (!e.wp || Math.hypot(e.wp[0] - e.p.x, e.wp[1] - e.p.z) < 12) {
-            e.wp = [rnd(-180, 180), rnd(-180, 180)];
+            e.wp = [rnd(-250, 250), rnd(-250, 250)];
           }
           targetX = e.wp[0];
           targetZ = e.wp[1];
@@ -5758,6 +5965,7 @@
           e.stuckTimer = 0;
         }
       }
+      if (isInf) e.p.y = getBaseWalkableHeight(e.p);
 
       if (isHeli) {
         if (e.m.chinGun) {
@@ -6579,8 +6787,12 @@
           ['sam', 450, mkSAMTruck]
         ];
         vehicleTypes.forEach(([type, hp, makeMesh], index) => {
-          const [x, z] = spawns[index];
-          const entity = addEntity(type, makeMesh(color), x, z, hp, team, type === 'heli' ? 0.5 : 0, 0);
+          const sign = team ? 1 : -1;
+          const rooftopHelipad = type === 'heli' && !isFFA;
+          const [x, z] = rooftopHelipad
+            ? [B[team][0] + sign * 18, B[team][1] - sign * 18]
+            : spawns[index];
+          const entity = addEntity(type, makeMesh(color), x, z, hp, team, rooftopHelipad ? 8 : type === 'heli' ? 0.5 : 0, 0);
           entity.heliSlot = index;
         });
       };
@@ -7823,7 +8035,7 @@
             if ((!networked || networkHost) && !playerDriven) updateBotAI(e, dt);
           } else if (P.veh !== e && !e.driver) {
             e.v = 0;
-            if (e.type === 'heli') e.p.y = Math.max(0.5, e.p.y - 8 * dt);
+            if (e.type === 'heli') e.p.y = Math.max(e.sp.y, e.p.y - 8 * dt);
           }
 
           e.m.position.copy(e.p);

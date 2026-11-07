@@ -70,6 +70,9 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="btn-join-public"/);
   assert.match(html, /id="mobile-controls"/);
   assert.match(html, /id="main-menu-modal"/);
+  assert.match(html, /id="updates-modal"/);
+  assert.match(html, /id="btn-main-updates"/);
+  assert.match(html, /VERSION 1\.1\.5 · BATTLEFIELD EXPANSION/);
   assert.match(html, /id="loading-screen"/);
   assert.match(html, /id="skip-loading"/);
   assert.match(html, /MISSION 01 · OPERATION STEEL RAIN/);
@@ -93,6 +96,16 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /function spawnVehicleExplosion\(pos, size = 3\.8\)/);
   assert.match(html, /if \(becameDead && isVehicleEntity\(entity\)\)/);
   assert.match(html, /f\.kind === 'vehicle-explosion'/);
+  assert.match(html, /const stairSteps = 14/);
+  assert.match(html, /new THREE\.PointLight\(0xffc56e, 7, 42, 2\)/);
+  assert.match(html, /const patrolCount = BOT_PATROL_COORDINATES\.length \*\* 2/);
+  assert.match(html, /rnd\(-250, 250\)/);
+  assert.match(html, /const variation = 1 \+ 0\.1 \* Math\.sin/);
+  assert.match(html, /for \(const z of \[-2\.7, -1\.62, -0\.54, 0\.54, 1\.62, 2\.7\]\)/);
+  assert.match(html, /function getBaseWalkableHeight\(pos\)/);
+  assert.match(html, /function getHelipadStairTarget\(vehicle, pos\)/);
+  assert.match(html, /const rooftopHelipad = type === 'heli' && !isFFA/);
+  assert.match(html, /Math\.max\(e\.sp\.y, e\.p\.y - 8 \* dt\)/);
   assert.match(html, /const weaponModels = W\.map\(makeWeaponModel\)/);
   assert.match(html, /function updateHeliChinGun/);
   assert.match(html, /barrelAssembly\.flash/);
@@ -111,13 +124,16 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /id="active-player-count">—/);
   assert.match(html, /veh\.type === 'car' \|\| veh\.type === 'heli' \|\| veh\.type === 'tank' \|\| veh\.type === 'sam'/);
   assert.match(html, /currentMode === 'ffa' \|\| veh\.tm === e\.tm/);
-  assert.match(html, /VERSION 1\.1\.0/);
-  assert.match(html, /Game version 1\.1\.0/);
+  assert.match(html, /VERSION 1\.1\.5/);
+  assert.match(html, /Game version 1\.1\.5/);
   assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(packageInfo.version, '1.1.0');
+  assert.equal(packageInfo.version, '1.1.5');
+  const lockInfo = JSON.parse(await readFile(path.join(root, 'package-lock.json'), 'utf8'));
+  assert.equal(lockInfo.version, '1.1.5');
+  assert.equal(lockInfo.packages[''].version, '1.1.5');
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
   assert.equal(sourcePath.status, 200);
