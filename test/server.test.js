@@ -88,6 +88,11 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /const introRockets = \[/);
   assert.match(html, /if \(t >= 12\) finishLoadingIntro\(\)/);
   assert.match(html, /renderer\.render\(introScene, introCamera\)/);
+  assert.match(html, /const introAdditionalBlasts = \[introTankTwo, introTankThree\]/);
+  assert.match(html, /const cameraBlend = \(value, start, end\) => THREE\.MathUtils\.smoothstep/);
+  assert.match(html, /function spawnVehicleExplosion\(pos, size = 3\.8\)/);
+  assert.match(html, /if \(becameDead && isVehicleEntity\(entity\)\)/);
+  assert.match(html, /f\.kind === 'vehicle-explosion'/);
   assert.match(html, /const weaponModels = W\.map\(makeWeaponModel\)/);
   assert.match(html, /function updateHeliChinGun/);
   assert.match(html, /barrelAssembly\.flash/);
