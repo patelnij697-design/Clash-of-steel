@@ -79,8 +79,15 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /data-mobile-action="fire"\]\s*\{\s*grid-area:fire;[\s\S]*?border-radius:50%/);
   assert.match(html, /#mobile-stick \{[^}]*bottom:calc\(112px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(html, /function updateLoadingIntro/);
+  assert.match(html, /CINEMATIC INTRO \/\/ VERSION 1/);
+  assert.match(html, /id="toggle-intro-audio"/);
+  assert.match(html, /const introScene = new THREE\.Scene\(\)/);
   assert.match(html, /const introApache = mkHeli/);
   assert.match(html, /const introTank = mkTank/);
+  assert.match(html, /const introWingmen = \[/);
+  assert.match(html, /const introRockets = \[/);
+  assert.match(html, /if \(t >= 12\) finishLoadingIntro\(\)/);
+  assert.match(html, /renderer\.render\(introScene, introCamera\)/);
   assert.match(html, /const weaponModels = W\.map\(makeWeaponModel\)/);
   assert.match(html, /function updateHeliChinGun/);
   assert.match(html, /barrelAssembly\.flash/);

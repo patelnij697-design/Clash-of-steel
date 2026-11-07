@@ -974,10 +974,7 @@
       animation:loading-beacon 1.2s ease-in-out infinite;
     }
     #loading-screen button {
-      position:absolute;
       z-index:2;
-      right:clamp(16px,4vw,48px);
-      bottom:clamp(16px,4vh,36px);
       padding:9px 13px;
       border:1px solid rgba(226,232,240,.35);
       border-radius:4px;
@@ -989,6 +986,26 @@
       cursor:pointer;
     }
     #loading-screen button:hover { color:#fff; border-color:#f59e0b; }
+    .loading-controls {
+      position:absolute;
+      z-index:2;
+      right:clamp(16px,4vw,48px);
+      bottom:clamp(16px,4vh,36px);
+      display:flex;
+      gap:8px;
+    }
+    .loading-beat {
+      position:absolute;
+      top:clamp(24px,5vh,52px);
+      right:clamp(24px,5vw,68px);
+      z-index:1;
+      color:#e2e8f0;
+      font:600 10px var(--font-mono);
+      letter-spacing:1.6px;
+      text-align:right;
+      text-shadow:0 2px 12px #000;
+    }
+    .loading-beat span { display:block; margin-top:7px; color:#fbbf24; }
     #loading-caption {
       margin:0;
       color:#f8fafc;
@@ -1003,6 +1020,12 @@
       letter-spacing:clamp(1px,.32vw,2.5px);
       text-shadow:0 2px 12px #000;
     }
+    .loading-version {
+      margin-top:14px;
+      color:rgba(226,232,240,.58);
+      font:600 9px var(--font-mono);
+      letter-spacing:1.8px;
+    }
     .loading-progress {
       width:min(230px,55vw);
       height:2px;
@@ -1016,7 +1039,7 @@
       height:100%;
       background:linear-gradient(90deg,#f59e0b,#fde68a);
       box-shadow:0 0 12px rgba(245,158,11,.75);
-      animation:loading-progress 7s linear forwards;
+      animation:loading-progress 12s linear forwards;
     }
     @keyframes loading-copy-in {
       from { opacity:0; transform:translate3d(0,16px,0); }
@@ -1032,6 +1055,14 @@
       #loading-screen { transition:none; }
       .loading-copy, .loading-kicker::before, .loading-progress span { animation:none; }
       .loading-progress span { width:100%; }
+    }
+    @media (max-width:560px) {
+      #loading-screen { padding:14px; }
+      .loading-copy { margin:0 0 96px 8px; padding-left:12px; }
+      .loading-beat { top:22px; right:22px; font-size:8px; }
+      .loading-controls { right:18px; bottom:18px; }
+      #loading-screen button { padding:8px 9px; font-size:8px; }
+      .loading-version { font-size:8px; }
     }
     .menu-home .modal-title { margin-top:4px; }
     .menu-home-actions {
@@ -1363,13 +1394,18 @@
   <canvas id="hud-world-canvas"></canvas>
 
   <div id="loading-screen" role="status" aria-live="polite">
+    <div class="loading-beat" aria-hidden="true">FLIGHT REEL / 01<span id="intro-beat">LOW-LEVEL HOVER</span></div>
     <div class="loading-copy">
       <div class="loading-kicker">MISSION 01 · OPERATION STEEL RAIN</div>
       <h1 id="loading-caption">AH-64 APACHE</h1>
       <div class="loading-subtitle">CLOSE AIR SUPPORT · HOSTILE ARMOR INBOUND</div>
       <div class="loading-progress" aria-hidden="true"><span></span></div>
+      <div class="loading-version">CINEMATIC INTRO // VERSION 1</div>
     </div>
-    <button type="button" id="skip-loading">SKIP INTRO</button>
+    <div class="loading-controls">
+      <button type="button" id="toggle-intro-audio" aria-pressed="false">AUDIO OFF</button>
+      <button type="button" id="skip-loading">SKIP INTRO</button>
+    </div>
   </div>
 
   <!-- HUD Overlay Layer -->
@@ -2033,6 +2069,8 @@
       camera.updateProjectionMatrix();
       menuCamera.aspect = innerWidth / innerHeight;
       menuCamera.updateProjectionMatrix();
+      introCamera.aspect = innerWidth / innerHeight;
+      introCamera.updateProjectionMatrix();
     });
 
     /* -------------------------------------------------------------------------
@@ -3037,58 +3075,253 @@
     let menuVehicleTimer = 0;
     menuVehicles[menuVehicleIndex].model.visible = false;
 
+    const introScene = new THREE.Scene();
+    introScene.background = new THREE.Color(0x8db8da);
+    introScene.fog = new THREE.Fog(0xb3c6c6, 58, 190);
+    const introCamera = new THREE.PerspectiveCamera(43, innerWidth / innerHeight, 0.1, 260);
+    introCamera.position.set(0, 7.2, 28);
+    introCamera.lookAt(0, 2.8, -5);
+    introScene.add(new THREE.HemisphereLight(0xd9edff, 0x4b4d35, 1.8));
+    const introSun = new THREE.DirectionalLight(0xffe6bd, 2.25);
+    introSun.position.set(-16, 24, 10);
+    introSun.castShadow = true;
+    introSun.shadow.mapSize.set(1024, 1024);
+    introSun.shadow.camera.left = -35;
+    introSun.shadow.camera.right = 35;
+    introSun.shadow.camera.top = 28;
+    introSun.shadow.camera.bottom = -24;
+    introScene.add(introSun);
+
+    const introGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(600, 600),
+      new THREE.MeshStandardMaterial({ color: 0x64734b, roughness: 1 })
+    );
+    introGround.rotation.x = -Math.PI / 2;
+    introGround.position.y = -0.9;
+    introGround.receiveShadow = true;
+    introScene.add(introGround);
+    const fieldMaterials = [0x788052, 0x6a764a, 0x8a8557].map(color =>
+      new THREE.MeshStandardMaterial({ color, roughness: 1 })
+    );
+    for (let index = 0; index < 12; index++) {
+      const field = new THREE.Mesh(new THREE.PlaneGeometry(7 + (index % 3) * 2, 170), fieldMaterials[index % fieldMaterials.length]);
+      field.rotation.x = -Math.PI / 2;
+      field.rotation.z = (index % 2 ? 1 : -1) * 0.035;
+      field.position.set(-34 + index * 6.5, -0.88 + index * 0.001, -28);
+      introScene.add(field);
+    }
+
+    const ridgeMaterial = new THREE.MeshStandardMaterial({ color: 0x87927c, roughness: 1 });
+    for (let index = 0; index < 5; index++) {
+      const ridge = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12), ridgeMaterial);
+      ridge.scale.set(23 + index * 2, 8 + (index % 2) * 3, 5);
+      ridge.position.set(-35 + index * 17, -2.6, -58 - (index % 2) * 7);
+      introScene.add(ridge);
+    }
+
+    const treeTrunkMaterial = new THREE.MeshStandardMaterial({ color: 0x514735, roughness: 1 });
+    const treeCanopyMaterials = [0x394b31, 0x52613b, 0x687045].map(color => new THREE.MeshStandardMaterial({ color, roughness: 1 }));
+    function introTree(x, z, size = 1) {
+      const tree = new THREE.Group();
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.24, 2.3, 7), treeTrunkMaterial);
+      trunk.position.y = 0.15;
+      tree.add(trunk);
+      const crown = new THREE.Mesh(new THREE.ConeGeometry(1.15, 3.2, 8), treeCanopyMaterials[Math.abs(Math.round(x + z)) % treeCanopyMaterials.length]);
+      crown.position.y = 2.2;
+      tree.add(crown);
+      tree.position.set(x, -0.7, z);
+      tree.scale.setScalar(size);
+      tree.castShadow = true;
+      introScene.add(tree);
+    }
+    [-24, -20, -16, -12, -8, 12, 16, 20, 24, 28].forEach((x, index) => introTree(x, -16 - (index % 3) * 2, 0.8 + (index % 4) * 0.1));
+    [-30, -25, -19, 18, 23, 29].forEach((x, index) => introTree(x, -31 - (index % 2) * 3, 1.2 + (index % 3) * 0.12));
+
+    const hangarMat = new THREE.MeshStandardMaterial({ color: 0x71776d, roughness: 0.88 });
+    const hangarRoofMat = new THREE.MeshStandardMaterial({ color: 0x4a514f, roughness: 0.8 });
+    const hangarDoorMat = new THREE.MeshStandardMaterial({ color: 0x1d2829, roughness: 1 });
+    function introHangar(x, z, size = 1) {
+      const hangar = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 6), hangarMat);
+      body.position.y = 1.2;
+      hangar.add(body);
+      const door = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 2.8), hangarDoorMat);
+      door.position.set(0, 0.65, 3.03);
+      hangar.add(door);
+      const roofLeft = new THREE.Mesh(new THREE.BoxGeometry(4.3, 0.28, 6.5), hangarRoofMat);
+      roofLeft.position.set(-2.05, 3.35, 0);
+      roofLeft.rotation.z = -0.28;
+      hangar.add(roofLeft);
+      const roofRight = new THREE.Mesh(new THREE.BoxGeometry(4.3, 0.28, 6.5), hangarRoofMat);
+      roofRight.position.set(2.05, 3.35, 0);
+      roofRight.rotation.z = 0.28;
+      hangar.add(roofRight);
+      hangar.position.set(x, -0.8, z);
+      hangar.scale.setScalar(size);
+      hangar.castShadow = true;
+      introScene.add(hangar);
+    }
+    introHangar(-15, -29, 0.9);
+    introHangar(15, -34, 0.72);
+
+    const cloudMaterial = new THREE.MeshBasicMaterial({ color: 0xf3f7f5, transparent: true, opacity: 0.72, depthWrite: false });
+    for (let index = 0; index < 7; index++) {
+      const cloud = new THREE.Group();
+      for (let puff = 0; puff < 4; puff++) {
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), cloudMaterial);
+        mesh.scale.set(2.5 + puff * 0.35, 0.8 + (puff % 2) * 0.25, 1.35);
+        mesh.position.set(puff * 1.7 - 2.5, (puff % 2) * 0.35, (puff % 3) * 0.2);
+        cloud.add(mesh);
+      }
+      cloud.position.set(-28 + index * 9, 17 + (index % 3) * 2.3, -60 - (index % 2) * 8);
+      cloud.scale.setScalar(0.8 + (index % 3) * 0.12);
+      introScene.add(cloud);
+    }
+
     const introApache = mkHeli(0x59644c);
-    introApache.scale.setScalar(0.68);
-    introApache.position.set(-9, 4.2, 0.4);
+    introApache.scale.setScalar(0.55);
+    introApache.position.set(-8, 2.3, 1.4);
     introApache.rotation.y = Math.PI / 2;
-    menuScene.add(introApache);
+    introScene.add(introApache);
+    const introWingmen = [
+      { model: mkHeli(0x657055), offset: -6, altitude: 1.55, scale: 0.42 },
+      { model: mkHeli(0x4e5e48), offset: -11, altitude: 2.6, scale: 0.36 }
+    ];
+    introWingmen.forEach(({ model, scale }) => {
+      model.scale.setScalar(scale);
+      model.rotation.y = Math.PI / 2;
+      introScene.add(model);
+    });
 
     const introTank = mkTank(0x59644c);
-    introTank.scale.setScalar(0.9);
-    introTank.position.set(4.2, 0, -0.5);
-    menuScene.add(introTank);
+    introTank.scale.setScalar(0.46);
+    introTank.position.set(8, -0.85, -8);
+    introTank.rotation.y = -0.08;
+    introScene.add(introTank);
+    const introTankTwo = mkTank(0x59644c);
+    introTankTwo.scale.setScalar(0.4);
+    introTankTwo.position.set(10.2, -0.85, -14);
+    introTankTwo.rotation.y = -0.12;
+    introScene.add(introTankTwo);
+    const introTankThree = mkTank(0x59644c);
+    introTankThree.scale.setScalar(0.38);
+    introTankThree.position.set(5.2, -0.85, -17);
+    introTankThree.rotation.y = 0.12;
+    introScene.add(introTankThree);
 
-    const introTitleCanvas = document.createElement('canvas');
-    introTitleCanvas.width = 1600;
-    introTitleCanvas.height = 300;
-    const introTitleContext = introTitleCanvas.getContext('2d');
-    introTitleContext.font = '700 190px Chakra Petch, sans-serif';
-    introTitleContext.textAlign = 'center';
-    introTitleContext.textBaseline = 'middle';
-    introTitleContext.lineWidth = 8;
-    introTitleContext.strokeStyle = 'rgba(5, 9, 15, 0.95)';
-    introTitleContext.shadowColor = 'rgba(245, 158, 11, 0.8)';
-    introTitleContext.shadowBlur = 32;
-    introTitleContext.strokeText('CLASH OF STEEL', 800, 155);
-    introTitleContext.fillStyle = '#f8fafc';
-    introTitleContext.fillText('CLASH OF STEEL', 800, 155);
-    const introTitleTexture = new THREE.CanvasTexture(introTitleCanvas);
-    introTitleTexture.encoding = THREE.sRGBEncoding;
-    const introTitle = new THREE.Mesh(
-      new THREE.PlaneGeometry(13, 2.45),
-      new THREE.MeshBasicMaterial({ map: introTitleTexture, transparent: true, opacity: 0, depthWrite: false })
-    );
-    introTitle.position.set(0, 4.1, -5);
-    menuScene.add(introTitle);
+    const dustCount = 180;
+    const dustGeometry = new THREE.BufferGeometry();
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustParticles = Array.from({ length: dustCount }, () => ({
+      angle: Math.random() * Math.PI * 2,
+      radius: 1 + Math.random() * 5,
+      height: Math.random() * 1.8,
+      phase: Math.random() * Math.PI * 2
+    }));
+    dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    const introDust = new THREE.Points(dustGeometry, new THREE.PointsMaterial({
+      color: 0xb9a27e, size: 0.34, transparent: true, opacity: 0.34, depthWrite: false, sizeAttenuation: true
+    }));
+    introScene.add(introDust);
 
     const introProjectile = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.045, 0.045, 1.25, 8),
+      new THREE.CylinderGeometry(0.055, 0.055, 1.2, 8),
       new THREE.MeshBasicMaterial({ color: 0xffc857 })
     );
     introProjectile.visible = false;
-    menuScene.add(introProjectile);
+    introScene.add(introProjectile);
+    const introRockets = [introProjectile, ...Array.from({ length: 2 }, () => {
+      const rocket = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.1, 8), new THREE.MeshBasicMaterial({ color: 0xffc857 }));
+      rocket.visible = false;
+      introScene.add(rocket);
+      return rocket;
+    })].map((mesh, index) => ({ mesh, fireAt: 5.65 + index * 0.32, start: null }));
 
     const introBlast = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 16, 12),
-      new THREE.MeshBasicMaterial({ color: 0xff6b1a, transparent: true, opacity: 0 })
+      new THREE.SphereGeometry(1, 20, 14),
+      new THREE.MeshBasicMaterial({ color: 0xff6b1a, transparent: true, opacity: 0, depthWrite: false })
     );
+    introBlast.position.set(8, 0.7, -8);
     introBlast.visible = false;
-    introBlast.position.set(4.2, 1.35, -0.5);
-    menuScene.add(introBlast);
+    introScene.add(introBlast);
+    const introBlastCore = new THREE.Mesh(
+      new THREE.SphereGeometry(0.65, 16, 12),
+      new THREE.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0, depthWrite: false })
+    );
+    introBlastCore.position.copy(introBlast.position);
+    introBlastCore.visible = false;
+    introScene.add(introBlastCore);
+    const introSmoke = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 14, 10),
+      new THREE.MeshBasicMaterial({ color: 0x343936, transparent: true, opacity: 0, depthWrite: false })
+    );
+    introSmoke.position.copy(introBlast.position);
+    introSmoke.visible = false;
+    introScene.add(introSmoke);
+
+    let introAudioEnabled = false;
+    let introMusic = null;
+    function setIntroAudio(enabled) {
+      introAudioEnabled = enabled;
+      const button = $('toggle-intro-audio');
+      button.textContent = enabled ? 'AUDIO ON' : 'AUDIO OFF';
+      button.setAttribute('aria-pressed', String(enabled));
+      if (enabled) {
+        const context = getAudio();
+        if (!introMusic) {
+          const master = context.createGain();
+          master.gain.value = 0;
+          master.connect(context.destination);
+          const voices = [55, 82.4, 110].map((frequency, index) => {
+            const oscillator = context.createOscillator();
+            const level = context.createGain();
+            oscillator.type = index === 0 ? 'triangle' : 'sine';
+            oscillator.frequency.value = frequency;
+            level.gain.value = index === 0 ? 0.18 : 0.09;
+            oscillator.connect(level);
+            level.connect(master);
+            oscillator.start();
+            return oscillator;
+          });
+          const lfo = context.createOscillator();
+          const lfoGain = context.createGain();
+          lfo.frequency.value = 0.16;
+          lfoGain.gain.value = 0.035;
+          lfo.connect(lfoGain);
+          lfoGain.connect(master.gain);
+          lfo.start();
+          introMusic = { master, voices };
+        }
+        introMusic.master.gain.cancelScheduledValues(context.currentTime);
+        introMusic.master.gain.setTargetAtTime(0.42, context.currentTime, 0.7);
+      } else if (introMusic && audioCtx) {
+        introMusic.master.gain.cancelScheduledValues(audioCtx.currentTime);
+        introMusic.master.gain.setTargetAtTime(0, audioCtx.currentTime, 0.15);
+      }
+    }
+    function playIntroSound(kind) {
+      if (!introAudioEnabled || !audioCtx) return;
+      const context = audioCtx;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const now = context.currentTime;
+      const isImpact = kind === 'impact';
+      oscillator.type = isImpact ? 'triangle' : 'sawtooth';
+      oscillator.frequency.setValueAtTime(isImpact ? 105 : 250, now);
+      oscillator.frequency.exponentialRampToValueAtTime(isImpact ? 34 : 90, now + (isImpact ? 0.72 : 0.28));
+      gain.gain.setValueAtTime(isImpact ? 0.42 : 0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + (isImpact ? 0.78 : 0.32));
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + (isImpact ? 0.8 : 0.34));
+    }
+    $('toggle-intro-audio').addEventListener('click', () => setIntroAudio(!introAudioEnabled));
 
     let introActive = true;
     let introElapsed = 0;
     let introFinished = false;
+    let introPreviousElapsed = 0;
     const loadingScreen = $('loading-screen');
 
     function finishLoadingIntro() {
@@ -3097,9 +3330,14 @@
       introActive = false;
       introApache.visible = false;
       introTank.visible = false;
-      introProjectile.visible = false;
+      introWingmen.forEach(({ model }) => { model.visible = false; });
+      introTankTwo.visible = false;
+      introTankThree.visible = false;
+      introRockets.forEach(({ mesh }) => { mesh.visible = false; });
       introBlast.visible = false;
-      introTitle.visible = false;
+      introBlastCore.visible = false;
+      introSmoke.visible = false;
+      setIntroAudio(false);
       menuVehicles[menuVehicleIndex].model.visible = true;
       $('main-menu-modal').style.display = 'flex';
       loadingScreen.style.opacity = '0';
@@ -3111,35 +3349,79 @@
     function updateLoadingIntro(dt) {
       introElapsed += dt;
       const t = introElapsed;
-      const approach = THREE.MathUtils.smoothstep(t, 0, 1.8);
-      introApache.position.set(-9 + approach * 7.3, 4.2 + Math.sin(t * 2.8) * 0.18, 0.4);
+      const travel = THREE.MathUtils.clamp(t / 5.6, 0, 1);
+      const apacheX = -8 + travel * 9 + Math.max(0, t - 5.6) * 0.34;
+      introApache.position.set(apacheX, 2.25 + Math.sin(t * 2.7) * 0.17, 1.4);
       introApache.rot.rotation.y += dt * 28;
       introApache.tailRot.rotation.x += dt * 35;
-      introTank.visible = t < 3.2;
-      introTank.rotation.z = t > 2.1 ? Math.min(0.48, (t - 2.1) * 0.42) : 0;
-      introTank.scale.setScalar(0.9 * (t > 2.2 ? Math.max(0.12, 1 - (t - 2.2) * 0.95) : 1));
+      introWingmen.forEach(({ model, offset, altitude }, index) => {
+        model.position.set(apacheX + offset, 2.25 + altitude + Math.sin(t * 2.2 + index) * 0.14, 1.4 - index * 4.5);
+        model.rot.rotation.y += dt * (26 - index * 2);
+        model.tailRot.rotation.x += dt * 33;
+      });
 
-      const firing = t >= 1.85 && t < 2.2;
-      introProjectile.visible = firing;
-      if (firing) {
-        const shotProgress = (t - 1.85) / 0.35;
-        const start = new V3(introApache.position.x + 1.1, 3.8, 0.4);
-        const end = new V3(3.7, 1.55, -0.5);
-        const direction = end.clone().sub(start);
-        introProjectile.position.copy(start).addScaledVector(direction, shotProgress);
-        introProjectile.quaternion.setFromUnitVectors(new V3(0, 1, 0), direction.normalize());
-      }
+      const dustFade = 1 - THREE.MathUtils.clamp((t - 1.8) / 2.2, 0, 1);
+      introDust.position.set(apacheX - 0.5, -0.65, 1.4);
+      introDust.material.opacity = 0.38 * dustFade;
+      const dustPositionsAttribute = dustGeometry.attributes.position;
+      dustParticles.forEach((particle, index) => {
+        const spread = 0.65 + Math.min(t, 2.2) * 0.9;
+        const angle = particle.angle + t * 0.4 + particle.phase;
+        dustPositionsAttribute.setXYZ(
+          index,
+          Math.cos(angle) * particle.radius * spread,
+          particle.height * spread * 0.48 + Math.sin(t * 2 + particle.phase) * 0.12,
+          Math.sin(angle) * particle.radius * spread * 0.56
+        );
+      });
+      dustPositionsAttribute.needsUpdate = true;
 
-      const blastProgress = t - 2.2;
-      introBlast.visible = blastProgress >= 0 && blastProgress < 1.1;
+      introCamera.position.x = Math.sin(t * 0.2) * 1.2 + Math.max(0, t - 4.2) * 0.22;
+      introCamera.lookAt(introCamera.position.x * 0.42, 2.65, -5);
+
+      introRockets.forEach(rocket => {
+        const elapsed = t - rocket.fireAt;
+        if (elapsed >= 0 && !rocket.start) {
+          rocket.start = new V3(introApache.position.x + 2.25, introApache.position.y + 0.1, 1.2);
+          if (introPreviousElapsed < rocket.fireAt) playIntroSound('launch');
+        }
+        const firing = elapsed >= 0 && elapsed < 0.95;
+        rocket.mesh.visible = firing;
+        if (firing) {
+          const progress = THREE.MathUtils.clamp(elapsed / 0.95, 0, 1);
+          const end = new V3(8, 0.75, -8 - (rocket.fireAt - 5.65) * 7);
+          const direction = end.clone().sub(rocket.start);
+          rocket.mesh.position.copy(rocket.start).addScaledVector(direction, progress);
+          rocket.mesh.quaternion.setFromUnitVectors(new V3(0, 1, 0), direction.normalize());
+        }
+      });
+
+      const blastProgress = t - 6.75;
+      introBlast.visible = blastProgress >= 0 && blastProgress < 2.7;
+      introBlastCore.visible = introBlast.visible && blastProgress < 0.9;
+      introSmoke.visible = blastProgress >= 0.22 && blastProgress < 3.4;
       if (introBlast.visible) {
-        const growth = Math.min(1, blastProgress / 0.18);
-        introBlast.scale.setScalar(0.15 + growth * 3.2);
-        introBlast.material.opacity = Math.max(0, 0.9 * (1 - blastProgress / 1.1));
+        const growth = Math.min(1, blastProgress / 0.2);
+        introBlast.scale.set(0.18 + growth * 2.6, 0.18 + growth * 2.2, 0.18 + growth * 2.2);
+        introBlast.material.opacity = Math.max(0, 0.88 * (1 - blastProgress / 2.7));
+        introBlastCore.scale.setScalar(0.15 + growth * 1.35);
+        introBlastCore.material.opacity = Math.max(0, 0.95 * (1 - blastProgress / 0.9));
+        introSmoke.position.y = 0.7 + Math.max(0, blastProgress - 0.22) * 1.1;
+        introSmoke.scale.set(0.5 + blastProgress * 1.0, 0.6 + blastProgress * 0.9, 0.5 + blastProgress * 0.8);
+        introSmoke.material.opacity = Math.max(0, Math.min(0.6, blastProgress * 0.7) * (1 - Math.max(0, blastProgress - 1) / 2.4));
       }
+      if (introPreviousElapsed < 6.75 && t >= 6.75) playIntroSound('impact');
+      introPreviousElapsed = t;
 
-      introTitle.material.opacity = THREE.MathUtils.clamp((t - 3.05) / 0.8, 0, 1);
-      if (t >= 7) finishLoadingIntro();
+      if (t < 2.5) $('intro-beat').textContent = 'LOW-LEVEL HOVER // DUST OFF';
+      else if (t < 5.3) $('intro-beat').textContent = 'TWO-SHIP FORMATION // TERRAIN FOLLOWING';
+      else if (t < 6.75) $('intro-beat').textContent = 'WEAPONS RELEASE // ROCKET SALVO';
+      else if (t < 9.5) $('intro-beat').textContent = 'TARGET DESTROYED // BREAKING CONTACT';
+      else {
+        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1';
+        $('loading-caption').textContent = 'CLASH OF STEEL';
+      }
+      if (t >= 12) finishLoadingIntro();
     }
 
     function updateMenuShowcase(dt) {
@@ -7548,8 +7830,8 @@
       }
 
       updateHUD();
-      const showMenuScene = $('main-menu-modal').style.display === 'flex' || introActive;
-      renderer.render(showMenuScene ? menuScene : scene, showMenuScene ? menuCamera : camera);
+      if (introActive) renderer.render(introScene, introCamera);
+      else renderer.render(showMainMenu ? menuScene : scene, showMainMenu ? menuCamera : camera);
       if (!inLobby) {
         drawTacticalRadar();
         drawWorldVehicleHealthBars();
