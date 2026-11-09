@@ -21,7 +21,10 @@ const HOST = '0.0.0.0';
 const DEV_PANEL_KEY = process.env.DEV_PANEL_KEY || '';
 const MAX_PLAYERS_PER_ROOM = 12;
 const MAX_CHAT_LENGTH = 240;
-const APPEARANCE_IDS = new Set(['cobalt', 'crimson', 'olive', 'sand', 'violet', 'arctic']);
+const APPEARANCE_IDS = new Set([
+  'cobalt', 'crimson', 'olive', 'sand', 'violet', 'arctic',
+  'woodland', 'desert', 'slate', 'midnight', 'copper', 'teal'
+]);
 const rooms = new Map();
 let activePlayers = 0;
 

@@ -218,8 +218,8 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
     assert.equal(guestRoom.activePlayers, 2);
 
     const profileUpdate = once(guest, 'player:profile');
-    host.emit('player:profile', { name: 'Ranger', appearance: 'violet' });
-    assert.deepEqual(await profileUpdate, { id: host.id, name: 'Ranger', appearance: 'violet' });
+    host.emit('player:profile', { name: 'Ranger', appearance: 'woodland' });
+    assert.deepEqual(await profileUpdate, { id: host.id, name: 'Ranger', appearance: 'woodland' });
 
     const matchStart = once(guest, 'match:start');
     host.emit('match:start', { mode: 'tdm', difficulty: 1 });

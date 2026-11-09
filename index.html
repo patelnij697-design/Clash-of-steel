@@ -241,11 +241,14 @@
       margin-left: 4px;
     }
     #weapon-sec-info {
-      font-size: 12px;
+      font-size: 13px;
       color: #38bdf8;
-      margin-top: 4px;
+      margin-top: 7px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(148,163,184,0.2);
       font-family: var(--font-display);
       letter-spacing: 1px;
+      font-weight: 700;
     }
     #weapon-card[data-vehicle="heli"] { border-right-color:#38bdf8; }
     #weapon-card[data-vehicle="tank"] { border-right-color:#f59e0b; }
@@ -680,7 +683,7 @@
       font:700 9px "JetBrains Mono", monospace;
       letter-spacing:1.5px;
     }
-    .appearance-grid { display:flex; flex-wrap:wrap; gap:7px; }
+    .appearance-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
     .appearance-choice {
       display:flex;
       align-items:center;
@@ -2079,7 +2082,7 @@
         <button class="btn-secondary" id="btn-main-leaderboard">LEADERBOARD</button>
         <button class="btn-secondary" id="btn-main-settings">SETTINGS</button>
         <button class="btn-secondary" id="btn-main-updates">UPDATES</button>
-        <button class="btn-secondary" id="btn-main-customize">CUSTOMIZATION</button>
+        <button class="btn-secondary" id="btn-main-customize">OPERATOR CUSTOMIZATION</button>
         <button class="btn-secondary" id="btn-main-stats">PLAYER STATISTICS</button>
         <button class="btn-secondary" id="btn-main-dev" style="color:#10b981;border-color:rgba(16,185,129,0.4)">DEV PANEL</button>
       </div>
@@ -2178,7 +2181,32 @@
           <div id="room-player-list" aria-label="Players in room"></div>
         </div>
       </section>
-      <section class="operator-customizer" aria-label="Operator customization">
+      <div class="mode-grid" id="mode-selector"></div>
+
+      <div style="margin: 18px 0; font-size:13px; color:#94a3b8;">
+        TACTICAL BOT PROTOCOL:
+        <span id="diff-selector" style="margin-left:10px; display:inline-flex; gap:8px;"></span>
+      </div>
+
+      <div id="roster-preview" style="font-size:12px; color:#cbd5e1; margin: 16px 0 24px; line-height:1.6;"></div>
+
+      <div>
+        <button class="btn-action" id="btn-deploy">DEPLOY TO BATTLEFIELD</button>
+        <button class="btn-secondary" id="btn-lobby-customize">OPERATOR CUSTOMIZATION</button>
+        <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
+      </div>
+    </div>
+    <div id="game-version" aria-label="Game version 1.1.10">v1.1.10</div>
+  </div>
+
+  <div class="menu-modal" id="operator-customization-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="operator-customization-title">
+    <div class="modal-box" style="max-width:760px;">
+      <div class="menu-back-row">
+        <h2 class="modal-title" id="operator-customization-title" style="font-size:30px;margin:0;">OPERATOR CUSTOMIZATION</h2>
+        <button type="button" class="btn-secondary" id="btn-operator-customization-close">BACK</button>
+      </div>
+      <p style="color:#94a3b8;font-size:12px;line-height:1.6;">Set your callsign and choose an armor finish. Your selection is saved on this device and shared with players in your room.</p>
+      <section class="operator-customizer" aria-label="Operator appearance">
         <div class="operator-identity">
           <div id="operator-preview" aria-hidden="true">C</div>
           <div style="min-width:0;flex:1;">
@@ -2191,21 +2219,8 @@
           <div class="appearance-grid" id="appearance-selector"></div>
         </div>
       </section>
-      <div class="mode-grid" id="mode-selector"></div>
-
-      <div style="margin: 18px 0; font-size:13px; color:#94a3b8;">
-        TACTICAL BOT PROTOCOL:
-        <span id="diff-selector" style="margin-left:10px; display:inline-flex; gap:8px;"></span>
-      </div>
-
-      <div id="roster-preview" style="font-size:12px; color:#cbd5e1; margin: 16px 0 24px; line-height:1.6;"></div>
-
-      <div>
-        <button class="btn-action" id="btn-deploy">DEPLOY TO BATTLEFIELD</button>
-        <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
-      </div>
+      <div id="operator-profile-status" role="status" aria-live="polite" style="min-height:18px;color:#fbbf24;font-size:11px;"></div>
     </div>
-    <div id="game-version" aria-label="Game version 1.1.10">v1.1.10</div>
   </div>
 
   <div class="menu-modal" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -3194,11 +3209,7 @@
       $('btn-main-settings').onclick = openSettings;
       $('btn-main-updates').onclick = () => { $('updates-modal').style.display = 'flex'; };
       $('btn-main-customize').onclick = () => {
-        $('main-menu-modal').style.display = 'none';
-        $('lobby-modal').style.display = 'flex';
-        $('chat-panel').style.display = networked ? 'block' : 'none';
-        buildLobbyUI();
-        $('player-name').focus();
+        openOperatorCustomization();
       };
       $('btn-main-stats').onclick = () => {
         updateProfileDisplay();
@@ -3489,7 +3500,6 @@
         isRaining: true
       }
     };
-
     const weatherKeys = ['CLEAR', 'FOGGY', 'RAINY'];
     let currentWeatherIdx = 0;
     let weatherTimer = 0;
@@ -6300,9 +6310,10 @@
         return;
       }
 
-      // Minor Aim Assist trajectory assist (cone magnet towards enemy hitbox)
-      const aimDir = applyMinorAimAssist(o, d, rm ? 0.065 : 0.048);
-      const spread = w.spr * (rm ? 0.25 : 1);
+      const aimDir = rm
+        ? getBallisticAimDirection(o, getAimPoint(), 220)
+        : applyMinorAimAssist(o, d, 0.048);
+      const spread = w.spr * (rm ? 0 : 1);
       const pellets = w.pel || 1;
       for (let i = 0; i < pellets; i++) {
         const q = aimDir.clone();
@@ -6555,7 +6566,7 @@
       const isSidearm = w.type === 'pistol' || w.cls === 'Auto Pistol';
       const isLauncher = w.type === 'rocket';
       const adsX = isSidearm ? 0.0 : isLauncher ? -0.05 : 0.0;
-      const adsY = isSidearm ? -0.178 : isLauncher ? -0.16 : -0.162;
+      const adsY = isSidearm ? -0.22 : isLauncher ? -0.20 : -0.205;
       const adsZ = isSidearm ? -0.38 : isLauncher ? -0.42 : -0.35;
       
       const adsBlend = gunAnim.ads;
@@ -6756,6 +6767,21 @@
       const t = r ? r.distance : (d.y < -0.001 ? Math.min(300, -o.y / d.y) : 300);
       return o.addScaledVector(d, t);
     }
+    function getBallisticAimDirection(origin, target, speed) {
+      const offset = target.clone().sub(origin);
+      const horizontalDistance = Math.hypot(offset.x, offset.z);
+      let flightTime = offset.length() / speed;
+      const direction = offset.clone();
+      for (let i = 0; i < 3; i++) {
+        direction.copy(offset);
+        direction.y += 0.5 * BULLET_GRAVITY * flightTime * flightTime;
+        direction.normalize();
+        const horizontalSpeed = speed * Math.hypot(direction.x, direction.z);
+        if (horizontalSpeed < 0.001) break;
+        flightTime = horizontalDistance / horizontalSpeed;
+      }
+      return direction;
+    }
     const getVehicleAimDir = (v, o) => getAimPoint().sub(o).normalize();
     function getHeliTargetLock(v) {
       const origin = getMuzzlePos(v);
@@ -6765,8 +6791,8 @@
     function fireVehicleMG(v, dmg, spread) {
       playSnd(260, 0.08, 0.18, 'square');
       const o = getMuzzlePos(v);
-      let d = getVehicleAimDir(v, o);
-      if (P.veh === v) d = applyMinorAimAssist(o, d, 0.06, 240);
+      let d = getBallisticAimDirection(o, getAimPoint(), 220);
+      if (P.veh !== v) d = getVehicleAimDir(v, o);
       d.x += rnd(-spread, spread);
       d.y += rnd(-spread, spread);
       raycastBullet(o, d.normalize(), dmg, v);
@@ -6775,8 +6801,8 @@
     function fireTankCoaxMG(v) {
       playSnd(320, 0.06, 0.16, 'sawtooth');
       const o = getMuzzlePos(v).add(new V3(0.4, -0.1, 0.5));
-      let d = getVehicleAimDir(v, o);
-      if (P.veh === v) d = applyMinorAimAssist(o, d, 0.055, 240);
+      let d = getBallisticAimDirection(o, getAimPoint(), 220);
+      if (P.veh !== v) d = getVehicleAimDir(v, o);
       d.x += rnd(-0.018, 0.018);
       d.y += rnd(-0.018, 0.018);
       raycastBullet(o, d.normalize(), 16, v);
@@ -6785,8 +6811,8 @@
     function fireSAMCIWS(v) {
       playSnd(360, 0.045, 0.14, 'sawtooth');
       const o = getMuzzlePos(v);
-      let d = getVehicleAimDir(v, o);
-      if (P.veh === v) d = applyMinorAimAssist(o, d, 0.065, 240);
+      let d = getBallisticAimDirection(o, getAimPoint(), 220);
+      if (P.veh !== v) d = getVehicleAimDir(v, o);
       d.x += rnd(-0.018, 0.018);
       d.y += rnd(-0.018, 0.018);
       raycastBullet(o.clone().add(new V3(-0.9, 0, 0)), d.normalize(), 20, v);
@@ -8322,7 +8348,13 @@
       { id: 'olive', name: 'OLIVE', color: '#a3e635' },
       { id: 'sand', name: 'SAND', color: '#fbbf24' },
       { id: 'violet', name: 'VIOLET', color: '#c084fc' },
-      { id: 'arctic', name: 'ARCTIC', color: '#e2e8f0' }
+    { id: 'arctic', name: 'ARCTIC', color: '#e2e8f0' },
+    { id: 'woodland', name: 'WOODLAND', color: '#4ade80' },
+    { id: 'desert', name: 'DESERT', color: '#d6a96b' },
+    { id: 'slate', name: 'SLATE', color: '#94a3b8' },
+    { id: 'midnight', name: 'MIDNIGHT', color: '#6366f1' },
+    { id: 'copper', name: 'COPPER', color: '#fb923c' },
+    { id: 'teal', name: 'TEAL', color: '#2dd4bf' }
     ];
     function sanitizeCallsign(value) {
       return typeof value === 'string'
@@ -8332,6 +8364,7 @@
     function validCallsign(value) {
       return /^[\p{L}\p{N}][\p{L}\p{N} _.-]{1,19}$/u.test(sanitizeCallsign(value).trim());
     }
+    const CALLSIGN_VALIDATION_MESSAGE = 'CALLSIGN MUST BE 2–20 LETTERS, NUMBERS, SPACES, DOTS, DASHES, OR UNDERSCORES.';
     const defaultOperatorName = `Operator-${Math.floor(1000 + Math.random() * 9000)}`;
     let operatorProfile = { name: defaultOperatorName, appearance: 'cobalt' };
     try {
@@ -8350,7 +8383,9 @@
       try {
         localStorage.setItem('clash-of-steel-operator', JSON.stringify(operatorProfile));
       } catch (error) {
-        $('room-status').textContent = 'CUSTOMIZATION WILL LAST FOR THIS SESSION ONLY.';
+        const message = 'CUSTOMIZATION WILL LAST FOR THIS SESSION ONLY.';
+        $('room-status').textContent = message;
+        $('operator-profile-status').textContent = message;
         console.warn('Operator customization could not be saved.', error);
       }
     }
@@ -8403,17 +8438,48 @@
       return [b[0] + rnd(-16, 16), b[1] + rnd(-16, 16)];
     }
 
-    function buildLobbyUI() {
-      $('player-name').value = operatorProfile.name;
+    function updateOperatorPreview() {
       const appearance = getAppearance(operatorProfile.appearance);
       $('operator-preview').textContent = operatorProfile.name.trim().charAt(0).toUpperCase() || 'C';
       $('operator-preview').style.background = appearance.color;
       $('operator-preview').style.setProperty('--operator-glow', `${appearance.color}55`);
+    }
+
+    function renderOperatorCustomization() {
+      $('player-name').value = operatorProfile.name;
+      updateOperatorPreview();
       $('appearance-selector').innerHTML = PLAYER_APPEARANCES.map(item => `
         <button type="button" class="appearance-choice ${item.id === operatorProfile.appearance ? 'selected' : ''}" data-appearance="${item.id}" style="--swatch:${item.color}" aria-pressed="${item.id === operatorProfile.appearance}">
           <span class="appearance-dot"></span>${item.name}
         </button>
       `).join('');
+    }
+
+    let customizationOpenedFromLobby = false;
+    function openOperatorCustomization(fromLobby = false) {
+      customizationOpenedFromLobby = fromLobby;
+      $('main-menu-modal').style.display = 'none';
+      if (fromLobby) {
+        $('lobby-modal').style.display = 'none';
+        $('chat-panel').style.display = 'none';
+      }
+      renderOperatorCustomization();
+      $('operator-customization-modal').style.display = 'flex';
+      $('player-name').focus();
+    }
+
+    function closeOperatorCustomization() {
+      $('operator-customization-modal').style.display = 'none';
+      if (customizationOpenedFromLobby) {
+        $('lobby-modal').style.display = 'flex';
+        $('chat-panel').style.display = networked ? 'block' : 'none';
+        buildLobbyUI();
+      } else {
+        $('main-menu-modal').style.display = 'flex';
+      }
+    }
+
+    function buildLobbyUI() {
       $('session-selector').innerHTML = [
         ['public', 'PUBLIC', 'Human operators only. No AI squads.'],
         ['public-bots', 'PUBLIC + BOTS', 'Join public operators with AI squads in the battle.'],
@@ -8476,13 +8542,6 @@
     }
 
     $('lobby-modal').onclick = e => {
-      const appearanceChoice = e.target.closest('[data-appearance]');
-      if (appearanceChoice) {
-        operatorProfile.appearance = appearanceChoice.dataset.appearance;
-        saveOperatorProfile();
-        if (networked) netSocket.emit('player:profile', operatorProfile);
-        buildLobbyUI();
-      }
       const sessionCard = e.target.closest('[data-session]');
       if (sessionCard) {
         sessionMode = sessionCard.dataset.session;
@@ -8505,6 +8564,16 @@
         e.target.click();
       }
     });
+    $('operator-customization-modal').onclick = e => {
+      const appearanceChoice = e.target.closest('[data-appearance]');
+      if (!appearanceChoice) return;
+      operatorProfile.appearance = appearanceChoice.dataset.appearance;
+      saveOperatorProfile();
+      if (networked) netSocket.emit('player:profile', operatorProfile);
+      renderOperatorCustomization();
+    };
+    $('btn-operator-customization-close').onclick = closeOperatorCustomization;
+    $('btn-lobby-customize').onclick = () => openOperatorCustomization(true);
 
     $('btn-private-bots').onclick = () => {
       if (networked && networkRoomKind === 'private' && !networkHost) return;
@@ -8534,11 +8603,14 @@
     $('btn-deploy').onclick = deployFromLobby;
     $('player-name').addEventListener('input', () => {
       operatorProfile.name = sanitizeCallsign($('player-name').value);
-      $('operator-preview').textContent = operatorProfile.name.trim().charAt(0).toUpperCase() || 'C';
+      updateOperatorPreview();
       if (!validCallsign(operatorProfile.name)) {
-        $('room-status').textContent = 'CALLSIGN MUST BE 2–20 LETTERS, NUMBERS, SPACES, DOTS, DASHES, OR UNDERSCORES.';
+        $('room-status').textContent = CALLSIGN_VALIDATION_MESSAGE;
+        $('operator-profile-status').textContent = CALLSIGN_VALIDATION_MESSAGE;
         return;
       }
+      if ($('room-status').textContent === CALLSIGN_VALIDATION_MESSAGE) $('room-status').textContent = '';
+      $('operator-profile-status').textContent = '';
       saveOperatorProfile();
       if (networked && netSocket.connected) {
         clearTimeout(profileUpdateTimer);
@@ -8549,6 +8621,8 @@
       operatorProfile.name = sanitizeCallsign(operatorProfile.name).trim();
       $('player-name').value = operatorProfile.name;
       if (validCallsign(operatorProfile.name)) {
+        if ($('room-status').textContent === CALLSIGN_VALIDATION_MESSAGE) $('room-status').textContent = '';
+        $('operator-profile-status').textContent = '';
         saveOperatorProfile();
         if (networked && netSocket.connected) netSocket.emit('player:profile', operatorProfile);
       }
@@ -9726,28 +9800,28 @@
       if (v) {
         if (v.type === 'sam') {
           $('weapon-name').textContent = 'M901 SAM TRUCK';
-          $('weapon-class').textContent = 'AIR DEFENSE · SAM POD';
-          $('ammo-cur').textContent = v.mReloading > 0 ? 'RELOAD' : v.mAmmo;
+          $('weapon-class').textContent = v.mReloading > 0
+            ? `AIR DEFENSE · SAM POD · RELOAD ${v.mReloading.toFixed(1)}s`
+            : 'AIR DEFENSE · SAM POD';
+          $('ammo-cur').textContent = v.mAmmo;
           $('ammo-mag').textContent = v.mMag;
-          $('weapon-sec-info').textContent = v.reloading > 0
-            ? `[RMB] 20MM CIWS RELOADING (${v.reloading.toFixed(1)}s)`
-            : `[RMB] 20MM CIWS: ${v.ammo} / ${v.mag}`;
+          $('weapon-sec-info').textContent = `[RMB] 20MM CIWS ${v.ammo} / ${v.mag}${v.reloading > 0 ? ` · RELOAD ${v.reloading.toFixed(1)}s` : ''}`;
         } else if (v.type === 'tank') {
           $('weapon-name').textContent = 'M1A2 TANK';
-          $('weapon-class').textContent = 'ARMOR · 120MM MAIN GUN';
-          $('ammo-cur').textContent = v.reloading > 0 ? 'RELOAD' : v.ammo;
+          $('weapon-class').textContent = v.reloading > 0
+            ? `ARMOR · 120MM MAIN GUN · RELOAD ${v.reloading.toFixed(1)}s`
+            : 'ARMOR · 120MM MAIN GUN';
+          $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
-          $('weapon-sec-info').textContent = v.mgReloading > 0
-            ? `[RMB] COAX MG RELOADING (${v.mgReloading.toFixed(1)}s)`
-            : `[RMB] COAX MG: ${v.mgAmmo} / ${v.mgMag}`;
+          $('weapon-sec-info').textContent = `[RMB] COAX MG ${v.mgAmmo} / ${v.mgMag}${v.mgReloading > 0 ? ` · RELOAD ${v.mgReloading.toFixed(1)}s` : ''}`;
         } else if (v.type === 'heli') {
           $('weapon-name').textContent = 'AH-64 APACHE';
-          $('weapon-class').textContent = 'AIR · ATTACK GUNSHIP';
-          $('ammo-cur').textContent = v.reloading > 0 ? 'RELOAD' : v.ammo;
+          $('weapon-class').textContent = v.reloading > 0
+            ? `AIR · CHAIN GUN · RELOAD ${v.reloading.toFixed(1)}s`
+            : 'AIR · CHAIN GUN';
+          $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
-          $('weapon-sec-info').textContent = v.mReloading > 0
-            ? `[${keyLabel(keyBindings.missile)}] MISSILE POD RELOADING (${v.mReloading.toFixed(1)}s)`
-            : `[${keyLabel(keyBindings.missile)}] GUIDED AIR/GROUND MISSILES: ${v.mAmmo} / ${v.mMag}`;
+          $('weapon-sec-info').textContent = `[${keyLabel(keyBindings.missile)}] MISSILES ${v.mAmmo} / ${v.mMag}${v.mReloading > 0 ? ` · RELOAD ${v.mReloading.toFixed(1)}s` : ''}`;
         } else {
           $('weapon-name').textContent = 'COMMAND APC';
           $('weapon-class').textContent = 'GROUND · ARMORED CARRIER';
