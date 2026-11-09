@@ -2602,6 +2602,7 @@
 
       <div>
         <button class="btn-action" id="btn-resume">RESUME BATTLE</button>
+        <button class="btn-secondary" id="btn-free-cursor" style="color:#38bdf8;border-color:rgba(56,189,248,0.4)">FREE CURSOR</button>
         <button class="btn-secondary" id="btn-pause-dev" style="color:#10b981;border-color:rgba(16,185,129,0.4)">DEV PANEL</button>
         <button class="btn-secondary" id="btn-pause-settings">SETTINGS</button>
         <button class="btn-secondary" id="btn-quit-lobby">ABORT TO LOBBY</button>
@@ -3245,6 +3246,11 @@
       $('btn-main-dev').onclick = openDevModal;
       $('btn-settings-dev').onclick = openDevModal;
       $('btn-pause-dev').onclick = openDevModal;
+      $('btn-free-cursor').onclick = () => {
+        $('pause-modal').style.display = 'none';
+        if (document.pointerLockElement) document.exitPointerLock();
+        isLocked = true;
+      };
 
       $('btn-auth-close').onclick = () => { $('auth-modal').style.display = 'none'; };
       $('auth-tab-login').onclick = () => {
