@@ -934,11 +934,20 @@
     @media (max-width: 620px) {
       .menu-modal {
         align-items:flex-start;
-        padding:calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
+        padding:calc(10px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
       }
-      .modal-box { margin:0; padding:18px 14px; max-height:calc(100vh - 16px); overflow-y:auto; overscroll-behavior:contain; }
-      @supports (height: 100dvh) { .modal-box { max-height:calc(100dvh - 16px); } }
-      .modal-title { font-size:clamp(28px,9vw,38px); letter-spacing:2px; }
+      .modal-box {
+        margin:auto;
+        padding:20px 14px;
+        width:100%;
+        max-height:calc(100vh - 20px);
+        overflow-y:auto;
+        overscroll-behavior:contain;
+        -webkit-overflow-scrolling:touch;
+        border-radius:10px;
+      }
+      @supports (height: 100dvh) { .modal-box { max-height:calc(100dvh - 20px); } }
+      .modal-title { font-size:clamp(26px,8.5vw,36px); letter-spacing:1.5px; }
       .modal-subtitle { font-size:10px; line-height:1.5; letter-spacing:.5px; }
       .menu-guide { padding:12px; }
       .menu-guide ol { grid-template-columns:1fr; gap:5px; }
@@ -946,23 +955,35 @@
       .multiplayer-heading { align-items:flex-start; flex-direction:column; gap:7px; }
       .operator-customizer { grid-template-columns:1fr; gap:12px; }
       .mode-grid { grid-template-columns:1fr; gap:9px; margin:12px 0; }
-      .tactical-card { padding:13px; }
+      .tactical-card { padding:14px; }
       .tactical-card:hover { transform:none; }
-      .lobby-tools input { flex:1 1 100%; width:100%; min-height:44px; }
-      .lobby-tools .btn-secondary { flex:1 1 100%; margin:0; min-height:44px; }
-      .btn-action, .btn-secondary { min-height:44px; }
-      .btn-action { width:100%; padding:12px 14px; font-size:16px; }
-      #btn-open-loadout { width:100%; margin:8px 0 0; padding:10px 12px; font-size:14px; }
+      .lobby-tools input { flex:1 1 100%; width:100%; min-height:48px; }
+      .lobby-tools .btn-secondary { flex:1 1 100%; margin:0; min-height:48px; }
+      .btn-action, .btn-secondary { min-height:48px; }
+      .btn-action { width:100%; padding:12px 16px; font-size:15px; }
+      #btn-open-loadout { width:100%; margin:8px 0 0; padding:12px 14px; font-size:14px; }
       .operator-identity input, .lobby-tools input, #chat-input { font-size:16px; }
-      .appearance-choice { min-height:44px; }
+      .appearance-choice { min-height:48px; }
       .online-counter { margin-top:8px; }
       #players-online { top:42px; right:8px; font-size:9px; }
       #chat-panel { right:8px; bottom:66px; width:min(300px, calc(100vw - 16px)); }
+      .menu-home-actions button { min-height:48px; font-size:12px; }
+      #dev-panel-modal [style*="grid-template-columns:1fr 1fr 1fr"],
+      #dev-panel-modal [style*="grid-template-columns: 1fr 1fr 1fr"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+      #leaderboard-modal table { min-width: 480px; }
+      #leaderboard-modal div[style*="overflow-y:auto"] { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
     }
     @media (pointer: coarse) {
       body { touch-action:manipulation; }
-      .modal-box { max-height:calc(100vh - 16px); overflow-y:auto; overscroll-behavior:contain; }
-      @supports (height: 100dvh) { .modal-box { max-height:calc(100dvh - 16px); } }
+      .modal-box {
+        max-height:calc(100vh - 20px);
+        overflow-y:auto;
+        overscroll-behavior:contain;
+        -webkit-overflow-scrolling:touch;
+      }
+      @supports (height: 100dvh) { .modal-box { max-height:calc(100dvh - 20px); } }
     }
     #lobby-modal, #settings-modal, #profile-modal, #updates-modal { display:none; }
     #main-menu-modal { display:flex; }
@@ -1339,140 +1360,575 @@
       touch-action:manipulation;
     }
     @media (pointer:coarse), (max-width:700px) {
-      #controls-dock { display:none; }
-      #players-online { display:none; }
-      #top-hud {
-        top:calc(8px + env(safe-area-inset-top));
-        left:50%;
-        width:calc(100vw - 150px);
-        justify-content:center;
-        gap:5px;
-        padding:5px 7px;
-      }
-      .score-badge { gap:3px; font-size:clamp(11px,3.2vw,15px); letter-spacing:0; }
-      .match-target { display:none; }
-      #weather-badge { padding:2px 4px; font-size:9px; letter-spacing:0; }
-      #radar-container { top:calc(48px + env(safe-area-inset-top)); left:8px; width:76px; height:76px; }
-      #radar-canvas { width:76px; height:76px; }
-      #players-online { top:calc(49px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); padding:5px 6px; font-size:8px; }
-      #vitals-card, #weapon-card {
-        top:auto;
-        bottom:calc(16px + env(safe-area-inset-bottom));
-      }
-      #vitals-card {
-        left:calc(8px + env(safe-area-inset-left));
-        width:clamp(96px,32vw,180px);
-        min-width:0;
-        padding:6px 7px;
-      }
-      #vitals-card .vital-title > span:first-child,
-      #veh-hint,
-      #weapon-class,
-      #weapon-sec-info { display:none; }
-      .vital-title { justify-content:flex-end; gap:4px; font-size:9px; letter-spacing:.5px; }
-      .bar-track { height:7px; margin-bottom:5px; }
-      #weapon-card {
-        right:calc(8px + env(safe-area-inset-right));
-        width:clamp(112px,36vw,190px);
-        min-width:0;
-        padding:6px 7px;
-      }
-      #weapon-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; letter-spacing:.4px; }
-      #ammo-counter { font-size:22px; }
-      #ammo-counter small { font-size:12px; }
-      #weapon-slots { display:none; }
-      #mobile-stick { width:clamp(120px,34vw,148px); height:clamp(120px,34vw,148px); bottom:calc(112px + env(safe-area-inset-bottom)); left:calc(12px + env(safe-area-inset-left)); }
-      #mobile-stick-knob { width:58px; height:58px; }
+      #vitals-card, #weapon-card { top:auto; bottom:calc(16px + env(safe-area-inset-bottom)); }
       #mobile-action-pad {
-        right:calc(12px + env(safe-area-inset-right));
-        bottom:calc(112px + env(safe-area-inset-bottom));
-        width:min(222px,58vw);
-        grid-template-columns:repeat(3,minmax(0,1fr));
-        grid-template-rows:repeat(4,clamp(48px,13vw,56px));
         grid-template-areas:
           "slide jump fire"
           "reload aim fire"
           "swap use missile"
           "loadout descend .";
-        gap:6px;
-      }
-      .mobile-action {
-        min-width:0;
-        min-height:48px;
-        padding:5px 3px;
-        font-size:clamp(8px,2.2vw,10px);
-        border-radius:13px;
-        line-height:1.15;
       }
       .mobile-action[data-mobile-action="fire"] {
         grid-area:fire;
-        justify-self:center;
-        align-self:center;
-        width:clamp(72px,20vw,88px);
-        height:clamp(72px,20vw,88px);
-        min-height:0;
-        border:2px solid rgba(245,158,11,.9);
         border-radius:50%;
-        background:radial-gradient(circle at 35% 30%,rgba(245,158,11,.3),rgba(10,18,30,.94) 72%);
-        box-shadow:0 0 0 5px rgba(245,158,11,.12),0 8px 22px rgba(0,0,0,.5),0 0 22px rgba(245,158,11,.24);
-        font-size:11px;
-        letter-spacing:1px;
       }
-      .mobile-action[data-mobile-action="aim"] { grid-area:aim; }
-      .mobile-action[data-mobile-action="slide"] { grid-area:slide; }
-      .mobile-action[data-mobile-action="use"] { grid-area:use; }
-      .mobile-action[data-mobile-action="jump"] { grid-area:jump; }
-      .mobile-action[data-mobile-action="descend"] { grid-area:descend; }
-      .mobile-action[data-mobile-action="reload"] { grid-area:reload; }
-      .mobile-action[data-mobile-action="missile"] { grid-area:missile; }
-      .mobile-action[data-mobile-action="swap"] { grid-area:swap; }
-      .mobile-action[data-mobile-action="loadout"] { grid-area:loadout; }
-      #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); min-width:56px; min-height:44px; padding:7px 8px; font-size:8px; }
-      #chat-toggle { min-height:44px; }
-      #weather-badge { min-height:36px; }
-      #chat-panel { right:8px; bottom:calc(270px + env(safe-area-inset-bottom)); width:min(280px,calc(100vw - 16px)); }
-      #chat-messages { max-height:110px; }
+      #mobile-stick { bottom:calc(112px + env(safe-area-inset-bottom)); }
     }
-    @media (max-width:360px) and (orientation:portrait) {
-      #mobile-action-pad { width:min(190px,60vw); grid-template-rows:repeat(4,44px); gap:4px; }
-      .mobile-action { min-height:44px; padding:4px 2px; font-size:8px; }
-      .mobile-action[data-mobile-action="fire"] { width:68px; height:68px; }
-    }
-    @media (pointer:coarse) and (orientation:landscape) and (max-height:520px) {
-      #mobile-stick { width:112px; height:112px; bottom:calc(76px + env(safe-area-inset-bottom)); }
-      #mobile-stick-knob { width:50px; height:50px; }
+
+    @media (pointer:coarse), (max-width:768px) {
+      #controls-dock { display:none !important; }
+      #players-online { display:none !important; }
+
+      /* TOP-LEFT RADAR (Compact & Clean) */
+      #radar-container {
+        top: calc(8px + env(safe-area-inset-top));
+        left: calc(8px + env(safe-area-inset-left));
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+        z-index: 10;
+      }
+      #radar-canvas {
+        width: 68px;
+        height: 68px;
+      }
+
+      /* TOP HUD: Scores & Mode */
+      #top-hud {
+        top: calc(8px + env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        min-width: 140px;
+        max-width: calc(100vw - 180px);
+        justify-content: center;
+        gap: 8px;
+        padding: 4px 12px;
+        background: rgba(10, 16, 26, 0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        z-index: 10;
+      }
+      .score-badge {
+        gap: 4px;
+        font-size: clamp(12px, 3.2vw, 15px);
+        letter-spacing: 0.5px;
+      }
+      .match-target { display:none; }
+      #weather-badge {
+        padding: 2px 6px;
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        min-height: 24px;
+        border-radius: 12px;
+      }
+
+      /* TOP-RIGHT CONTROLS: PAUSE & ARMORY */
+      #mobile-pause {
+        top: calc(8px + env(safe-area-inset-top));
+        right: calc(8px + env(safe-area-inset-right));
+        min-width: 48px;
+        min-height: 40px;
+        padding: 6px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        border-radius: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: rgba(10, 18, 30, 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #f8fafc;
+        z-index: 15;
+      }
+      .mobile-action[data-mobile-action="loadout"] {
+        position: fixed !important;
+        top: calc(8px + env(safe-area-inset-top));
+        right: calc(62px + env(safe-area-inset-right));
+        min-width: 54px;
+        min-height: 40px;
+        height: 40px;
+        padding: 6px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        border-radius: 8px;
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        background: rgba(10, 18, 30, 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #38bdf8;
+        z-index: 15;
+        grid-area: auto !important;
+      }
+
+      /* TOP-LEFT HEALTH & VITALS CARD (Adjacent to radar, never blocking joystick!) */
+      #vitals-card {
+        top: calc(8px + env(safe-area-inset-top));
+        left: calc(82px + env(safe-area-inset-left));
+        bottom: auto !important;
+        width: clamp(118px, 26vw, 160px);
+        min-width: 0;
+        padding: 5px 8px;
+        background: rgba(10, 16, 26, 0.78);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        z-index: 9;
+      }
+      #vitals-card .vital-title > span:first-child {
+        display: inline-block;
+        font-size: 8px;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .vital-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+      }
+      .bar-track {
+        height: 6px;
+        margin-bottom: 3px;
+        border-radius: 3px;
+        background: rgba(15, 23, 42, 0.8);
+      }
+      #veh-hint { display:none !important; }
+
+      /* BOTTOM-CENTER WEAPON & AMMO CARD (Translucent HUD Pill, completely clear of controls) */
+      #weapon-card {
+        top: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        right: auto !important;
+        bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+        width: auto !important;
+        min-width: 120px;
+        max-width: 200px;
+        padding: 4px 12px;
+        background: rgba(10, 16, 26, 0.72);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        z-index: 9;
+      }
+      #weapon-card > div:first-child {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      #weapon-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      #weapon-class, #weapon-sec-info, #weapon-slots { display:none !important; }
+      #ammo-counter {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1;
+      }
+      #ammo-counter small {
+        font-size: 10px;
+        color: #94a3b8;
+      }
+
+      /* BOTTOM-LEFT MOVEMENT JOYSTICK */
+      #mobile-stick {
+        left: calc(14px + env(safe-area-inset-left));
+        bottom: calc(14px + env(safe-area-inset-bottom));
+        width: clamp(116px, 28vw, 138px);
+        height: clamp(116px, 28vw, 138px);
+        border-radius: 50%;
+        border: 1px solid rgba(226, 232, 240, 0.35);
+        background: radial-gradient(circle, rgba(14, 26, 43, 0.5) 0%, rgba(6, 11, 18, 0.7) 100%);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(56, 189, 248, 0.12);
+        z-index: 12;
+      }
+      #mobile-stick-knob {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(125, 211, 252, 0.9);
+        background: radial-gradient(circle at 35% 30%, rgba(56, 189, 248, 0.45), rgba(14, 116, 144, 0.6) 75%);
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+      }
+
+      /* BOTTOM-RIGHT ERGONOMIC RADIAL ACTION CLUSTER */
       #mobile-action-pad {
-        right:8px;
-        bottom:calc(76px + env(safe-area-inset-bottom));
-        width:min(196px,38vw);
-        grid-template-rows:repeat(4,42px);
-        gap:4px;
+        position: fixed;
+        right: calc(10px + env(safe-area-inset-right));
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        width: 224px;
+        height: 184px;
+        display: block !important;
+        pointer-events: none;
+        z-index: 13;
       }
-      .mobile-action { min-height:42px; padding:4px 2px; font-size:8px; }
-      .mobile-action[data-mobile-action="fire"] { width:68px; height:68px; font-size:9px; }
+      .mobile-action {
+        position: absolute !important;
+        pointer-events: auto;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        border-radius: 50%;
+        background: rgba(10, 18, 30, 0.82);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1px solid rgba(148, 163, 184, 0.42);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+        color: #f1f5f9;
+        transition: transform 0.08s ease, background 0.08s ease, border-color 0.08s ease;
+      }
+      .mobile-action:active, .mobile-action.pressed {
+        transform: scale(0.92);
+        background: rgba(14, 116, 144, 0.85);
+        border-color: #38bdf8;
+        color: #ffffff;
+      }
+      .mobile-action[hidden] {
+        display: none !important;
+      }
+
+      /* PRIMARY FIRE: Natural thumb anchor */
+      .mobile-action[data-mobile-action="fire"] {
+        right: 4px;
+        bottom: 4px;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 2px solid rgba(245, 158, 11, 0.95);
+        background: radial-gradient(circle at 35% 30%, rgba(245, 158, 11, 0.35), rgba(10, 18, 30, 0.94) 75%);
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 6px 20px rgba(0, 0, 0, 0.55), 0 0 18px rgba(245, 158, 11, 0.3);
+        color: #fbbf24;
+        font-size: 12px;
+        letter-spacing: 1px;
+        z-index: 2;
+      }
+      .mobile-action[data-mobile-action="fire"]:active,
+      .mobile-action[data-mobile-action="fire"].pressed {
+        background: radial-gradient(circle at 35% 30%, rgba(245, 158, 11, 0.6), rgba(180, 83, 9, 0.95) 75%);
+        border-color: #fef08a;
+        color: #fff;
+      }
+
+      /* AIM / SECONDARY FIRE: Above fire */
+      .mobile-action[data-mobile-action="aim"] {
+        right: 18px;
+        bottom: 84px;
+        width: 50px;
+        height: 50px;
+        font-size: 10px;
+        border-color: rgba(56, 189, 248, 0.65);
+        color: #7dd3fc;
+      }
+
+      /* JUMP / CLIMB: Upper arc */
+      .mobile-action[data-mobile-action="jump"] {
+        right: 66px;
+        bottom: 128px;
+        width: 48px;
+        height: 48px;
+        font-size: 9px;
+        border-color: rgba(226, 232, 240, 0.5);
+      }
+
+      /* SLIDE: Left of fire */
+      .mobile-action[data-mobile-action="slide"] {
+        right: 84px;
+        bottom: 6px;
+        width: 50px;
+        height: 50px;
+        font-size: 9px;
+        border-color: rgba(226, 232, 240, 0.5);
+      }
+
+      /* RELOAD: Inner thumb arc */
+      .mobile-action[data-mobile-action="reload"] {
+        right: 78px;
+        bottom: 68px;
+        width: 46px;
+        height: 46px;
+        font-size: 9px;
+        border-color: rgba(245, 158, 11, 0.6);
+        color: #fcd34d;
+      }
+
+      /* SWAP WEAPON: Upper-left arc */
+      .mobile-action[data-mobile-action="swap"] {
+        right: 126px;
+        bottom: 118px;
+        width: 44px;
+        height: 44px;
+        font-size: 9px;
+        border-color: rgba(148, 163, 184, 0.5);
+      }
+
+      /* USE / VEHICLE INTERACT: Left edge, rounded rect */
+      .mobile-action[data-mobile-action="use"] {
+        right: 142px;
+        bottom: 10px;
+        width: 54px;
+        height: 46px;
+        border-radius: 12px;
+        font-size: 10px;
+        border-color: rgba(16, 185, 129, 0.65);
+        color: #6ee7b7;
+      }
+      .mobile-action[data-mobile-action="use"].vehicle-near,
+      #mobile-controls[data-vehicle] .mobile-action[data-mobile-action="use"] {
+        border-color: #f59e0b;
+        color: #fbbf24;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+      }
+
+      /* GUIDED MISSILE / SPECIAL */
+      .mobile-action[data-mobile-action="missile"] {
+        right: 136px;
+        bottom: 66px;
+        width: 50px;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 9px;
+        border-color: rgba(244, 63, 94, 0.7);
+        color: #fda4af;
+      }
+
+      /* DESCEND / SPRINT */
+      .mobile-action[data-mobile-action="descend"] {
+        right: 12px;
+        bottom: 128px;
+        width: 48px;
+        height: 48px;
+        font-size: 8px;
+        border-color: rgba(56, 189, 248, 0.5);
+      }
+
+      /* CHAT PANEL */
+      #chat-panel {
+        right: 8px;
+        bottom: calc(200px + env(safe-area-inset-bottom));
+        width: min(280px, calc(100vw - 16px));
+      }
+      #chat-messages {
+        max-height: 100px;
+      }
     }
-    @media (max-width:420px) {
-      #top-hud { width:calc(100vw - 150px); }
-      #weather-badge { display:none; }
-      #mobile-stick { width:96px; height:96px; }
-      #mobile-action-pad { grid-template-rows:repeat(4,clamp(44px,13vw,52px)); width:min(204px,58vw); }
-      .mobile-action { min-height:44px; font-size:clamp(8px,2.1vw,9px); }
-      .mobile-action[data-mobile-action="fire"] { width:clamp(68px,20vw,80px); height:clamp(68px,20vw,80px); }
-      #chat-panel { bottom:calc(265px + env(safe-area-inset-bottom)); width:min(260px,calc(100vw - 16px)); }
-      #chat-messages { max-height:95px; }
+
+    /* Small screens / narrow portrait adjustments */
+    @media (max-width: 420px) {
+      #radar-container {
+        width: 60px;
+        height: 60px;
+      }
+      #radar-canvas {
+        width: 60px;
+        height: 60px;
+      }
+      #vitals-card {
+        left: calc(72px + env(safe-area-inset-left));
+        width: clamp(108px, 28vw, 135px);
+        padding: 4px 6px;
+      }
+      #mobile-stick {
+        width: 110px;
+        height: 110px;
+      }
+      #mobile-stick-knob {
+        width: 46px;
+        height: 46px;
+      }
+      #mobile-action-pad {
+        width: 216px;
+        height: 180px;
+      }
+      .mobile-action[data-mobile-action="fire"] {
+        width: 70px;
+        height: 70px;
+        font-size: 11px;
+      }
+      .mobile-action[data-mobile-action="aim"] {
+        width: 48px;
+        height: 48px;
+        bottom: 80px;
+        right: 16px;
+      }
+      .mobile-action[data-mobile-action="jump"] {
+        width: 46px;
+        height: 46px;
+        bottom: 124px;
+        right: 60px;
+      }
+      .mobile-action[data-mobile-action="slide"] {
+        width: 48px;
+        height: 48px;
+        bottom: 6px;
+        right: 80px;
+      }
+      .mobile-action[data-mobile-action="reload"] {
+        width: 46px;
+        height: 46px;
+        bottom: 64px;
+        right: 76px;
+      }
+      .mobile-action[data-mobile-action="swap"] {
+        width: 44px;
+        height: 44px;
+        bottom: 114px;
+        right: 116px;
+      }
+      .mobile-action[data-mobile-action="use"] {
+        width: 52px;
+        height: 46px;
+        bottom: 8px;
+        right: 134px;
+      }
+      .mobile-action[data-mobile-action="missile"] {
+        width: 48px;
+        height: 44px;
+        bottom: 62px;
+        right: 128px;
+      }
+      .mobile-action[data-mobile-action="descend"] {
+        width: 46px;
+        height: 46px;
+        bottom: 124px;
+        right: 10px;
+      }
+      #weapon-card {
+        min-width: 110px;
+        padding: 3px 10px;
+      }
+      #weapon-name {
+        font-size: 10px;
+      }
+      #ammo-counter {
+        font-size: 16px;
+      }
     }
-    @media (max-width:900px) and (max-height:480px) {
-      #radar-container, #players-online { display:none; }
-      #vitals-card { width:30vw; }
-      #weapon-card { width:34vw; }
-      #mobile-stick { width:84px; height:84px; bottom:calc(76px + env(safe-area-inset-bottom)); left:8px; }
-      #mobile-stick-knob { width:38px; height:38px; }
-      #mobile-action-pad { right:8px; bottom:calc(76px + env(safe-area-inset-bottom)); width:min(196px,48vw); grid-template-rows:repeat(4,42px); gap:4px; }
-      .mobile-action { min-height:42px; font-size:8px; }
-      .mobile-action[data-mobile-action="fire"] { width:68px; height:68px; }
-      #mobile-pause { top:calc(8px + env(safe-area-inset-top)); right:8px; }
-      #chat-panel { top:calc(48px + env(safe-area-inset-top)); bottom:auto; right:8px; width:min(230px, 38vw); }
-      #chat-messages { max-height:80px; }
+
+    /* Landscape mode on phones (max-height <= 520px) */
+    @media (pointer:coarse) and (orientation:landscape) and (max-height:520px) {
+      #radar-container {
+        width: 58px;
+        height: 58px;
+      }
+      #radar-canvas {
+        width: 58px;
+        height: 58px;
+      }
+      #vitals-card {
+        left: calc(70px + env(safe-area-inset-left));
+        width: clamp(110px, 22vw, 140px);
+        padding: 4px 6px;
+      }
+      #mobile-stick {
+        width: 110px;
+        height: 110px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        left: calc(12px + env(safe-area-inset-left));
+      }
+      #mobile-stick-knob {
+        width: 46px;
+        height: 46px;
+      }
+      #mobile-action-pad {
+        right: calc(8px + env(safe-area-inset-right));
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        width: 220px;
+        height: 176px;
+      }
+      .mobile-action[data-mobile-action="fire"] {
+        width: 68px;
+        height: 68px;
+      }
+      .mobile-action[data-mobile-action="aim"] {
+        width: 48px;
+        height: 48px;
+        bottom: 78px;
+        right: 16px;
+      }
+      .mobile-action[data-mobile-action="jump"] {
+        width: 46px;
+        height: 46px;
+        bottom: 122px;
+        right: 60px;
+      }
+      .mobile-action[data-mobile-action="slide"] {
+        width: 48px;
+        height: 48px;
+        bottom: 6px;
+        right: 80px;
+      }
+      .mobile-action[data-mobile-action="reload"] {
+        width: 46px;
+        height: 46px;
+        bottom: 62px;
+        right: 74px;
+      }
+      .mobile-action[data-mobile-action="swap"] {
+        width: 44px;
+        height: 44px;
+        bottom: 112px;
+        right: 114px;
+      }
+      .mobile-action[data-mobile-action="use"] {
+        width: 52px;
+        height: 46px;
+        bottom: 8px;
+        right: 134px;
+      }
+      .mobile-action[data-mobile-action="missile"] {
+        width: 48px;
+        height: 44px;
+        bottom: 60px;
+        right: 126px;
+      }
+      .mobile-action[data-mobile-action="descend"] {
+        width: 46px;
+        height: 46px;
+        bottom: 122px;
+        right: 10px;
+      }
+      #weapon-card {
+        bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+        padding: 3px 10px;
+      }
+      #chat-panel {
+        top: calc(48px + env(safe-area-inset-top));
+        bottom: auto;
+        right: 8px;
+        width: min(240px, 36vw);
+      }
+      #chat-messages {
+        max-height: 80px;
+      }
     }
   </style>
 </head>
@@ -6766,15 +7222,12 @@
           e.targetVeh = null;
           e.boardTimer = 0;
         } else {
-          const vDist = e.targetVeh.type === 'heli'
+          const isHeliTarget = e.targetVeh.type === 'heli';
+          const vDist = isHeliTarget
             ? Math.hypot(e.p.x - e.targetVeh.p.x, e.p.z - e.targetVeh.p.z)
             : e.p.distanceTo(e.targetVeh.p);
-          const stairTarget = getHelipadStairTarget(e.targetVeh, e.p);
-          if (stairTarget) {
-            targetX = stairTarget.x;
-            targetZ = stairTarget.z;
-            e.boardTimer = 0;
-          } else if (vDist > 5.5) {
+          const maxBoardDist = isHeliTarget ? 8.5 : 8.0;
+          if (vDist > maxBoardDist) {
             targetX = e.targetVeh.p.x;
             targetZ = e.targetVeh.p.z;
             e.boardTimer = 0;
@@ -6809,9 +7262,8 @@
 
       // Keep vehicle boarding ahead of mode-specific movement objectives.
       if (isInf && e.aiState === 'board_veh' && e.targetVeh && !e.targetVeh.dead && !e.targetVeh.driver) {
-        const stairTarget = getHelipadStairTarget(e.targetVeh, e.p);
-        targetX = stairTarget ? stairTarget.x : e.targetVeh.p.x;
-        targetZ = stairTarget ? stairTarget.z : e.targetVeh.p.z;
+        targetX = e.targetVeh.p.x;
+        targetZ = e.targetVeh.p.z;
       }
       // Smart Cover Seeking
       else if (isInf && e.aiState === 'seek_cover' && e.coverPt) {
@@ -9185,6 +9637,17 @@
       const isSc = scoped();
       mobileMissileButton.disabled = !v || v.type !== 'heli';
       updateMobileVehicleControls(v);
+      const mobileUseBtn = $('mobile-action-pad')?.querySelector('[data-mobile-action="use"]');
+      if (mobileUseBtn) {
+        if (v) {
+          mobileUseBtn.textContent = 'EXIT';
+          mobileUseBtn.classList.add('vehicle-near');
+        } else {
+          const nearVeh = E.some(e => isVehicleEntity(e) && !e.team && !e.dead && !e.driver && e.p.distanceTo(P.p) < 8.5);
+          mobileUseBtn.textContent = nearVeh ? 'ENTER' : 'USE';
+          mobileUseBtn.classList.toggle('vehicle-near', nearVeh);
+        }
+      }
       ['vitals-card', 'weapon-card', 'mobile-controls'].forEach(id => {
         if (v) $(id).dataset.vehicle = v.type;
         else delete $(id).dataset.vehicle;
