@@ -18,6 +18,7 @@ const io = new Server(httpServer, {
 });
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
+const DEV_PANEL_KEY = process.env.DEV_PANEL_KEY || '';
 const MAX_PLAYERS_PER_ROOM = 12;
 const MAX_CHAT_LENGTH = 240;
 const APPEARANCE_IDS = new Set(['cobalt', 'crimson', 'olive', 'sand', 'violet', 'arctic']);
@@ -231,7 +232,12 @@ app.get('/api/leaderboard', (_req, res) => {
 
 app.post('/api/dev/verify', (req, res) => {
   const password = String(req.body?.password || '').trim();
-  if (password === '816999') {
+  if (!DEV_PANEL_KEY) {
+    return res.status(503).json({ ok: false, error: 'Developer panel is not configured.' });
+  }
+  const providedKey = Buffer.from(password);
+  const configuredKey = Buffer.from(DEV_PANEL_KEY);
+  if (providedKey.length === configuredKey.length && timingSafeEqual(providedKey, configuredKey)) {
     res.json({ ok: true, authorized: true });
   } else {
     res.status(403).json({ ok: false, error: 'Access Denied: Invalid Keycode' });
@@ -317,12 +323,15 @@ io.on('connection', socket => {
     if (socket.data.roomId) return acknowledge({ error: 'You are already in a room.' });
 
     const kind = request?.kind;
-    if (kind !== 'public' && kind !== 'private') return acknowledge({ error: 'Choose a public or private room.' });
+    if (!['public', 'public-bots', 'private'].includes(kind)) {
+      return acknowledge({ error: 'Choose a public, public with bots, or private room.' });
+    }
 
     let room;
-    if (kind === 'public') {
+    if (kind === 'public' || kind === 'public-bots') {
       if (request.action && request.action !== 'join') return acknowledge({ error: 'Public rooms can only be joined.' });
-      room = rooms.get('public') || makeRoom('public', 'public');
+      room = rooms.get(kind) || makeRoom(kind, kind);
+      room.botsEnabled = kind === 'public-bots';
     } else if (request.action === 'create') {
       let code;
       do { code = randomInt(100000, 1000000).toString(); } while (rooms.has(code));
@@ -394,7 +403,7 @@ io.on('connection', socket => {
     room.matchConfig = {
       mode: config.mode,
       difficulty: Math.max(0, Math.min(2, Number(config.difficulty) || 0)),
-      botsEnabled: room.kind !== 'private' || room.botsEnabled
+      botsEnabled: room.botsEnabled
     };
     room.gameState = null;
     io.to(room.id).emit('match:start', room.matchConfig);

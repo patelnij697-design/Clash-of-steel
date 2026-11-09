@@ -42,7 +42,7 @@ before(async () => {
   baseUrl = `http://127.0.0.1:${port}`;
   serverProcess = spawn(process.execPath, ['server.js'], {
     cwd: root,
-    env: { ...process.env, PORT: String(port) },
+    env: { ...process.env, PORT: String(port), DEV_PANEL_KEY: 'test-secret-key' },
     stdio: 'ignore'
   });
 
@@ -64,10 +64,11 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   const html = await page.text();
   assert.match(html, /id="session-selector"/);
   assert.match(html, /data-session="public"/);
+  assert.match(html, /data-session="public-bots"/);
   assert.match(html, /data-session="private"/);
   assert.match(html, /data-session="bots"/);
   assert.match(html, /id="btn-private-bots"/);
-  assert.match(html, /id="btn-join-public"/);
+  assert.doesNotMatch(html, new RegExp(`${['816', '999'].join('')}|test-secret-key`));
   assert.match(html, /id="mobile-controls"/);
   assert.match(html, /id="main-menu-modal"/);
   assert.match(html, /id="updates-modal"/);
@@ -167,6 +168,22 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(socketClient.headers.get('content-type'), /javascript/);
 });
 
+test('developer authorization uses the server-configured key', async () => {
+  const invalid = await fetch(`${baseUrl}/api/dev/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: 'wrong-key' })
+  });
+  assert.equal(invalid.status, 403);
+
+  const valid = await fetch(`${baseUrl}/api/dev/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: 'test-secret-key' })
+  });
+  assert.deepEqual(await valid.json(), { ok: true, authorized: true });
+});
+
 test('Render blueprint configures the app as a healthy Node web service', async () => {
   const blueprint = await readFile(path.join(root, 'render.yaml'), 'utf8');
   assert.match(blueprint, /type:\s*web/);
@@ -188,12 +205,12 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
   const host = await connectClient();
   const guest = await connectClient();
   try {
-    const hostRoom = await join(host, { kind: 'public', name: 'Host' });
+    const hostRoom = await join(host, { kind: 'public-bots', name: 'Host' });
     assert.equal(hostRoom.player.id, host.id);
     assert.equal(hostRoom.hostId, host.id);
     assert.equal(hostRoom.player.team, 0);
 
-    const guestRoom = await join(guest, { kind: 'public', name: '<Guest>' });
+    const guestRoom = await join(guest, { kind: 'public-bots', name: '<Guest>' });
     assert.equal(guestRoom.hostId, host.id);
     assert.equal(guestRoom.player.team, 1);
     assert.equal(guestRoom.player.name, 'Guest');
@@ -234,6 +251,32 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
     guest.disconnect();
     clients.delete(host);
     clients.delete(guest);
+  }
+});
+
+test('public human-only and bot-enabled queues stay separate', async () => {
+  const humanRoomClient = await connectClient();
+  const botRoomClient = await connectClient();
+  try {
+    const humanRoom = await join(humanRoomClient, { kind: 'public', name: 'Human' });
+    const botRoom = await join(botRoomClient, { kind: 'public-bots', name: 'Bot Queue' });
+    assert.equal(humanRoom.roomKind, 'public');
+    assert.equal(humanRoom.botsEnabled, false);
+    assert.equal(botRoom.roomKind, 'public-bots');
+    assert.equal(botRoom.botsEnabled, true);
+    assert.notEqual(humanRoom.hostId, botRoom.hostId);
+
+    const humanMatch = once(humanRoomClient, 'match:start');
+    const botMatch = once(botRoomClient, 'match:start');
+    humanRoomClient.emit('match:start', { mode: 'tdm', difficulty: 1 });
+    botRoomClient.emit('match:start', { mode: 'tdm', difficulty: 1 });
+    assert.equal((await humanMatch).botsEnabled, false);
+    assert.equal((await botMatch).botsEnabled, true);
+  } finally {
+    humanRoomClient.disconnect();
+    botRoomClient.disconnect();
+    clients.delete(humanRoomClient);
+    clients.delete(botRoomClient);
   }
 });
 

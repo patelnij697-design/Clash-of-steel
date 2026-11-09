@@ -2129,8 +2129,8 @@
       <section class="menu-guide" aria-label="How to get started">
         <h2>QUICK START</h2>
         <ol>
-          <li>Choose online or bots-only, then select a battle mode.</li>
-          <li>Set your callsign and squad appearance; join or create a room to play with friends.</li>
+          <li>Choose a public queue, a private room, or bots-only, then select a battle mode.</li>
+          <li>Set your callsign and squad appearance, then deploy. Create or join a private room to play with friends.</li>
           <li>Tap DEPLOY, then use E / USE near a vehicle to drive it.</li>
         </ol>
         <p class="menu-guide-mobile"><b>Mobile:</b> Left joystick moves; drag the right side of the screen to aim; use the buttons at bottom-right to fire, reload, exit vehicles, or use special weapons.</p>
@@ -2146,8 +2146,12 @@
         </div>
         <div class="mode-grid" id="session-selector" data-selector="session">
           <div class="tactical-card selected" data-session="public" role="button" tabindex="0">
+            <h4>PUBLIC</h4>
+            <p>Human operators only. No AI squads.</p>
+          </div>
+          <div class="tactical-card" data-session="public-bots" role="button" tabindex="0">
             <h4>PUBLIC + BOTS</h4>
-            <p>Join the public battlefield with real players; bots keep the fight active.</p>
+            <p>Join public operators with AI squads in the battle.</p>
           </div>
           <div class="tactical-card" data-session="private" role="button" tabindex="0">
             <h4>PRIVATE ROOM</h4>
@@ -2160,7 +2164,6 @@
         </div>
         <div class="lobby-tools" id="private-room-tools">
           <input id="room-code-input" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="off" placeholder="ROOM CODE" aria-label="Private room code">
-          <button class="btn-secondary" id="btn-join-public">JOIN PUBLIC LOBBY</button>
           <button class="btn-secondary" id="btn-private-bots" type="button" aria-pressed="true" style="display:none;">BOTS: ON</button>
           <button class="btn-secondary" id="btn-create-room">CREATE PRIVATE ROOM</button>
           <button class="btn-secondary" id="btn-join-room">JOIN BY CODE</button>
@@ -2375,20 +2378,20 @@
     </div>
   </div>
 
-  <!-- Commander Dev Panel Modal (Password 816999) -->
+  <!-- Commander Dev Panel Modal -->
   <div class="menu-modal" id="dev-panel-modal" role="dialog" aria-modal="true" aria-labelledby="dev-title" style="display:none;">
     <div class="modal-box" style="max-width:640px;">
       <div class="menu-back-row">
         <h2 class="modal-title" id="dev-title" style="font-size:26px;margin:0;color:#10b981;">COMMANDER DEV PANEL</h2>
         <button type="button" class="btn-secondary" id="btn-dev-close">CLOSE</button>
       </div>
-      <div class="modal-subtitle">RESTRICTED ACCESS · LEVEL 5 AUTHORIZATION REQUIRED (KEY: 816999)</div>
+      <div class="modal-subtitle">RESTRICTED ACCESS · LEVEL 5 AUTHORIZATION REQUIRED</div>
 
       <!-- Password Lock Screen -->
       <div id="dev-lock-screen" style="padding:24px 16px;text-align:center;">
         <div style="font-size:14px;color:#cbd5e1;margin-bottom:12px;">ENTER AUTHORIZATION KEYCODE TO PROCEED</div>
         <div style="display:flex;justify-content:center;gap:10px;margin-bottom:14px;">
-          <input type="password" id="dev-password-input" maxlength="12" placeholder="KEYCODE" autocomplete="off" style="width:180px;text-align:center;font-size:18px;letter-spacing:4px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.5);border-radius:4px;color:#10b981;padding:8px 12px;font-family:var(--font-mono);">
+          <input type="password" id="dev-password-input" maxlength="128" placeholder="KEYCODE" autocomplete="off" style="width:180px;text-align:center;font-size:18px;letter-spacing:4px;background:rgba(15,23,42,0.9);border:1px solid rgba(16,185,129,0.5);border-radius:4px;color:#10b981;padding:8px 12px;font-family:var(--font-mono);">
           <button type="button" class="btn-action" id="btn-dev-unlock" style="background:#059669;border-color:#10b981;">UNLOCK</button>
         </div>
         <div id="dev-password-error" style="min-height:18px;color:#f43f5e;font-size:12px;font-weight:700;"></div>
@@ -2397,7 +2400,7 @@
       <!-- Unlocked Dev Console Screen -->
       <div id="dev-unlocked-screen" style="display:none;text-align:left;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:4px;margin-bottom:16px;font-size:12px;">
-          <span style="color:#10b981;font-weight:700;">● DEV MODE ACTIVE (KEYCODE 816999 VERIFIED)</span>
+          <span style="color:#10b981;font-weight:700;">● DEV MODE ACTIVE</span>
           <button type="button" class="btn-secondary" id="btn-dev-relock" style="padding:2px 8px;font-size:10px;">RELOCK</button>
         </div>
 
@@ -2705,9 +2708,9 @@
         $('settings-status').textContent = '';
       }
       /* -------------------------------------------------------------------------
-         DEVELOPER SUITE (PASSWORD: 816999) CONTROLLER
+         DEVELOPER SUITE CONTROLLER
          ------------------------------------------------------------------------- */
-      let isDevUnlocked = localStorage.getItem('cos_dev_unlocked') === '1';
+      let isDevUnlocked = false;
       let devBotsFrozen = false;
 
       function updateDevUIState() {
@@ -2746,23 +2749,38 @@
         }
       }
 
-      function unlockDev() {
-        const pwd = $('dev-password-input').value.trim();
-        if (pwd === '816999') {
+      async function unlockDev() {
+        const password = $('dev-password-input').value.trim();
+        const unlockButton = $('btn-dev-unlock');
+        unlockButton.disabled = true;
+        try {
+          const response = await fetch('/api/dev/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+          });
+          const result = await response.json();
+          if (response.status === 403) {
+            $('dev-password-error').textContent = 'INVALID KEYCODE · ACCESS DENIED';
+            playSnd(140, 0.2, 0.3, 'sawtooth');
+            return;
+          }
+          if (!response.ok || result.authorized !== true) throw new Error('Authorization failed.');
           isDevUnlocked = true;
-          localStorage.setItem('cos_dev_unlocked', '1');
           updateDevUIState();
           bannerMsg('AUTHORIZATION GRANTED · DEV SUITE UNLOCKED');
           playSnd(880, 0.2, 0.25, 'triangle');
-        } else {
-          $('dev-password-error').textContent = 'INVALID KEYCODE · ACCESS DENIED';
+        } catch {
+          $('dev-password-error').textContent = 'AUTHORIZATION SERVICE UNAVAILABLE';
           playSnd(140, 0.2, 0.3, 'sawtooth');
+        } finally {
+          $('dev-password-input').value = '';
+          unlockButton.disabled = false;
         }
       }
 
       function relockDev() {
         isDevUnlocked = false;
-        localStorage.removeItem('cos_dev_unlocked');
         P.godmode = false;
         P.infAmmo = false;
         P.speedMultiplier = 1;
@@ -8397,7 +8415,8 @@
         </button>
       `).join('');
       $('session-selector').innerHTML = [
-        ['public', 'PUBLIC + BOTS', 'Join the public battlefield with real players; bots keep the fight active.'],
+        ['public', 'PUBLIC', 'Human operators only. No AI squads.'],
+        ['public-bots', 'PUBLIC + BOTS', 'Join public operators with AI squads in the battle.'],
         ['private', 'PRIVATE ROOM', 'Create or join a room and choose whether to include bots.'],
         ['bots', 'BOTS ONLY', 'Practice offline against the tactical bot squads.']
       ].map(([key, title, description]) => `
@@ -8406,9 +8425,8 @@
           <p>${description}</p>
         </div>
       `).join('');
-      $('private-room-tools').style.display = sessionMode === 'bots' ? 'none' : 'flex';
+      $('private-room-tools').style.display = sessionMode === 'private' || networked ? 'flex' : 'none';
       $('room-code-input').style.display = sessionMode === 'private' ? 'block' : 'none';
-      $('btn-join-public').style.display = sessionMode === 'public' ? 'inline-block' : 'none';
       $('btn-create-room').style.display = sessionMode === 'private' ? 'inline-block' : 'none';
       $('btn-join-room').style.display = sessionMode === 'private' ? 'inline-block' : 'none';
       const botToggle = $('btn-private-bots');
@@ -8436,9 +8454,15 @@
         ? `<b>12 BOT OPERATORS:</b> ${BOT_NAMES.join(', ')}`
         : `<span style="color:var(--color-blue)">BLUE SQUAD:</span> You + 7 bots (${BOT_NAMES.slice(0, 7).join(', ')})<br><span style="color:var(--color-red)">RED SQUAD:</span> 7 bots (${[...BOT_NAMES.slice(7), ...BOT_NAMES.slice(0, 2)].join(', ')})`;
     }
+    function roomLabel(kind = networkRoomKind, roomId = networkRoomId) {
+      if (kind === 'private') return `PRIVATE ROOM ${roomId}`;
+      return kind === 'public-bots' ? 'PUBLIC + BOTS ROOM' : 'PUBLIC ROOM';
+    }
     function renderRoomDetails() {
       $('room-details').style.display = networked ? 'block' : 'none';
-      $('room-code-display').textContent = networkRoomKind === 'private' ? networkRoomId : 'PUBLIC';
+      $('room-code-display').textContent = networkRoomKind === 'private'
+        ? networkRoomId
+        : networkRoomKind === 'public-bots' ? 'PUBLIC + BOTS' : 'PUBLIC';
       $('room-copy').style.display = networkRoomKind === 'private' ? 'inline-block' : 'none';
       const list = $('room-player-list');
       list.replaceChildren();
@@ -8482,7 +8506,6 @@
       }
     });
 
-    $('btn-join-public').onclick = () => joinOnlineRoom('public', 'join');
     $('btn-private-bots').onclick = () => {
       if (networked && networkRoomKind === 'private' && !networkHost) return;
       privateRoomBotsEnabled = !privateRoomBotsEnabled;
@@ -8537,9 +8560,11 @@
       matchStartedAt = Date.now();
       operatorStats.matches++;
       saveOperatorStats();
-      matchBotsEnabled = !networked || networkRoomKind !== 'private'
+      matchBotsEnabled = !networked
         ? true
-        : networkHost ? privateRoomBotsEnabled : networkMatchConfig?.botsEnabled !== false;
+        : networkHost
+          ? networkRoomKind === 'private' ? privateRoomBotsEnabled : networkRoomKind === 'public-bots'
+          : networkMatchConfig?.botsEnabled === true;
       E.forEach(e => {
         scene.remove(e.m);
       });
@@ -8850,7 +8875,7 @@
           $('btn-leave-room').style.display = 'inline-block';
           $('room-player-count').textContent = result.players.length;
           $('active-player-count').textContent = Number.isFinite(result.activePlayers) ? result.activePlayers : '—';
-          $('room-status').textContent = `${result.roomKind === 'private' ? `PRIVATE ROOM ${result.roomCode}` : 'PUBLIC ROOM'} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${result.players.length} REAL PLAYERS`;
+          $('room-status').textContent = `${roomLabel(result.roomKind, result.roomCode || networkRoomId)} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${result.players.length} REAL PLAYERS`;
           if (result.gameState) applyNetworkGameState(result.gameState);
           if (result.matchConfig && !networkHost) {
             currentMode = result.matchConfig.mode;
@@ -8901,9 +8926,19 @@
           $('room-status').textContent = 'CREATE A PRIVATE ROOM OR JOIN USING A ROOM CODE FIRST.';
           return;
         }
-        const joined = await joinOnlineRoom('public', 'join');
+        const joined = await joinOnlineRoom(sessionMode, 'join');
         if (!joined) return;
-        $('room-status').textContent = 'PUBLIC ROOM JOINED. PRESS DEPLOY TO START THE MATCH.';
+        if (networkHost) {
+          startMatch();
+          enterGameplayControls();
+        } else if (joined.matchConfig) {
+          currentMode = joined.matchConfig.mode;
+          selectedDiff = joined.matchConfig.difficulty;
+          startMatch();
+          enterGameplayControls();
+        } else {
+          $('room-status').textContent = 'JOINED PUBLIC QUEUE. WAITING FOR THE HOST TO DEPLOY.';
+        }
         return;
       }
 
@@ -9163,7 +9198,7 @@
     netSocket.on('room:presence', data => {
       if (!Number.isInteger(data?.activePlayers) || data.activePlayers < 0) return;
       $('room-player-count').textContent = data.activePlayers;
-      if (networked) $('room-status').textContent = `${networkRoomKind === 'private' ? `PRIVATE ROOM ${networkRoomId}` : 'PUBLIC ROOM'} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${data.activePlayers} REAL PLAYERS`;
+      if (networked) $('room-status').textContent = `${roomLabel()} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${data.activePlayers} REAL PLAYERS`;
     });
     netSocket.on('player:joined', player => {
       networkRoster.set(player.id, player);

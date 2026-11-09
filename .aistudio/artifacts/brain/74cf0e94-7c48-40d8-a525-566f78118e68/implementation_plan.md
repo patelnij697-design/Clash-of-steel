@@ -1,6 +1,6 @@
-# Developer Suite (816999), Cross-Browser Accounts & Combat Leaderboard
+# Developer Suite, Cross-Browser Accounts & Combat Leaderboard
 
-Deliver a secure developer panel unlocked by password `816999`, cross-browser username/password authentication with server-side persistent profiles, and an interactive global combat leaderboard ranking operators by combined combat performance.
+Deliver a developer panel unlocked with a server-configured key, cross-browser username/password authentication with server-side persistent profiles, and an interactive global combat leaderboard ranking operators by combined combat performance.
 
 ## User Review & Critical Decisions
 
@@ -20,7 +20,7 @@ Deliver a secure developer panel unlocked by password `816999`, cross-browser us
 │                                                                        │
 │  ┌──────────────────┐   ┌────────────────────┐   ┌──────────────────┐  │
 │  │   Auth Modal     │   │ Global Leaderboard │   │    Dev Panel     │  │
-│  │  (Login/Register)│   │  (Ranked Standings)│   │ (Password 816999)│  │
+│  │  (Login/Register)│   │  (Ranked Standings)│   │ (Key Protected) │  │
 │  └────────┬─────────┘   └─────────┬──────────┘   └────────┬─────────┘  │
 └───────────┼───────────────────────┼───────────────────────┼────────────┘
             │ HTTP POST / GET       │ HTTP GET / Socket     │ In-Engine
@@ -61,8 +61,8 @@ Deliver a secure developer panel unlocked by password `816999`, cross-browser us
   - Current player's highlighted rank row even when outside top 10
   - Live refresh capability and seamless integration into match summary screen
 
-### C. Tactical Developer Panel (Password: `816999`)
-- **Password Gate**: Protected by authorization keycode `816999` with real-time validation and active dev badge indicator.
+### C. Tactical Developer Panel (Server-Configured Key)
+- **Password Gate**: Protected by a server-configured authorization key with real-time validation and an active dev badge indicator.
 - **Godmode & Combat Cheats**:
   - `Toggle Godmode`: Player and driven vehicles take zero damage.
   - `Infinite Ammo & Instant Fire`: Zero weapon cooldown and bottomless magazines.
