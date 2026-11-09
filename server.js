@@ -16,7 +16,7 @@ const io = new Server(httpServer, {
   pingInterval: 10000,
   pingTimeout: 20000
 });
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = (process.env.PORT && process.env.PORT !== '8080') ? Number(process.env.PORT) : 3000;
 const HOST = '0.0.0.0';
 const DEV_PANEL_KEY = process.env.DEV_PANEL_KEY || '';
 const MAX_PLAYERS_PER_ROOM = 12;

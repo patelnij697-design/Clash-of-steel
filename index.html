@@ -250,6 +250,64 @@
       letter-spacing: 1px;
       font-weight: 700;
     }
+    #vehicle-ammo-panel {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .veh-weapon-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      padding: 6px 10px;
+    }
+    .veh-w-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .veh-w-bind {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 1px;
+    }
+    .veh-w-name {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #f8fafc;
+    }
+    .veh-w-ammo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .veh-w-ammo small {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-left: 2px;
+    }
+    .veh-w-ammo.reloading {
+      font-size: 12px;
+      color: #f43f5e;
+      letter-spacing: 0.5px;
+    }
+    #weapon-card[data-vehicle="tank"] .veh-w-ammo { color: #fbbf24; }
+    #weapon-card[data-vehicle="heli"] .veh-w-ammo { color: #38bdf8; }
+    #weapon-card[data-vehicle="sam"] .veh-w-ammo { color: #34d399; }
+    #weapon-card[data-vehicle="car"] .veh-w-ammo { color: #c4b5fd; }
     #weapon-card[data-vehicle="heli"] { border-right-color:#38bdf8; }
     #weapon-card[data-vehicle="tank"] { border-right-color:#f59e0b; }
     #weapon-card[data-vehicle="sam"] { border-right-color:#10b981; }
@@ -1979,6 +2037,22 @@
     <div id="weapon-class">ASSAULT RIFLE</div>
     <div id="weapon-name">M4A1 CARBINE</div>
     <div id="ammo-counter"><span id="ammo-cur">30</span><small>/ <span id="ammo-mag">30</span></small></div>
+    <div id="vehicle-ammo-panel">
+      <div class="veh-weapon-row" id="veh-w1-row">
+        <div class="veh-w-meta">
+          <span class="veh-w-bind" id="veh-w1-bind">[LMB]</span>
+          <span class="veh-w-name" id="veh-w1-name">120MM CANNON</span>
+        </div>
+        <div class="veh-w-ammo" id="veh-w1-ammo"><span class="veh-ammo-cur" id="veh-w1-cur">1</span><small>/ <span class="veh-ammo-max" id="veh-w1-max">1</span></small></div>
+      </div>
+      <div class="veh-weapon-row" id="veh-w2-row">
+        <div class="veh-w-meta">
+          <span class="veh-w-bind" id="veh-w2-bind">[RMB]</span>
+          <span class="veh-w-name" id="veh-w2-name">COAXIAL MG</span>
+        </div>
+        <div class="veh-w-ammo" id="veh-w2-ammo"><span class="veh-ammo-cur" id="veh-w2-cur">75</span><small>/ <span class="veh-ammo-max" id="veh-w2-max">75</span></small></div>
+      </div>
+    </div>
     <div id="weapon-sec-info"></div>
     <div id="weapon-slots">
       <div class="slot-pill active" id="slot-pri">1. PRIMARY</div>
@@ -5970,7 +6044,7 @@
     const BULLET_MATERIAL = new THREE.MeshBasicMaterial({ color: 0xfde047 });
     let bulletSequence = 0;
 
-    function spawnBullet(origin, direction, damage, attacker = 1, speed = 220, id = null, remote = false, teamOverride = null) {
+    function spawnBullet(origin, direction, damage, attacker = 1, speed = 220, id = null, remote = false, teamOverride = null, aimed = false) {
       const mesh = new THREE.Mesh(BULLET_GEOMETRY, BULLET_MATERIAL);
       mesh.position.copy(origin);
       scene.add(mesh);
@@ -5985,13 +6059,14 @@
         attacker,
         team,
         life: 2.5,
-        remote
+        remote,
+        aimed: Boolean(aimed)
       };
       BULLETS.push(bullet);
       return bullet;
     }
 
-    function raycastBullet(origin, dir, damage, attacker = 1) {
+    function raycastBullet(origin, dir, damage, attacker = 1, aimed = false) {
       if (networked && !networkHost) {
         netSocket.emit('combat:action', {
           kind: 'shot',
@@ -6001,7 +6076,7 @@
         });
         return;
       }
-      spawnBullet(origin, dir, damage, attacker);
+      return spawnBullet(origin, dir, damage, attacker, 220, null, false, null, aimed);
     }
 
     function updateBullets(dt) {
@@ -6010,7 +6085,9 @@
         if (bullet.remote) continue;
 
         bullet.life -= dt;
-        bullet.velocity.y -= BULLET_GRAVITY * dt;
+        if (!bullet.aimed) {
+          bullet.velocity.y -= BULLET_GRAVITY * dt;
+        }
         const previous = bullet.p.clone();
         bullet.p.addScaledVector(bullet.velocity, dt);
         const segment = bullet.p.clone().sub(previous);
@@ -6310,17 +6387,22 @@
         return;
       }
 
-      const aimDir = rm
-        ? getBallisticAimDirection(o, getAimPoint(), 220)
+      // When aiming down sights (rm), bullets travel directly along the sightline (camera bore d)
+      // landing dead-center on the sights with zero gravity drop and zero spread
+      const isAimed = Boolean(rm && !P.veh);
+      const aimDir = isAimed
+        ? d.clone().normalize()
         : applyMinorAimAssist(o, d, 0.048);
-      const spread = w.spr * (rm ? 0 : 1);
+      const spread = isAimed ? (w.type === 'shotgun' ? 0.012 : 0) : (w.spr || 0.015);
       const pellets = w.pel || 1;
       for (let i = 0; i < pellets; i++) {
         const q = aimDir.clone();
-        q.x += rnd(-spread, spread);
-        q.y += rnd(-spread, spread);
-        q.z += rnd(-spread, spread);
-        raycastBullet(o, q.normalize(), w.dmg);
+        if (spread > 0) {
+          q.x += rnd(-spread, spread);
+          q.y += rnd(-spread, spread);
+          q.z += rnd(-spread, spread);
+        }
+        raycastBullet(o, q.normalize(), w.dmg, 1, isAimed);
       }
     }
 
@@ -6565,9 +6647,11 @@
       
       const isSidearm = w.type === 'pistol' || w.cls === 'Auto Pistol';
       const isLauncher = w.type === 'rocket';
-      const adsX = isSidearm ? 0.0 : isLauncher ? -0.05 : 0.0;
-      const adsY = isSidearm ? -0.22 : isLauncher ? -0.20 : -0.205;
-      const adsZ = isSidearm ? -0.38 : isLauncher ? -0.42 : -0.35;
+      // Low-profile tactical ADS: gun model rests cleanly in lower viewport
+      // so the physical gun never blocks or gets in the way of the sights/reticle
+      const adsX = isSidearm ? 0.05 : isLauncher ? 0.08 : 0.04;
+      const adsY = isSidearm ? -0.36 : isLauncher ? -0.42 : -0.38;
+      const adsZ = isSidearm ? -0.42 : isLauncher ? -0.48 : -0.44;
       
       const adsBlend = gunAnim.ads;
       const motionDamp = 1 - adsBlend * 0.72;
@@ -6791,32 +6875,32 @@
     function fireVehicleMG(v, dmg, spread) {
       playSnd(260, 0.08, 0.18, 'square');
       const o = getMuzzlePos(v);
-      let d = getBallisticAimDirection(o, getAimPoint(), 220);
-      if (P.veh !== v) d = getVehicleAimDir(v, o);
+      const target = getAimPoint();
+      let d = target.clone().sub(o).normalize();
       d.x += rnd(-spread, spread);
       d.y += rnd(-spread, spread);
-      raycastBullet(o, d.normalize(), dmg, v);
+      raycastBullet(o, d.normalize(), dmg, v, true);
     }
 
     function fireTankCoaxMG(v) {
       playSnd(320, 0.06, 0.16, 'sawtooth');
       const o = getMuzzlePos(v).add(new V3(0.4, -0.1, 0.5));
-      let d = getBallisticAimDirection(o, getAimPoint(), 220);
-      if (P.veh !== v) d = getVehicleAimDir(v, o);
-      d.x += rnd(-0.018, 0.018);
-      d.y += rnd(-0.018, 0.018);
-      raycastBullet(o, d.normalize(), 16, v);
+      const target = getAimPoint();
+      let d = target.clone().sub(o).normalize();
+      d.x += rnd(-0.012, 0.012);
+      d.y += rnd(-0.012, 0.012);
+      raycastBullet(o, d.normalize(), 16, v, true);
     }
 
     function fireSAMCIWS(v) {
       playSnd(360, 0.045, 0.14, 'sawtooth');
       const o = getMuzzlePos(v);
-      let d = getBallisticAimDirection(o, getAimPoint(), 220);
-      if (P.veh !== v) d = getVehicleAimDir(v, o);
-      d.x += rnd(-0.018, 0.018);
-      d.y += rnd(-0.018, 0.018);
-      raycastBullet(o.clone().add(new V3(-0.9, 0, 0)), d.normalize(), 20, v);
-      raycastBullet(o.clone().add(new V3(0.9, 0, 0)), d.normalize(), 20, v);
+      const target = getAimPoint();
+      let d = target.clone().sub(o).normalize();
+      d.x += rnd(-0.012, 0.012);
+      d.y += rnd(-0.012, 0.012);
+      raycastBullet(o.clone().add(new V3(-0.9, 0, 0)), d.normalize(), 20, v, true);
+      raycastBullet(o.clone().add(new V3(0.9, 0, 0)), d.normalize(), 20, v, true);
     }
 
     /* -------------------------------------------------------------------------
@@ -7822,7 +7906,7 @@
       }
 
       // Tactical ADS sight overlay when aiming down sights
-      if (isLocked && !P.veh && (gunAnim.ads || 0) > 0.05) {
+      if (!P.veh && (gunAnim.ads || 0) > 0.05) {
         drawTacticalADSReticle(hwCtx, innerWidth, innerHeight);
       }
     }
@@ -7891,6 +7975,17 @@
         ctx.fillText(`${Math.round(v.p.y)}`, cx + 214, cy);
         ctx.font = '10px "JetBrains Mono", monospace';
         ctx.fillText('METERS', cx + 214, cy + 18);
+
+        // Dual Weapon Ammo Telemetry on Apache HUD
+        ctx.fillStyle = 'rgba(14, 26, 43, 0.75)';
+        ctx.fillRect(cx - 160, 48, 320, 26);
+        ctx.strokeRect(cx - 160, 48, 320, 26);
+        ctx.fillStyle = hudColor;
+        ctx.font = '700 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        const h1 = v.reloading > 0 ? `CHAIN: RLD ${v.reloading.toFixed(1)}s` : `CHAIN: ${v.ammo}/${v.mag}`;
+        const h2 = v.mReloading > 0 ? `AGM: RLD ${v.mReloading.toFixed(1)}s` : `AGM: ${v.mAmmo}/${v.mMag}`;
+        ctx.fillText(`[LMB] ${h1}   |   [${keyLabel(keyBindings.missile)}] ${h2}`, cx, 65);
 
         // Airborne Enemy Tracking & Lead Reticles
         E.forEach(e => {
@@ -7974,6 +8069,17 @@
         ctx.font = '700 12px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
         ctx.fillText(`TURRET HDG: ${headingDeg}° [AZIMUTH]`, cx, 65);
+
+        // Dual Weapon Ammo Telemetry on FCS Reticle
+        ctx.fillStyle = 'rgba(14, 26, 43, 0.75)';
+        ctx.fillRect(cx - 160, 80, 320, 24);
+        ctx.strokeRect(cx - 160, 80, 320, 24);
+        ctx.fillStyle = fcsColor;
+        ctx.font = '700 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        const t1 = v.reloading > 0 ? `120MM: RLD ${v.reloading.toFixed(1)}s` : `120MM: ${v.ammo}/${v.mag}`;
+        const t2 = v.mgReloading > 0 ? `COAX: RLD ${v.mgReloading.toFixed(1)}s` : `COAX: ${v.mgAmmo}/${v.mgMag}`;
+        ctx.fillText(`[LMB] ${t1}   |   [RMB] ${t2}`, cx, 96);
 
         ctx.restore();
 
@@ -8092,6 +8198,17 @@
           const tag = isLockedOn ? `⚠ RADAR LOCK-ON · ${dist.toFixed(0)}M` : `AIR-TGT · ${dist.toFixed(0)}M · ALT ${Math.round(e.p.y)}M`;
           ctx.fillText(tag, ex, ey - sz - 6);
         });
+
+        // Dual Weapon Ammo Telemetry on SAM Radar HUD
+        ctx.fillStyle = 'rgba(14, 26, 43, 0.75)';
+        ctx.fillRect(cx - 160, 48, 320, 26);
+        ctx.strokeRect(cx - 160, 48, 320, 26);
+        ctx.fillStyle = samGreen;
+        ctx.font = '700 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        const s1 = v.mReloading > 0 ? `SAM: RLD ${v.mReloading.toFixed(1)}s` : `SAM: ${v.mAmmo}/${v.mMag}`;
+        const s2 = v.reloading > 0 ? `CIWS: RLD ${v.reloading.toFixed(1)}s` : `CIWS: ${v.ammo}/${v.mag}`;
+        ctx.fillText(`[LMB] ${s1}   |   [RMB] ${s2}`, cx, 65);
 
         // SAM Missile Pod 4-Cell Status HUD at Bottom
         const cellW = 85, cellH = 28;
@@ -8271,7 +8388,7 @@
       ctx.save();
       ctx.globalAlpha = Math.min(1, ads * 1.25);
 
-      if (curW.type === 'rifle' || curW.type === 'smg' || curW.cls === 'Assault Rifle') {
+      if (curW.type === 'rifle' || curW.type === 'smg' || curW.type === 'lmg' || curW.cls === 'Assault Rifle') {
         // Holographic Red-Dot / Reflex Reticle (EOTech circle dot)
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.95)';
         ctx.lineWidth = 1.8;
@@ -8328,6 +8445,24 @@
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath();
         ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (curW.type === 'rocket') {
+        // Anti-Armor / Air Defense Optical Guidance Crosshair
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 40, cy); ctx.lineTo(cx - 26, cy);
+        ctx.moveTo(cx + 26, cy); ctx.lineTo(cx + 40, cy);
+        ctx.moveTo(cx, cy - 40); ctx.lineTo(cx, cy - 26);
+        ctx.moveTo(cx, cy + 26); ctx.lineTo(cx, cy + 40);
+        ctx.stroke();
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
@@ -9796,40 +9931,123 @@
         $('veh-hint').style.display = 'none';
       }
 
-      // Weapon Card & Telemetry with Vehicle Magazines
+      // Weapon Card & Telemetry with Vehicle Dual-Weapon Ammo Readouts
+      const vehPanel = $('vehicle-ammo-panel');
+      const vehW1Row = $('veh-w1-row');
+      const vehW2Row = $('veh-w2-row');
+      const vehW1Bind = $('veh-w1-bind');
+      const vehW1Name = $('veh-w1-name');
+      const vehW1Ammo = $('veh-w1-ammo');
+      const vehW2Bind = $('veh-w2-bind');
+      const vehW2Name = $('veh-w2-name');
+      const vehW2Ammo = $('veh-w2-ammo');
+
       if (v) {
+        if (vehPanel) vehPanel.style.display = 'flex';
+        $('ammo-counter').style.display = 'none';
+        $('weapon-slots').style.display = 'none';
+        $('weapon-sec-info').style.display = 'none';
+
+        const fireBtn = $('mobile-action-pad')?.querySelector('[data-mobile-action="fire"]');
+        const aimBtn = $('mobile-action-pad')?.querySelector('[data-mobile-action="aim"]');
+        const missileBtn = $('mobile-action-pad')?.querySelector('[data-mobile-action="missile"]');
+
         if (v.type === 'sam') {
           $('weapon-name').textContent = 'M901 SAM TRUCK';
-          $('weapon-class').textContent = v.mReloading > 0
-            ? `AIR DEFENSE · SAM POD · RELOAD ${v.mReloading.toFixed(1)}s`
-            : 'AIR DEFENSE · SAM POD';
+          $('weapon-class').textContent = 'AIR DEFENSE · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.mAmmo;
           $('ammo-mag').textContent = v.mMag;
           $('weapon-sec-info').textContent = `[RMB] 20MM CIWS ${v.ammo} / ${v.mag}${v.reloading > 0 ? ` · RELOAD ${v.reloading.toFixed(1)}s` : ''}`;
+
+          if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
+          if (vehW1Name) vehW1Name.textContent = 'RADAR SAM MISSILES';
+          if (vehW1Ammo) {
+            vehW1Ammo.innerHTML = v.mReloading > 0
+              ? `<span class="veh-w-ammo reloading">RELOAD ${v.mReloading.toFixed(1)}s</span>`
+              : `<span class="veh-ammo-cur">${v.mAmmo}</span><small>/ ${v.mMag}</small>`;
+          }
+          if (vehW2Row) vehW2Row.style.display = 'flex';
+          if (vehW2Bind) vehW2Bind.textContent = '[RMB]';
+          if (vehW2Name) vehW2Name.textContent = '20MM CIWS';
+          if (vehW2Ammo) {
+            vehW2Ammo.innerHTML = v.reloading > 0
+              ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
+              : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
+          }
+          if (fireBtn) fireBtn.textContent = `SAM (${v.mReloading > 0 ? 'RLD' : v.mAmmo})`;
+          if (aimBtn) aimBtn.textContent = `CIWS (${v.reloading > 0 ? 'RLD' : v.ammo})`;
+
         } else if (v.type === 'tank') {
-          $('weapon-name').textContent = 'M1A2 TANK';
-          $('weapon-class').textContent = v.reloading > 0
-            ? `ARMOR · 120MM MAIN GUN · RELOAD ${v.reloading.toFixed(1)}s`
-            : 'ARMOR · 120MM MAIN GUN';
+          $('weapon-name').textContent = 'M1A2 ABRAMS TANK';
+          $('weapon-class').textContent = 'HEAVY ARMOR · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = `[RMB] COAX MG ${v.mgAmmo} / ${v.mgMag}${v.mgReloading > 0 ? ` · RELOAD ${v.mgReloading.toFixed(1)}s` : ''}`;
+
+          if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
+          if (vehW1Name) vehW1Name.textContent = '120MM CANNON';
+          if (vehW1Ammo) {
+            vehW1Ammo.innerHTML = v.reloading > 0
+              ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
+              : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
+          }
+          if (vehW2Row) vehW2Row.style.display = 'flex';
+          if (vehW2Bind) vehW2Bind.textContent = '[RMB]';
+          if (vehW2Name) vehW2Name.textContent = 'COAXIAL MG';
+          if (vehW2Ammo) {
+            vehW2Ammo.innerHTML = v.mgReloading > 0
+              ? `<span class="veh-w-ammo reloading">RELOAD ${v.mgReloading.toFixed(1)}s</span>`
+              : `<span class="veh-ammo-cur">${v.mgAmmo}</span><small>/ ${v.mgMag}</small>`;
+          }
+          if (fireBtn) fireBtn.textContent = `120MM (${v.reloading > 0 ? 'RLD' : v.ammo})`;
+          if (aimBtn) aimBtn.textContent = `COAX (${v.mgReloading > 0 ? 'RLD' : v.mgAmmo})`;
+
         } else if (v.type === 'heli') {
           $('weapon-name').textContent = 'AH-64 APACHE';
-          $('weapon-class').textContent = v.reloading > 0
-            ? `AIR · CHAIN GUN · RELOAD ${v.reloading.toFixed(1)}s`
-            : 'AIR · CHAIN GUN';
+          $('weapon-class').textContent = 'AIR CAVALRY · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = `[${keyLabel(keyBindings.missile)}] MISSILES ${v.mAmmo} / ${v.mMag}${v.mReloading > 0 ? ` · RELOAD ${v.mReloading.toFixed(1)}s` : ''}`;
+
+          if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
+          if (vehW1Name) vehW1Name.textContent = '30MM CHAIN GUN';
+          if (vehW1Ammo) {
+            vehW1Ammo.innerHTML = v.reloading > 0
+              ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
+              : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
+          }
+          if (vehW2Row) vehW2Row.style.display = 'flex';
+          if (vehW2Bind) vehW2Bind.textContent = `[${keyLabel(keyBindings.missile)}]`;
+          if (vehW2Name) vehW2Name.textContent = 'AGM MISSILES';
+          if (vehW2Ammo) {
+            vehW2Ammo.innerHTML = v.mReloading > 0
+              ? `<span class="veh-w-ammo reloading">RELOAD ${v.mReloading.toFixed(1)}s</span>`
+              : `<span class="veh-ammo-cur">${v.mAmmo}</span><small>/ ${v.mMag}</small>`;
+          }
+          if (fireBtn) fireBtn.textContent = `CHAIN (${v.reloading > 0 ? 'RLD' : v.ammo})`;
+          if (missileBtn) missileBtn.textContent = `AGM (${v.mReloading > 0 ? 'RLD' : v.mAmmo})`;
+
         } else {
           $('weapon-name').textContent = 'COMMAND APC';
           $('weapon-class').textContent = 'GROUND · ARMORED CARRIER';
           $('ammo-cur').textContent = v.reloading > 0 ? 'RELOAD' : v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = `25MM AUTOCANNON`;
+
+          if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
+          if (vehW1Name) vehW1Name.textContent = '25MM AUTOCANNON';
+          if (vehW1Ammo) {
+            vehW1Ammo.innerHTML = v.reloading > 0
+              ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
+              : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
+          }
+          if (vehW2Row) vehW2Row.style.display = 'none';
         }
       } else {
+        if (vehPanel) vehPanel.style.display = 'none';
+        $('ammo-counter').style.display = 'block';
+        $('weapon-slots').style.display = 'flex';
+        $('weapon-sec-info').style.display = 'block';
         $('weapon-name').textContent = w.n;
         $('weapon-class').textContent = w.cls;
         $('ammo-cur').textContent = w.rl > 0 ? 'RELOAD' : w.a;
