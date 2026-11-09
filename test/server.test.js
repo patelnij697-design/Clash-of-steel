@@ -127,6 +127,7 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /for \(const z of \[-2\.7, -1\.62, -0\.54, 0\.54, 1\.62, 2\.7\]\)/);
   assert.match(html, /function getBaseWalkableHeight\(pos\)/);
   assert.match(html, /function getHelipadStairTarget\(vehicle, pos\)/);
+  assert.match(html, /if \(pos\.y >= 7 && Math\.abs\(pos\.x - gantryX\) <= 7\.5/);
   assert.match(html, /const rooftopHelipad = type === 'heli' && !isFFA/);
   assert.match(html, /Math\.max\(e\.sp\.y, e\.p\.y - 8 \* dt\)/);
   assert.match(html, /const weaponModels = W\.map\(makeWeaponModel\)/);
@@ -148,15 +149,16 @@ test('serves the multiplayer lobby and Socket.IO browser client', async () => {
   assert.match(html, /veh\.type === 'car' \|\| veh\.type === 'heli' \|\| veh\.type === 'tank' \|\| veh\.type === 'sam'/);
   assert.match(html, /currentMode === 'ffa' \|\| veh\.tm === e\.tm/);
   assert.match(html, /VERSION 1\.1\.10/);
-  assert.match(html, /Game version 1\.1\.10/);
+  assert.match(html, /VERSION 1\.2\.00 · PUBLIC MATCHMAKING & HUD/);
+  assert.match(html, /Game version 1\.2\.00/);
   assert.match(html, /PLAYER STATISTICS/);
   assert.match(html, /TILL BOT BOARDING/);
 
   const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(packageInfo.version, '1.1.10');
+  assert.equal(packageInfo.version, '1.2.00');
   const lockInfo = JSON.parse(await readFile(path.join(root, 'package-lock.json'), 'utf8'));
-  assert.equal(lockInfo.version, '1.1.10');
-  assert.equal(lockInfo.packages[''].version, '1.1.10');
+  assert.equal(lockInfo.version, '1.2.00');
+  assert.equal(lockInfo.packages[''].version, '1.2.00');
 
   const sourcePath = await fetch(`${baseUrl}/server.js`);
   assert.equal(sourcePath.status, 200);
@@ -205,12 +207,12 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
   const host = await connectClient();
   const guest = await connectClient();
   try {
-    const hostRoom = await join(host, { kind: 'public-bots', name: 'Host' });
+    const hostRoom = await join(host, { kind: 'public-bots', name: 'Host', mode: 'tdm', difficulty: 1 });
     assert.equal(hostRoom.player.id, host.id);
     assert.equal(hostRoom.hostId, host.id);
     assert.equal(hostRoom.player.team, 0);
 
-    const guestRoom = await join(guest, { kind: 'public-bots', name: '<Guest>' });
+    const guestRoom = await join(guest, { kind: 'public-bots', name: '<Guest>', mode: 'ffa', difficulty: 2 });
     assert.equal(guestRoom.hostId, host.id);
     assert.equal(guestRoom.player.team, 1);
     assert.equal(guestRoom.player.name, 'Guest');
@@ -222,7 +224,12 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
     assert.deepEqual(await profileUpdate, { id: host.id, name: 'Ranger', appearance: 'woodland' });
 
     const matchStart = once(guest, 'match:start');
-    host.emit('match:start', { mode: 'tdm', difficulty: 1 });
+    host.emit('match:start', { mode: 'ffa', difficulty: 2 });
+    const prematureStart = await Promise.race([
+      matchStart.then(config => ({ config })),
+      new Promise(resolve => setTimeout(() => resolve(null), 100))
+    ]);
+    assert.equal(prematureStart, null);
     assert.deepEqual(await matchStart, { mode: 'tdm', difficulty: 1, botsEnabled: true });
 
     const roomChat = once(guest, 'chat:message');
@@ -266,12 +273,10 @@ test('public human-only and bot-enabled queues stay separate', async () => {
     assert.equal(botRoom.botsEnabled, true);
     assert.notEqual(humanRoom.hostId, botRoom.hostId);
 
-    const humanMatch = once(humanRoomClient, 'match:start');
-    const botMatch = once(botRoomClient, 'match:start');
     humanRoomClient.emit('match:start', { mode: 'tdm', difficulty: 1 });
     botRoomClient.emit('match:start', { mode: 'tdm', difficulty: 1 });
-    assert.equal((await humanMatch).botsEnabled, false);
-    assert.equal((await botMatch).botsEnabled, true);
+    assert.equal(humanRoom.matchConfig, null);
+    assert.equal(botRoom.matchConfig, null);
   } finally {
     humanRoomClient.disconnect();
     botRoomClient.disconnect();

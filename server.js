@@ -21,6 +21,7 @@ const HOST = '0.0.0.0';
 const DEV_PANEL_KEY = process.env.DEV_PANEL_KEY || '';
 const MAX_PLAYERS_PER_ROOM = 12;
 const MAX_CHAT_LENGTH = 240;
+const PUBLIC_MATCH_DELAY_MS = 8000;
 const APPEARANCE_IDS = new Set([
   'cobalt', 'crimson', 'olive', 'sand', 'violet', 'arctic',
   'woodland', 'desert', 'slate', 'midnight', 'copper', 'teal'
@@ -262,7 +263,11 @@ function makeRoom(id, kind) {
     hostId: null,
     matchConfig: null,
     gameState: null,
-    botsEnabled: true
+    botsEnabled: true,
+    pendingMatchConfig: null,
+    matchStartsAt: null,
+    matchStartTimer: null,
+    matchCountdownTimer: null
   };
   rooms.set(id, room);
   return room;
@@ -276,6 +281,7 @@ function roomSummary(room) {
     players: [...room.players.values()],
     activePlayers,
     matchConfig: room.matchConfig,
+    matchStartsAt: room.matchStartsAt,
     gameState: room.gameState,
     botsEnabled: room.botsEnabled
   };
@@ -284,6 +290,33 @@ function roomSummary(room) {
 function sendPresence(room) {
   io.emit('presence', { activePlayers });
   if (room) io.to(room.id).emit('room:presence', { activePlayers: room.players.size });
+}
+
+function schedulePublicMatch(room, requestedConfig = {}) {
+  if (room.kind === 'private' || room.matchConfig || room.matchStartTimer) return;
+  room.pendingMatchConfig = {
+    mode: ['tdm', 'ffa', 'ctf'].includes(requestedConfig.mode) ? requestedConfig.mode : 'tdm',
+    difficulty: Math.max(0, Math.min(2, Number(requestedConfig.difficulty) || 0)),
+    botsEnabled: room.botsEnabled
+  };
+  room.matchStartsAt = Date.now() + PUBLIC_MATCH_DELAY_MS;
+  const announceCountdown = () => {
+    const secondsRemaining = Math.max(0, Math.ceil((room.matchStartsAt - Date.now()) / 1000));
+    io.to(room.id).emit('room:countdown', { secondsRemaining });
+  };
+  announceCountdown();
+  room.matchCountdownTimer = setInterval(announceCountdown, 1000);
+  room.matchStartTimer = setTimeout(() => {
+    clearInterval(room.matchCountdownTimer);
+    room.matchCountdownTimer = null;
+    room.matchStartTimer = null;
+    if (rooms.get(room.id) !== room || !room.players.size) return;
+    room.matchConfig = room.pendingMatchConfig;
+    room.pendingMatchConfig = null;
+    room.matchStartsAt = null;
+    room.gameState = null;
+    io.to(room.id).emit('match:start', room.matchConfig);
+  }, PUBLIC_MATCH_DELAY_MS);
 }
 
 function cleanName(value) {
@@ -362,6 +395,9 @@ io.on('connection', socket => {
     if (!room.hostId) room.hostId = socket.id;
     socket.data.roomId = room.id;
     socket.join(room.id);
+    if (room.kind !== 'private' && !room.matchConfig) {
+      schedulePublicMatch(room, { mode: request.mode, difficulty: request.difficulty });
+    }
     acknowledge({ ...roomSummary(room), player });
     socket.to(room.id).emit('player:joined', player);
     sendPresence(room);
@@ -402,7 +438,7 @@ io.on('connection', socket => {
 
   socket.on('match:start', config => {
     const room = rooms.get(socket.data.roomId);
-    if (!room || room.hostId !== socket.id || !config || !['tdm', 'ffa', 'ctf'].includes(config.mode)) return;
+    if (!room || room.kind !== 'private' || room.hostId !== socket.id || !config || !['tdm', 'ffa', 'ctf'].includes(config.mode)) return;
     room.matchConfig = {
       mode: config.mode,
       difficulty: Math.max(0, Math.min(2, Number(config.difficulty) || 0)),
@@ -423,6 +459,12 @@ io.on('connection', socket => {
     const room = rooms.get(socket.data.roomId);
     if (room && room.hostId === socket.id && Number.isInteger(result?.winnerTeam)) {
       io.to(room.id).emit('match:end', { winnerTeam: result.winnerTeam });
+      if (room.kind !== 'private' && room.matchConfig) {
+        const nextConfig = room.matchConfig;
+        room.matchConfig = null;
+        room.gameState = null;
+        schedulePublicMatch(room, nextConfig);
+      }
     }
   });
 
@@ -521,6 +563,8 @@ function leaveRoom(socket) {
   }
   socket.to(room.id).emit('player:left', { id: socket.id, hostId: room.hostId });
   if (!room.players.size) {
+    clearTimeout(room.matchStartTimer);
+    clearInterval(room.matchCountdownTimer);
     rooms.delete(room.id);
     io.emit('presence', { activePlayers });
   } else {

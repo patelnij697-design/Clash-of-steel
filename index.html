@@ -210,7 +210,7 @@
       bottom: 16px;
       padding: 12px 20px;
       text-align: right;
-      min-width: 260px;
+      min-width: 320px;
       border-right: 3px solid var(--color-primary);
     }
     #weapon-name {
@@ -252,23 +252,28 @@
     }
     #vehicle-ammo-panel {
       display: none;
-      flex-direction: column;
-      gap: 6px;
+      flex-direction: row;
       margin-top: 8px;
+      border-top: 1px solid rgba(148,163,184,0.2);
+      border-bottom: 1px solid rgba(148,163,184,0.2);
+      background: rgba(15, 23, 42, 0.55);
     }
     .veh-weapon-row {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 4px;
-      padding: 6px 10px;
+      flex: 1;
+      min-width: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+      padding: 7px 9px;
+    }
+    .veh-weapon-row + .veh-weapon-row {
+      border-left: 1px solid rgba(148,163,184,0.28);
     }
     .veh-w-meta {
       display: flex;
       flex-direction: column;
+      min-width: 0;
       align-items: flex-start;
       text-align: left;
     }
@@ -285,6 +290,10 @@
       font-weight: 700;
       letter-spacing: 1px;
       color: #f8fafc;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .veh-w-ammo {
       font-family: var(--font-display);
@@ -1588,6 +1597,26 @@
         gap: 10px;
         z-index: 9;
       }
+      #weapon-card[data-vehicle] {
+        top: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        right: auto !important;
+        bottom: calc(238px + env(safe-area-inset-bottom)) !important;
+        display: block !important;
+        width: min(340px, calc(100vw - 24px)) !important;
+        min-width: 0;
+        max-width: 340px;
+        padding: 8px 10px;
+        text-align: left;
+        border-radius: 8px;
+      }
+      #weapon-card[data-vehicle] #vehicle-ammo-panel { margin-top: 5px; }
+      #weapon-card[data-vehicle] .veh-weapon-row { padding: 6px 7px; }
+      #weapon-card[data-vehicle] .veh-w-bind { font-size: 9px; }
+      #weapon-card[data-vehicle] .veh-w-name { font-size: 10px; letter-spacing: 0.4px; }
+      #weapon-card[data-vehicle] .veh-w-ammo { font-size: 18px; }
+      #weapon-card[data-vehicle] .veh-w-ammo small { font-size: 11px; }
       #weapon-card > div:first-child {
         display: flex;
         flex-direction: column;
@@ -2004,7 +2033,7 @@
       <h1 id="loading-caption">AH-64 APACHE</h1>
       <div class="loading-subtitle">CLOSE AIR SUPPORT · HOSTILE ARMOR INBOUND</div>
       <div class="loading-progress" aria-hidden="true"><span></span></div>
-      <div class="loading-version">CINEMATIC INTRO // VERSION 1.1.10</div>
+      <div class="loading-version">CINEMATIC INTRO // VERSION 1.2.00</div>
     </div>
     <div class="loading-controls">
       <button type="button" id="toggle-intro-audio" aria-pressed="false">AUDIO OFF</button>
@@ -2142,7 +2171,7 @@
   <div class="menu-modal" id="main-menu-modal" style="display:none;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 1.1.10</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 1.2.00</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -2180,6 +2209,14 @@
           <li>Enemy infantry now head for an available team vehicle as soon as they spawn or respawn.</li>
           <li>Expanded bot patrol lanes to an 8 × 8 grid covering the full battlefield.</li>
           <li>Rebuilt infantry and refreshed vehicle, terrain, building, tree, rock, and supply models.</li>
+        </ul>
+      </section>
+      <section class="update-release" aria-label="Version 1.2.00 updates">
+        <h3>VERSION 1.2.00 · PUBLIC MATCHMAKING & HUD</h3>
+        <ul>
+          <li>Public queues show the operator roster and automatically start matches after a short countdown.</li>
+          <li>Vehicle HUD ammunition is split into clear side-by-side readouts for both weapon systems.</li>
+          <li>Fixed rooftop helipads raising players who are still beneath the platform.</li>
         </ul>
       </section>
       <section class="update-release" aria-label="Version 1.1.5 updates">
@@ -2252,6 +2289,7 @@
             <div><div style="font-size:9px;color:#94a3b8;letter-spacing:1px;">ROOM CODE</div><code id="room-code-display">PUBLIC</code></div>
             <button type="button" class="btn-secondary" id="room-copy">COPY CODE</button>
           </div>
+          <div class="room-roster-heading">OPERATORS IN LOBBY</div>
           <div id="room-player-list" aria-label="Players in room"></div>
         </div>
       </section>
@@ -2270,7 +2308,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 1.1.10">v1.1.10</div>
+    <div id="game-version" aria-label="Game version 1.2.00">v1.2.00</div>
   </div>
 
   <div class="menu-modal" id="operator-customization-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="operator-customization-title">
@@ -5169,7 +5207,7 @@
       else if (t < 6.75) $('intro-beat').textContent = 'WEAPONS RELEASE // ROCKET SALVO';
       else if (t < 9.5) $('intro-beat').textContent = 'TARGET DESTROYED // BREAKING CONTACT';
       else {
-        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1.1.10';
+        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1.2.00';
         $('loading-caption').textContent = 'CLASH OF STEEL';
       }
       if (t >= 12) finishLoadingIntro();
@@ -6509,7 +6547,7 @@
         if (Math.abs(pos.x - stairX) <= 1.6 && progress >= 0 && progress <= 1) {
           return 0.5 + progress * 7.1;
         }
-        if (Math.abs(pos.x - gantryX) <= 7.5 && Math.abs(pos.z - gantryZ) <= 6.5) return 7.6;
+        if (pos.y >= 7 && Math.abs(pos.x - gantryX) <= 7.5 && Math.abs(pos.z - gantryZ) <= 6.5) return 7.6;
       }
       return 0;
     }
@@ -8654,6 +8692,10 @@
         : currentMode === 'ffa'
         ? `<b>12 BOT OPERATORS:</b> ${BOT_NAMES.join(', ')}`
         : `<span style="color:var(--color-blue)">BLUE SQUAD:</span> You + 7 bots (${BOT_NAMES.slice(0, 7).join(', ')})<br><span style="color:var(--color-red)">RED SQUAD:</span> 7 bots (${[...BOT_NAMES.slice(7), ...BOT_NAMES.slice(0, 2)].join(', ')})`;
+      const deployButton = $('btn-deploy');
+      const waitingForPublicMatch = networked && networkRoomKind !== 'private' && !networkMatchConfig;
+      deployButton.disabled = waitingForPublicMatch;
+      deployButton.textContent = waitingForPublicMatch ? 'MATCH STARTING AUTOMATICALLY' : 'DEPLOY TO BATTLEFIELD';
     }
     function roomLabel(kind = networkRoomKind, roomId = networkRoomId) {
       if (kind === 'private') return `PRIVATE ROOM ${roomId}`;
@@ -8670,8 +8712,9 @@
       if (!networked) return;
       [...networkRoster.values()].forEach(player => {
         const chip = document.createElement('span');
-        chip.className = `room-player-chip${player.id === networkHostId ? ' host' : ''}`;
-        chip.textContent = `${player.name || 'Operator'} · ${player.team === 0 ? 'BLUE' : player.team === 1 ? 'RED' : 'FREE'}${player.id === networkHostId ? ' · HOST' : ''}`;
+        const isPrivateHost = networkRoomKind === 'private' && player.id === networkHostId;
+        chip.className = `room-player-chip${isPrivateHost ? ' host' : ''}`;
+        chip.textContent = `${player.name || 'Operator'} · ${player.team === 0 ? 'BLUE' : player.team === 1 ? 'RED' : 'FREE'}${isPrivateHost ? ' · HOST' : ''}`;
         list.appendChild(chip);
       });
     }
@@ -8895,7 +8938,7 @@
         if (networkGameState) applyNetworkGameState(networkGameState);
         if (networkHost) {
           networkMatchConfig = { mode: currentMode, difficulty: selectedDiff, botsEnabled: matchBotsEnabled };
-          netSocket.emit('match:start', networkMatchConfig);
+          if (networkRoomKind === 'private') netSocket.emit('match:start', networkMatchConfig);
         }
       }
 
@@ -9050,6 +9093,8 @@
         netSocket.timeout(6000).emit('room:join', {
           kind,
           action,
+          mode: currentMode,
+          difficulty: selectedDiff,
           roomCode: roomCode.trim(),
           botsEnabled: privateRoomBotsEnabled,
           name: operatorProfile.name,
@@ -9085,6 +9130,10 @@
           $('room-player-count').textContent = result.players.length;
           $('active-player-count').textContent = Number.isFinite(result.activePlayers) ? result.activePlayers : '—';
           $('room-status').textContent = `${roomLabel(result.roomKind, result.roomCode || networkRoomId)} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${result.players.length} REAL PLAYERS`;
+          if (networkRoomKind !== 'private' && !result.matchConfig) {
+            $('room-status').textContent = `PUBLIC LOBBY · ${result.players.length} OPERATORS · MATCH STARTING AUTOMATICALLY`;
+          }
+          buildLobbyUI();
           if (result.gameState) applyNetworkGameState(result.gameState);
           if (result.matchConfig && !networkHost) {
             currentMode = result.matchConfig.mode;
@@ -9120,6 +9169,7 @@
       $('btn-leave-room').style.display = 'none';
       $('room-player-count').textContent = '—';
       renderRoomDetails();
+      buildLobbyUI();
     }
 
     async function deployFromLobby() {
@@ -9137,16 +9187,13 @@
         }
         const joined = await joinOnlineRoom(sessionMode, 'join');
         if (!joined) return;
-        if (networkHost) {
-          startMatch();
-          enterGameplayControls();
-        } else if (joined.matchConfig) {
+        if (joined.matchConfig) {
           currentMode = joined.matchConfig.mode;
           selectedDiff = joined.matchConfig.difficulty;
           startMatch();
           enterGameplayControls();
         } else {
-          $('room-status').textContent = 'JOINED PUBLIC QUEUE. WAITING FOR THE HOST TO DEPLOY.';
+          $('room-status').textContent = 'PUBLIC LOBBY · MATCH STARTING AUTOMATICALLY';
         }
         return;
       }
@@ -9155,7 +9202,14 @@
         $('room-status').textContent = 'Leave the current room before changing lobby type.';
         return;
       }
-      if (networkHost) {
+      if (networkRoomKind !== 'private') {
+        if (networkMatchConfig && inLobby) {
+          currentMode = networkMatchConfig.mode;
+          selectedDiff = networkMatchConfig.difficulty;
+          startMatch();
+          enterGameplayControls();
+        }
+      } else if (networkHost) {
         startMatch();
         enterGameplayControls();
       } else {
@@ -9407,7 +9461,13 @@
     netSocket.on('room:presence', data => {
       if (!Number.isInteger(data?.activePlayers) || data.activePlayers < 0) return;
       $('room-player-count').textContent = data.activePlayers;
-      if (networked) $('room-status').textContent = `${roomLabel()} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${data.activePlayers} REAL PLAYERS`;
+      if (networked) $('room-status').textContent = networkRoomKind === 'private'
+        ? `${roomLabel()} · ${networkHost ? 'HOST' : 'CONNECTED'} · ${data.activePlayers} REAL PLAYERS`
+        : `PUBLIC LOBBY · ${data.activePlayers} OPERATORS · MATCH STARTING AUTOMATICALLY`;
+    });
+    netSocket.on('room:countdown', data => {
+      if (!networked || networkRoomKind === 'private' || !Number.isInteger(data?.secondsRemaining)) return;
+      $('room-status').textContent = `PUBLIC LOBBY · ${networkRoster.size} OPERATORS · MATCH STARTS IN ${data.secondsRemaining}s`;
     });
     netSocket.on('player:joined', player => {
       networkRoster.set(player.id, player);
@@ -9461,7 +9521,6 @@
       renderRoomDetails();
     });
     netSocket.on('match:start', config => {
-      if (networkHost) return;
       networkMatchConfig = config;
       currentMode = config.mode;
       selectedDiff = config.difficulty;
