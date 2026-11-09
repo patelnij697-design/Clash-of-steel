@@ -2027,13 +2027,9 @@
   <canvas id="hud-world-canvas"></canvas>
 
   <div id="loading-screen" role="status" aria-live="polite">
-    <div class="loading-beat" aria-hidden="true">FLIGHT REEL / 01<span id="intro-beat">LOW-LEVEL HOVER</span></div>
     <div class="loading-copy">
-      <div class="loading-kicker">MISSION 01 · OPERATION STEEL RAIN</div>
-      <h1 id="loading-caption">AH-64 APACHE</h1>
-      <div class="loading-subtitle">CLOSE AIR SUPPORT · HOSTILE ARMOR INBOUND</div>
+      <h1 id="loading-caption">CLASH OF STEEL</h1>
       <div class="loading-progress" aria-hidden="true"><span></span></div>
-      <div class="loading-version">CINEMATIC INTRO // VERSION 1.2.00</div>
     </div>
     <div class="loading-controls">
       <button type="button" id="toggle-intro-audio" aria-pressed="false">AUDIO OFF</button>
@@ -2858,6 +2854,8 @@
       }
 
       function openDevModal() {
+        leaveGameplayControls();
+        $('pause-modal').style.display = 'none';
         updateDevUIState();
         $('dev-password-error').textContent = '';
         $('dev-panel-modal').style.display = 'flex';
@@ -2870,6 +2868,7 @@
       function toggleDevPanel() {
         if ($('dev-panel-modal').style.display === 'flex') {
           $('dev-panel-modal').style.display = 'none';
+          if (!inLobby) awaitGameplayInput();
         } else {
           leaveGameplayControls();
           openDevModal();
@@ -2922,7 +2921,7 @@
         const spawnPos = (P.veh ? P.veh.p : P.p).clone().addScaledVector(forward, 7);
         const color = TC[P.tm] || 0x38bdf8;
         const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : type === 'car' ? mkAPC : mkSAMTruck;
-        const hp = type === 'heli' ? 300 : type === 'tank' ? 450 : type === 'car' ? 550 : 450;
+        const hp = type === 'heli' ? 750 : type === 'tank' ? 1800 : type === 'car' ? 950 : 1100;
         const mesh = makeMesh(color);
         const entity = addEntity(type, mesh, spawnPos.x, spawnPos.z, hp, P.tm, type === 'heli' ? 1.0 : 0, 0);
         entity.yaw = Math.atan2(forward.x, forward.z);
@@ -3270,7 +3269,10 @@
       $('lb-tab-wins').onclick = () => loadLeaderboard('wins');
       $('btn-leaderboard-refresh').onclick = () => loadLeaderboard(currentLeaderboardTab);
 
-      $('btn-dev-close').onclick = () => { $('dev-panel-modal').style.display = 'none'; };
+      $('btn-dev-close').onclick = () => {
+        $('dev-panel-modal').style.display = 'none';
+        if (!inLobby) awaitGameplayInput();
+      };
       $('btn-dev-unlock').onclick = unlockDev;
       $('dev-password-input').onkeydown = e => { if (e.key === 'Enter') unlockDev(); };
       $('btn-dev-relock').onclick = relockDev;
@@ -5202,14 +5204,7 @@
       if (introPreviousElapsed < 6.6 && t >= 6.6) playIntroSound('impact');
       introPreviousElapsed = t;
 
-      if (t < 2.5) $('intro-beat').textContent = 'LOW-LEVEL HOVER // DUST OFF';
-      else if (t < 5.3) $('intro-beat').textContent = 'TWO-SHIP FORMATION // TERRAIN FOLLOWING';
-      else if (t < 6.75) $('intro-beat').textContent = 'WEAPONS RELEASE // ROCKET SALVO';
-      else if (t < 9.5) $('intro-beat').textContent = 'TARGET DESTROYED // BREAKING CONTACT';
-      else {
-        $('intro-beat').textContent = 'CLASH OF STEEL // VERSION 1.2.00';
-        $('loading-caption').textContent = 'CLASH OF STEEL';
-      }
+      $('loading-caption').textContent = 'CLASH OF STEEL';
       if (t >= 12) finishLoadingIntro();
     }
 
@@ -5238,17 +5233,17 @@
        HIGH-DETAIL FIRST-PERSON GUN MODELS & WEAPON ARSENAL
        ------------------------------------------------------------------------- */
     const W = [
-      { n: 'Combat Pistol', lv: 1, dmg: 22, rate: 0.25, mag: 15, rel: 1.1, spr: 0.012, zoom: 1.3, cls: 'Sidearm', type: 'pistol' },
-      { n: 'Vector SMG', lv: 1, dmg: 14, rate: 0.065, mag: 32, rel: 1.4, spr: 0.03, zoom: 1.5, auto: 1, cls: 'Close Quarters', type: 'smg' },
-      { n: 'Magnum .44', lv: 2, dmg: 62, rate: 0.5, mag: 6, rel: 2.0, spr: 0.005, zoom: 1.6, cls: 'Heavy Revolver', type: 'pistol' },
-      { n: 'SPAS Shotgun', lv: 2, dmg: 12, pel: 8, rate: 0.75, mag: 8, rel: 2.2, spr: 0.065, zoom: 1.2, cls: 'Breaching', type: 'shotgun' },
-      { n: 'M4A1 Carbine', lv: 3, dmg: 28, rate: 0.1, mag: 30, rel: 1.7, spr: 0.015, zoom: 2.4, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
-      { n: 'Micro SMG', lv: 3, dmg: 10, rate: 0.05, mag: 24, rel: 1.2, spr: 0.04, zoom: 1.3, auto: 1, cls: 'Auto Pistol', type: 'smg' },
-      { n: 'M39 DMR', lv: 4, dmg: 52, rate: 0.3, mag: 10, rel: 1.9, spr: 0.004, zoom: 3.8, scope: 1, cls: 'Marksman', type: 'sniper' },
+      { n: 'Combat Pistol', lv: 1, dmg: 17, rate: 0.25, mag: 15, rel: 1.1, spr: 0.012, zoom: 1.3, cls: 'Sidearm', type: 'pistol' },
+      { n: 'Vector SMG', lv: 1, dmg: 10, rate: 0.065, mag: 32, rel: 1.4, spr: 0.03, zoom: 1.5, auto: 1, cls: 'Close Quarters', type: 'smg' },
+      { n: 'Magnum .44', lv: 2, dmg: 48, rate: 0.5, mag: 6, rel: 2.0, spr: 0.005, zoom: 1.6, cls: 'Heavy Revolver', type: 'pistol' },
+      { n: 'SPAS Shotgun', lv: 2, dmg: 9, pel: 8, rate: 0.75, mag: 8, rel: 2.2, spr: 0.065, zoom: 1.2, cls: 'Breaching', type: 'shotgun' },
+      { n: 'M4A1 Carbine', lv: 3, dmg: 21, rate: 0.1, mag: 30, rel: 1.7, spr: 0.015, zoom: 2.4, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
+      { n: 'Micro SMG', lv: 3, dmg: 8, rate: 0.05, mag: 24, rel: 1.2, spr: 0.04, zoom: 1.3, auto: 1, cls: 'Auto Pistol', type: 'smg' },
+      { n: 'M39 DMR', lv: 4, dmg: 40, rate: 0.3, mag: 10, rel: 1.9, spr: 0.004, zoom: 3.8, scope: 1, cls: 'Marksman', type: 'sniper' },
       { n: 'AT-4 Rocket', lv: 4, rate: 1.8, mag: 1, rel: 2.5, zoom: 2.0, m: 'at', cls: 'Anti-Armor', type: 'rocket' },
-      { n: 'Barrett .50', lv: 5, dmg: 135, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
+      { n: 'Barrett .50', lv: 5, dmg: 105, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
       { n: 'Stinger AA', lv: 5, rate: 1.8, mag: 1, rel: 2.6, zoom: 2.0, m: 'aa', cls: 'Lock-On Anti-Air', type: 'rocket' },
-      { n: 'M249 SAW', lv: 6, dmg: 22, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' }
+      { n: 'M249 SAW', lv: 6, dmg: 16, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' }
     ];
     W.forEach(w => { w.a = w.mag; w.cd = 0; w.rl = 0; });
 
@@ -5406,7 +5401,7 @@
         model.add(fastener);
       }
       const flash = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 1), glow.clone());
-      flash.position.set(0, 0.03, muzzleZ);
+      flash.position.set(0, 0.012, muzzleZ - 0.06);
       model.add(flash);
       model.flash = flash;
       model.magHomeY = model.magMesh ? model.magMesh.position.y : 0;
@@ -5499,6 +5494,7 @@
         hp,
         mhp: hp,
         team,
+        teamColorHex: tm >= 0 ? (TC[tm] ?? 0xf8fafc) : 0xf8fafc,
         nid: `entity-${E.reduce((count, entity) => count + (!entity.remote && !entity.playerProxy ? 1 : 0), 0)}`,
         yaw: 0,
         v: 0,
@@ -5859,7 +5855,7 @@
 
     document.addEventListener('pointerlockchange', () => {
       isLocked = mobileControlsActive || document.pointerLockElement === canvas;
-      $('pause-modal').style.display = (!isLocked && !inLobby && $('loadout-modal').style.display !== 'flex') ? 'flex' : 'none';
+      $('pause-modal').style.display = (!isLocked && !inLobby && $('loadout-modal').style.display !== 'flex' && $('dev-panel-modal').style.display !== 'flex') ? 'flex' : 'none';
       if (!isLocked) lm = rm = 0;
     });
 
@@ -6166,7 +6162,7 @@
               const isHead = hitObj.object.userData.head;
               const multiplier = entity.type === 'inf'
                 ? (bullet.headshots && isHead ? 2.5 : 1)
-                : (bullet.vehicleDamageScale ?? 0.18);
+                : (bullet.vehicleDamageScale ?? 0.04);
               if (!bullet.remote) hitMarkerPulse();
               applyDamage(entity, bullet.damage * multiplier, bullet.attacker, previous);
             }
@@ -6411,7 +6407,10 @@
       gunAnim.recoilRotY = (Math.random() - 0.5) * 0.04;
       gunAnim.muzzleTimer = 0.05;
       const weaponModel = weaponModels[P.w];
-      if (weaponModel.flash) weaponModel.flash.material.opacity = 0.9;
+      if (weaponModel.flash) {
+        weaponModel.flash.scale.setScalar(rm && !P.veh ? 0.45 : 1);
+        weaponModel.flash.material.opacity = 0.9;
+      }
       fpMuzzleLight.intensity = w.m ? 3.4 : w.dmg > 50 ? 2.8 : 1.9;
 
       const o = camera.position.clone();
@@ -6523,6 +6522,7 @@
       });
       if (best) {
         P.veh = best;
+        setVehicleTeamColor(best, P.tm);
         best.v = 0;
         best.team = 1;
         best.tm = P.tm;
@@ -6567,6 +6567,21 @@
         return { x: stairX, z: startZ - sign * nextProgress * 12 };
       }
       return null;
+    }
+
+    function setVehicleTeamColor(v, team) {
+      if (!v || !v.m) return;
+      const nextHex = TC[team] ?? 0xf8fafc;
+      const prevHex = v.teamColorHex;
+      v.tm = team;
+      v.teamColorHex = nextHex;
+      if (prevHex === undefined || prevHex === nextHex) return;
+      v.m.traverse(obj => {
+        if (obj.isMesh && obj.material && obj.material.color && obj.material.color.getHex() === prevHex) {
+          obj.material = obj.material.clone();
+          obj.material.color.setHex(nextHex);
+        }
+      });
     }
 
     function exitVehicle() {
@@ -6808,6 +6823,8 @@
           if (v.mAmmo > 0) {
             v.mAmmo--;
             v.mCd = 0.55;
+            const o = getMuzzlePos(v);
+            const d = getVehicleAimDir(v, o);
             const tgtLock = (activeMissileLock.kind === 'sam' && activeMissileLock.target && !activeMissileLock.target.dead)
               ? activeMissileLock.target
               : lockTarget(o, d, 440, 0.45, v.tm, 'sam');
@@ -7412,6 +7429,7 @@
                 e.targetVeh.tm = e.tm;
                 e.targetVeh.driver = e;
                 e.drivingVeh = e.targetVeh;
+                setVehicleTeamColor(e.targetVeh, e.tm);
                 e.targetVeh.patrolSlot = e.patrolSlot;
                 e.targetVeh.patrolVisit = e.patrolVisit;
                 e.targetVeh.boardingBot = null;
@@ -8729,6 +8747,13 @@
       if (modeCard) {
         currentMode = modeCard.dataset.mode;
         buildLobbyUI();
+        if ((sessionMode === 'public' || sessionMode === 'public-bots') && netSocket?.connected) {
+          if (networked) {
+            netSocket.emit('room:leave');
+            networked = false;
+          }
+          joinRoom(sessionMode, 'join');
+        }
       }
       const diffBtn = e.target.closest('[data-diff]');
       if (diffBtn) {
@@ -8859,10 +8884,10 @@
 
       const spawnVehicleFleet = (team, spawns, color) => {
         const vehicleTypes = [
-          ['car', 550, mkAPC],
-          ['heli', 280, mkHeli],
-          ['tank', 420, mkTank],
-          ['sam', 450, mkSAMTruck]
+          ['car', 950, mkAPC],
+          ['heli', 750, mkHeli],
+          ['tank', 1800, mkTank],
+          ['sam', 1100, mkSAMTruck]
         ];
         vehicleTypes.forEach(([type, hp, makeMesh], index) => {
           const sign = team ? 1 : -1;
@@ -8887,6 +8912,16 @@
         [0, 1].forEach(team => {
           spawnVehicleFleet(team, [0, 1, 2, 3].map(index => bayPos(team, index)), TC[team]);
         });
+        // Neutral white vehicle spawns at opposite map corners away from Red/Blue bases
+        [
+          ['tank', 1800, mkTank, -205, 205],
+          ['car', 950, mkAPC, -193, 205],
+          ['heli', 750, mkHeli, 205, -205],
+          ['sam', 1100, mkSAMTruck, 193, -205]
+        ].forEach(([type, hp, makeMesh, x, z]) => {
+          const entity = addEntity(type, makeMesh(0xf8fafc), x, z, hp, -1, type === 'heli' ? 0.5 : 0, 0);
+          entity.teamColorHex = 0xf8fafc;
+        });
       }
 
       if (matchBotsEnabled) {
@@ -8903,7 +8938,7 @@
       }
 
       if (matchBotsEnabled && isFFA) {
-        [['heli', 180], ['tank', 320], ['sam', 380]].forEach(([type, hp], index) => {
+        [['heli', 650], ['tank', 1500], ['sam', 950]].forEach(([type, hp], index) => {
           const team = 20 + index;
           const [x, z] = getSpawnPoint(team);
           const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : mkSAMTruck;
