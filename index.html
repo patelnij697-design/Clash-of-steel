@@ -2628,7 +2628,7 @@
     <div id="mobile-stick" aria-label="Movement joystick"><div id="mobile-stick-knob"></div></div>
     <div id="mobile-action-pad">
       <button class="mobile-action primary" data-mobile-action="fire" data-hold="fire" aria-label="Fire weapon">FIRE</button>
-      <button class="mobile-action" data-mobile-action="aim" data-tap="aim" aria-label="Toggle aim or secondary fire">AIM</button>
+      <button class="mobile-action" data-mobile-action="aim" data-hold="aim" aria-label="Aim or secondary fire">AIM</button>
       <button class="mobile-action" data-mobile-action="slide" data-tap="slide" aria-label="Tactical slide">SLIDE</button>
       <button class="mobile-action" data-mobile-action="use" data-tap="use" aria-label="Enter or exit vehicle">USE</button>
       <button class="mobile-action" data-mobile-action="jump" data-hold="jump" aria-label="Jump or climb">JUMP</button>
@@ -2636,31 +2636,11 @@
       <button class="mobile-action" data-mobile-action="reload" data-tap="reload" aria-label="Reload">RELOAD</button>
       <button class="mobile-action" data-mobile-action="missile" data-tap="missile" aria-label="Fire guided missile">MISSILE</button>
       <button class="mobile-action" data-mobile-action="swap" data-tap="swap" aria-label="Switch weapon slot">SWAP</button>
-      <button class="mobile-action" data-mobile-action="grenade" data-tap="grenade" aria-label="Throw frag grenade">FRAG</button>
-      <button class="mobile-action" data-mobile-action="grapple" data-tap="grapple" aria-label="Fire grapple hook">GRAPPLE</button>
+      <button class="mobile-action" data-mobile-action="throw" data-tap="throw" aria-label="Throw grenade or shield bubble">THROW</button>
+      <button class="mobile-action" data-mobile-action="cyclethrow" data-tap="cyclethrow" aria-label="Cycle throwable">GEAR</button>
       <button class="mobile-action" data-mobile-action="loadout" data-tap="loadout" aria-label="Open loadout">ARMORY</button>
     </div>
     <button id="mobile-pause" type="button">PAUSE</button>
-  </div>
-  <div id="vote-modal" style="display:none;position:fixed;inset:0;z-index:50;background:rgba(6,10,16,0.92);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:24px;">
-    <div class="tactical-panel" style="max-width:640px;width:100%;padding:28px;text-align:center;">
-      <div id="vote-result-title" style="font-family:var(--font-display);font-size:28px;font-weight:700;color:#f59e0b;margin-bottom:6px;">MATCH COMPLETE</div>
-      <div id="vote-countdown" style="font-size:12px;letter-spacing:1.5px;color:#94a3b8;margin-bottom:20px;">NEXT DEPLOYMENT IN 10s — VOTE FOR GAMEMODE</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;" id="vote-options">
-        <button type="button" class="tactical-card" data-vote-mode="tdm" style="padding:18px;cursor:pointer;">
-          <h4 style="margin:0 0 6px;color:#38bdf8;">TEAM DEATHMATCH</h4>
-          <p style="margin:0;font-size:11px;color:#94a3b8;">25 kills to win</p>
-        </button>
-        <button type="button" class="tactical-card" data-vote-mode="ctf" style="padding:18px;cursor:pointer;">
-          <h4 style="margin:0 0 6px;color:#f59e0b;">CAPTURE THE FLAG</h4>
-          <p style="margin:0;font-size:11px;color:#94a3b8;">3 captures to win</p>
-        </button>
-        <button type="button" class="tactical-card" data-vote-mode="ffa" style="padding:18px;cursor:pointer;">
-          <h4 style="margin:0 0 6px;color:#10b981;">BATTLE ROYALE</h4>
-          <p style="margin:0;font-size:11px;color:#94a3b8;">Last squad standing</p>
-        </button>
-      </div>
-    </div>
   </div>
 
   <!-- Legacy Cannon.js map bodies and Three.js renderer from CDN -->
@@ -3845,6 +3825,82 @@
     }
     scene.add(runwayGroup);
 
+    // Tactical Map Enhancements: Crossroad Checkpoints, Cover Barriers, Supply Depots & Natural Cover
+    (function buildTacticalMapProps() {
+      const barrierMat = mats.concrete;
+      const crateMat = mats.olive || new THREE.MeshStandardMaterial({ color: 0x4b5320, roughness: 0.85 });
+      const woodMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+      const foliageMat = new THREE.MeshStandardMaterial({ color: 0x2d4c2b, roughness: 0.88 });
+      const rockMat = new THREE.MeshStandardMaterial({ color: 0x6b7068, roughness: 0.92 });
+
+      // 1. Concrete Jersey barriers along road intersections for infantry cover
+      const intersections = [
+        [-125, -125], [125, -125], [-125, 125], [125, 125],
+        [-125, 0], [125, 0], [0, -125], [0, 125]
+      ];
+      intersections.forEach(([ix, iz], idx) => {
+        // Corner concrete cover walls
+        box(6, 1.35, 0.8, barrierMat, ix - 11, 0.675, iz - 11);
+        box(0.8, 1.35, 6, barrierMat, ix - 13.6, 0.675, iz - 8.4);
+        box(6, 1.35, 0.8, barrierMat, ix + 11, 0.675, iz + 11);
+        box(0.8, 1.35, 6, barrierMat, ix + 13.6, 0.675, iz + 8.4);
+
+        // Tactical supply crates at alternating checkpoints
+        if (idx % 2 === 0) {
+          box(2.2, 1.6, 2.2, crateMat, ix - 10.5, 0.8, iz - 8.8);
+          box(1.6, 1.2, 1.6, crateMat, ix - 8.2, 0.6, iz - 9.0);
+        }
+      });
+
+      // 2. Central Forward Outpost Bunkers flanking the main runway
+      [[-46, 46], [46, -46]].forEach(([bx, bz]) => {
+        box(12, 0.25, 12, barrierMat, bx, 0.125, bz);
+        box(10, 2.4, 0.9, barrierMat, bx, 1.2, bz - 5.2);
+        box(10, 2.4, 0.9, barrierMat, bx, 1.2, bz + 5.2);
+        box(0.9, 2.4, 4.2, barrierMat, bx - 5.2, 1.2, bz - 3.1);
+        box(0.9, 2.4, 4.2, barrierMat, bx + 5.2, 1.2, bz + 3.1);
+        box(2.4, 1.4, 2.4, crateMat, bx - 2.2, 0.7, bz + 1.8);
+        cyl(0.25, 0.35, 4.5, 8, mats.steelDark, bx + 3.2, 2.25, bz - 3.2);
+      });
+
+      // 3. Perimeter & Ridge Pine Tree Clusters + Rock Outcrops
+      const treeSpots = [
+        [-170, -60], [-185, -45], [-165, 70], [-190, 95],
+        [170, 60], [185, 45], [165, -70], [190, -95],
+        [-75, -175], [-55, -190], [80, -175], [100, -188],
+        [-80, 175], [-100, 188], [75, 175], [55, 190],
+        [-240, -140], [240, 140], [-245, 130], [245, -130]
+      ];
+      treeSpots.forEach(([tx, tz], i) => {
+        const scale = 0.85 + (i % 4) * 0.22;
+        cyl(0.32 * scale, 0.45 * scale, 3.2 * scale, 6, woodMat, tx, 1.6 * scale, tz);
+        const cone1 = new THREE.Mesh(new THREE.ConeGeometry(2.4 * scale, 4.6 * scale, 7), foliageMat);
+        cone1.position.set(tx, 4.2 * scale, tz);
+        cone1.castShadow = true;
+        cone1.receiveShadow = true;
+        scene.add(cone1);
+        const cone2 = new THREE.Mesh(new THREE.ConeGeometry(1.7 * scale, 3.6 * scale, 7), foliageMat);
+        cone2.position.set(tx, 6.2 * scale, tz);
+        cone2.castShadow = true;
+        scene.add(cone2);
+      });
+
+      const rockSpots = [
+        [-155, -155], [155, 155], [-155, 155], [155, -155],
+        [-88, -58], [88, 58], [-62, 92], [62, -92]
+      ];
+      rockSpots.forEach(([rx, rz], i) => {
+        const rSize = 1.6 + (i % 3) * 0.7;
+        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(rSize, 0), rockMat);
+        rock.position.set(rx, rSize * 0.45, rz);
+        rock.rotation.set(i * 0.5, i * 1.1, 0.2);
+        rock.scale.set(1.3, 0.75, 1.1);
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        scene.add(rock);
+      });
+    })();
+
     function mkTree(x, z, scale = 1) {
       const g = new THREE.Group();
       cyl(0.3 * scale, 0.5 * scale, 3 * scale, 6, mats.treeWood, 0, 1.5 * scale, 0, g);
@@ -4188,31 +4244,6 @@
     }
     mkBase(0);
     mkBase(1);
-
-    function mkRockArch(x, z, rot = 0) {
-      const cos = Math.cos(rot), sin = Math.sin(rot);
-      const place = (lx, ly, lz, w, h, d) => {
-        const wx = x + lx * cos - lz * sin;
-        const wz = z + lx * sin + lz * cos;
-        addObstacle(w, h, d, mats.rockGrey, wx, wz, ly);
-      };
-      place(-7.5, 5, 0, 4.5, 10, 5.5);
-      place(7.5, 5, 0, 4.5, 10, 5.5);
-      place(0, 10.5, 0, 19, 3.2, 5.2);
-    }
-
-    function mkCQBCompound(x, z) {
-      mkContainer(x - 6, z - 5, 0, 0);
-      mkContainer(x + 6, z + 5, 1, 1);
-      addObstacle(8, 2.4, 1.2, mats.concrete, x, z - 10, 1.2);
-      addObstacle(8, 2.4, 1.2, mats.concrete, x, z + 10, 1.2);
-      addObstacle(1.2, 2.2, 6, mats.camoTan, x - 11, z, 1.1);
-      addObstacle(1.2, 2.2, 6, mats.camoTan, x + 11, z, 1.1);
-      addObstacle(3.5, 1.5, 3.5, mats.steelDark, x, z, 0.75);
-    }
-
-    [[-75, -25, 0.4], [75, 25, 0.4], [-40, 85, 1.2], [40, -85, 1.2], [0, -135, 0], [0, 135, 0]].forEach(([x, z, r]) => mkRockArch(x, z, r));
-    [[-55, 45], [55, -45], [-105, -10], [105, 10]].forEach(([x, z]) => mkCQBCompound(x, z));
 
     for (let i = 0; i < 55; i++) {
       const tx = rnd(-270, 270), tz = rnd(-270, 270);
@@ -5293,11 +5324,10 @@
       { n: 'Barrett .50', lv: 5, dmg: 125, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
       { n: 'Stinger AA', lv: 5, rate: 1.8, mag: 1, rel: 2.6, zoom: 2.0, m: 'aa', cls: 'Lock-On Anti-Air', type: 'rocket' },
       { n: 'M249 SAW', lv: 6, dmg: 25, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' },
-      { n: 'AK-47', lv: 2, dmg: 34, rate: 0.11, mag: 30, rel: 1.8, spr: 0.018, zoom: 2.2, auto: 1, cls: 'Heavy Assault', type: 'rifle' },
-      { n: 'P90 PDW', lv: 3, dmg: 18, rate: 0.06, mag: 50, rel: 1.9, spr: 0.025, zoom: 1.6, auto: 1, cls: 'Tactical PDW', type: 'smg' },
-      { n: 'SCAR-H', lv: 4, dmg: 42, rate: 0.14, mag: 20, rel: 2.0, spr: 0.012, zoom: 2.8, auto: 1, cls: 'Battle Rifle', type: 'rifle' },
-      { n: 'M870 Tactical', lv: 1, dmg: 18, pel: 8, rate: 0.85, mag: 6, rel: 2.3, spr: 0.055, zoom: 1.3, cls: 'Combat Shotgun', type: 'shotgun' },
-      { n: 'UMP-45', lv: 2, dmg: 22, rate: 0.09, mag: 25, rel: 1.5, spr: 0.02, zoom: 1.6, auto: 1, cls: 'Tactical SMG', type: 'smg' }
+      { n: 'AK-47 Rifle', lv: 2, dmg: 34, rate: 0.115, mag: 30, rel: 1.9, spr: 0.018, zoom: 2.2, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
+      { n: 'MP5 Tactical', lv: 2, dmg: 19, rate: 0.075, mag: 30, rel: 1.5, spr: 0.022, zoom: 1.6, auto: 1, cls: 'Tactical SMG', type: 'smg' },
+      { n: 'AWP Magnum', lv: 4, dmg: 115, rate: 1.15, mag: 5, rel: 2.3, spr: 0.001, zoom: 6.5, scope: 1, cls: 'Bolt Sniper', type: 'sniper' },
+      { n: 'AA-12 Auto', lv: 4, dmg: 14, pel: 7, rate: 0.32, mag: 12, rel: 2.4, spr: 0.07, zoom: 1.2, auto: 1, cls: 'Auto Shotgun', type: 'shotgun' }
     ];
     W.forEach(w => { w.a = w.mag; w.cd = 0; w.rl = 0; });
 
@@ -5491,7 +5521,10 @@
       slideCd: 0,
       slideDir: new V3(),
       slideSpeed: 0,
-      slideEyeHeight: 1.7
+      slideEyeHeight: 1.7,
+      throwables: { frag: 2, grenade: 2, shield: 1 },
+      activeThrowable: 'frag',
+      throwCd: 0
     };
     const lvl = () => 1 + Math.floor(P.xp / 100);
 
@@ -5794,40 +5827,8 @@
       mobileLookZone.addEventListener(type, () => { mobileLookPointer = null; });
     });
 
-    let fireAimPointer = null, fireAimX = 0, fireAimY = 0;
-    $('mobile-action-pad').addEventListener('pointerdown', event => {
-      const button = event.target.closest('[data-hold], [data-tap]');
-      if (!button || !mobileControlsActive) return;
-      event.preventDefault();
-      button.setPointerCapture(event.pointerId);
-      if (button.dataset.tap === 'aim') {
-        rm = rm ? 0 : 1;
-        button.classList.toggle('pressed', !!rm);
-        return;
-      }
-      button.classList.add('pressed');
-      if (button.dataset.hold === 'fire') {
-        lm = 1; lc = 1;
-        fireAimPointer = event.pointerId;
-        fireAimX = event.clientX;
-        fireAimY = event.clientY;
-      }
-      if (button.dataset.hold === 'jump') K[keyBindings.jump] = 1;
-      if (button.dataset.hold === 'descend') K[keyBindings.sprint] = 1;
-      if (button.dataset.tap === 'slide' && !P.veh) triggerSlide();
-      if (button.dataset.tap === 'use') useVehicle();
-      if (button.dataset.tap === 'reload') reloadActiveWeapon();
-      if (button.dataset.tap === 'missile' && P.veh?.type === 'heli') fireHeliMissile();
-      if (button.dataset.tap === 'swap' && !P.veh) selectSlot(1 - P.sl);
-      if (button.dataset.tap === 'grenade' && !P.veh) throwFragGrenade();
-      if (button.dataset.tap === 'grapple' && !P.veh) triggerGrapple();
-      if (button.dataset.tap === 'loadout') openLoadout();
-    });
-    $('mobile-action-pad').addEventListener('pointermove', event => {
-      if (!mobileControlsActive || fireAimPointer !== event.pointerId) return;
-      const dx = event.clientX - fireAimX, dy = event.clientY - fireAimY;
-      fireAimX = event.clientX;
-      fireAimY = event.clientY;
+    let mobileFirePointer = null, mobileFireX = 0, mobileFireY = 0;
+    function applyMobileLookDelta(dx, dy) {
       if (P.veh) {
         P.ay = P.veh.type === 'heli'
           ? Math.max(-1.4, Math.min(1.4, P.ay - dx * 0.006 * gameSettings.mouseSensitivity))
@@ -5837,15 +5838,53 @@
         P.yaw -= dx * 0.006 * gameSettings.mouseSensitivity;
         P.pit = Math.max(-1.5, Math.min(1.5, P.pit - dy * 0.006 * gameSettings.mouseSensitivity));
       }
+    }
+
+    $('mobile-action-pad').addEventListener('pointerdown', event => {
+      const button = event.target.closest('[data-hold], [data-tap]');
+      if (!button || !mobileControlsActive) return;
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      if (button.dataset.hold === 'aim') {
+        rm = rm ? 0 : 1;
+        button.classList.toggle('pressed', Boolean(rm));
+        return;
+      }
+      button.classList.add('pressed');
+      if (button.dataset.hold === 'fire') {
+        lm = 1;
+        lc = 1;
+        mobileFirePointer = event.pointerId;
+        mobileFireX = event.clientX;
+        mobileFireY = event.clientY;
+      }
+      if (button.dataset.hold === 'jump') K[keyBindings.jump] = 1;
+      if (button.dataset.hold === 'descend') K[keyBindings.sprint] = 1;
+      if (button.dataset.tap === 'slide' && !P.veh) triggerSlide();
+      if (button.dataset.tap === 'use') useVehicle();
+      if (button.dataset.tap === 'reload') reloadActiveWeapon();
+      if (button.dataset.tap === 'missile' && P.veh?.type === 'heli') fireHeliMissile();
+      if (button.dataset.tap === 'swap' && !P.veh) selectSlot(1 - P.sl);
+      if (button.dataset.tap === 'throw' && !P.veh) throwActiveThrowable();
+      if (button.dataset.tap === 'cyclethrow' && !P.veh) cycleThrowable();
+      if (button.dataset.tap === 'loadout') openLoadout();
+    });
+    $('mobile-action-pad').addEventListener('pointermove', event => {
+      if (!mobileControlsActive || mobileFirePointer !== event.pointerId) return;
+      const dx = event.clientX - mobileFireX;
+      const dy = event.clientY - mobileFireY;
+      mobileFireX = event.clientX;
+      mobileFireY = event.clientY;
+      applyMobileLookDelta(dx, dy);
     });
     const releaseMobileAction = event => {
       const button = event.target.closest('[data-hold], [data-tap]');
       if (!button) return;
-      if (button.dataset.tap === 'aim') return;
+      if (button.dataset.hold === 'aim') return;
       button.classList.remove('pressed');
       if (button.dataset.hold === 'fire') {
         lm = 0;
-        if (fireAimPointer === event.pointerId) fireAimPointer = null;
+        if (mobileFirePointer === event.pointerId) mobileFirePointer = null;
       }
       if (button.dataset.hold === 'jump') K[keyBindings.jump] = 0;
       if (button.dataset.hold === 'descend') K[keyBindings.sprint] = 0;
@@ -5873,10 +5912,6 @@
         updateControlReferences();
         saveSettings();
         return;
-      }
-      if (isLocked && !inLobby && P.hp > 0 && !P.veh) {
-        if (e.code === 'KeyG') throwFragGrenade();
-        if (e.code === 'KeyQ') triggerGrapple();
       }
       if ($('settings-modal').style.display === 'flex') {
         if (e.code === keyBindings.pause) {
@@ -6384,6 +6419,118 @@
           applyDamage(e, dmg, attacker);
         }
       });
+    }
+
+    const THROWABLES = [];
+    const SHIELD_BUBBLES = [];
+    const THROWABLE_ORDER = ['frag', 'grenade', 'shield'];
+    const THROWABLE_LABELS = { frag: 'FRAG', grenade: 'HE GRENADE', shield: 'SHIELD BUBBLE' };
+
+    function updateMobileThrowButton() {
+      const btn = document.querySelector('[data-mobile-action="throw"]');
+      if (!btn) return;
+      const type = P.activeThrowable || 'frag';
+      const count = P.throwables?.[type] ?? 0;
+      const short = type === 'frag' ? 'FRAG' : type === 'grenade' ? 'HE' : 'SHIELD';
+      btn.textContent = `${short} (${count})`;
+    }
+
+    function cycleThrowable() {
+      const idx = THROWABLE_ORDER.indexOf(P.activeThrowable);
+      P.activeThrowable = THROWABLE_ORDER[(idx + 1) % THROWABLE_ORDER.length];
+      updateMobileThrowButton();
+      bannerMsg(`THROWABLE: ${THROWABLE_LABELS[P.activeThrowable]} (${P.throwables[P.activeThrowable] || 0})`);
+    }
+
+    function spawnShieldBubble(pos, team = P.tm) {
+      const geo = new THREE.SphereGeometry(5.5, 24, 18);
+      const mat = new THREE.MeshBasicMaterial({
+        color: team === 1 ? 0xf43f5e : 0x38bdf8,
+        transparent: true,
+        opacity: 0.22,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(pos);
+      mesh.position.y = Math.max(0.2, pos.y);
+      scene.add(mesh);
+      SHIELD_BUBBLES.push({ mesh, p: mesh.position.clone(), team, life: 10, radius: 5.5 });
+      playSnd(520, 0.35, 0.25, 'sine', 880);
+    }
+
+    function throwActiveThrowable() {
+      if (P.veh || P.hp <= 0 || P.throwCd > 0) return;
+      const type = P.activeThrowable || 'frag';
+      if (!P.throwables || (P.throwables[type] || 0) <= 0) {
+        bannerMsg(`NO ${THROWABLE_LABELS[type]} LEFT`);
+        return;
+      }
+      P.throwables[type]--;
+      P.throwCd = 0.5;
+      updateMobileThrowButton();
+
+      const dir = new V3(0, 0, -1).applyEuler(new THREE.Euler(P.pit, P.yaw, 0, 'YXZ')).normalize();
+      const start = camera.position.clone().addScaledVector(dir, 0.9);
+      const vel = dir.multiplyScalar(22);
+      vel.y += 5.5;
+
+      const color = type === 'shield' ? 0x38bdf8 : type === 'grenade' ? 0xf59e0b : 0x4ade80;
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 10, 10),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.5, emissive: color, emissiveIntensity: 0.25 })
+      );
+      mesh.position.copy(start);
+      scene.add(mesh);
+      THROWABLES.push({ mesh, p: start, v: vel, type, team: P.tm, fuse: type === 'frag' ? 1.6 : type === 'grenade' ? 1.0 : 1.1 });
+      playSnd(240, 0.14, 0.18, 'triangle', 120);
+    }
+
+    function updateThrowables(dt) {
+      if (P.throwCd > 0) P.throwCd = Math.max(0, P.throwCd - dt);
+      for (let i = THROWABLES.length - 1; i >= 0; i--) {
+        const t = THROWABLES[i];
+        t.fuse -= dt;
+        t.v.y -= 18 * dt;
+        t.p.addScaledVector(t.v, dt);
+        if (t.p.y <= 0.2) {
+          t.p.y = 0.2;
+          t.v.y *= -0.35;
+          t.v.x *= 0.65;
+          t.v.z *= 0.65;
+          if (t.type === 'grenade' || t.type === 'shield') t.fuse = Math.min(t.fuse, 0.05);
+        }
+        t.mesh.position.copy(t.p);
+        if (t.fuse <= 0) {
+          scene.remove(t.mesh);
+          if (t.type === 'shield') {
+            spawnShieldBubble(t.p, t.team);
+          } else {
+            const radius = t.type === 'frag' ? 11 : 9;
+            const maxDmg = t.type === 'frag' ? 160 : 110;
+            spawnExplosion(t.p, 6, t.type === 'frag' ? 0xf97316 : 0xfbbf24, 0.6);
+            playSnd(95, 0.55, 0.4, 'sawtooth', 25);
+            E.forEach(e => {
+              if (!e.team || e.dead || e.tm === t.team) return;
+              const d = e.p.distanceTo(t.p);
+              if (d < radius) applyDamage(e, maxDmg * (1 - d / radius), 1);
+            });
+          }
+          THROWABLES.splice(i, 1);
+        }
+      }
+      for (let i = SHIELD_BUBBLES.length - 1; i >= 0; i--) {
+        const b = SHIELD_BUBBLES[i];
+        b.life -= dt;
+        b.mesh.material.opacity = Math.min(0.24, 0.1 + Math.sin(performance.now() * 0.005) * 0.04);
+        if (!P.veh && P.hp > 0 && P.tm === b.team && P.p.distanceTo(b.p) <= b.radius) {
+          P.sh = Math.min(50, P.sh + 8 * dt);
+        }
+        if (b.life <= 0) {
+          scene.remove(b.mesh);
+          SHIELD_BUBBLES.splice(i, 1);
+        }
+      }
     }
 
     function missileTargetPoint(target) {
@@ -9844,46 +9991,8 @@
         ? `${MODES[currentMode].name} · WINNING SCORE ${scores[winnerTeam] || 0}`
         : `${MODES[currentMode].name} · BLUE ${scores[0] || 0} — RED ${scores[1] || 0}`;
       $('main-menu-modal').style.display = 'none';
+      $('lobby-modal').style.display = 'flex';
       document.body.classList.remove('in-mission');
-      if (sessionType === 'public' || sessionType === 'public-bots') {
-        showPublicVoteScreen(winnerTeam);
-      } else {
-        $('lobby-modal').style.display = 'flex';
-      }
-    }
-
-    let voteTimerId = null;
-    function showPublicVoteScreen(winnerTeam) {
-      const voteModal = $('vote-modal');
-      if (!voteModal) { $('lobby-modal').style.display = 'flex'; return; }
-      $('vote-result-title').textContent = winnerTeam === P.tm ? 'VICTORY — MISSION ACCOMPLISHED' : 'DEFEAT — MISSION FAILED';
-      $('vote-result-title').style.color = winnerTeam === P.tm ? 'var(--color-primary)' : 'var(--color-red)';
-      let selectedVote = currentMode;
-      const buttons = voteModal.querySelectorAll('[data-vote-mode]');
-      buttons.forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.voteMode === selectedVote);
-        btn.onclick = () => {
-          selectedVote = btn.dataset.voteMode;
-          buttons.forEach(b => b.classList.toggle('selected', b.dataset.voteMode === selectedVote));
-        };
-      });
-      voteModal.style.display = 'flex';
-      let sec = 10;
-      $('vote-countdown').textContent = `NEXT DEPLOYMENT IN ${sec}s — VOTE FOR GAMEMODE`;
-      if (voteTimerId) clearInterval(voteTimerId);
-      voteTimerId = setInterval(() => {
-        sec--;
-        if (sec <= 0) {
-          clearInterval(voteTimerId);
-          voteTimerId = null;
-          voteModal.style.display = 'none';
-          currentMode = selectedVote;
-          if (typeof startMission === 'function') startMission();
-          else $('lobby-modal').style.display = 'flex';
-        } else {
-          $('vote-countdown').textContent = `NEXT DEPLOYMENT IN ${sec}s — VOTE FOR GAMEMODE`;
-        }
-      }, 1000);
     }
 
     function quitToLobby() {
@@ -9916,10 +10025,7 @@
 
       FLAGS.forEach((f, teamIdx) => {
         let c = f.carrier;
-        if (c && (c === P ? (P.hp <= 0 || P.veh) : c.dead)) {
-          if (c === P && P.veh) bannerMsg('FLAG DROPPED — CANNOT CARRY IN VEHICLE');
-          c = f.carrier = null;
-        }
+        if (c && (c === P ? P.hp <= 0 : c.dead)) c = f.carrier = null;
 
         if (c) {
           const carrierPos = c === P && P.veh ? P.veh.p : c.p;
@@ -10399,110 +10505,7 @@
     /* -------------------------------------------------------------------------
        MAIN ENGINE GAME LOOP WITH 3D BILLBOARD HEALTH BARS
        ------------------------------------------------------------------------- */
-    const GRENADES = [];
-    let grenadeCd = 0;
-    let grappleState = { active: false, target: new V3(), cd: 0, timer: 0 };
-
-    function throwFragGrenade() {
-      if (grenadeCd > 0 || P.hp <= 0 || P.veh) return;
-      grenadeCd = 4.0;
-      const dir = new V3(0, 0, -1).applyEuler(new THREE.Euler(P.pit + 0.18, P.yaw, 0, 'YXZ')).normalize();
-      const pos = P.p.clone().add(new V3(0, 1.5, 0)).addScaledVector(dir, 0.8);
-      const mesh = new THREE.Mesh(
-        new THREE.SphereGeometry(0.18, 8, 8),
-        new THREE.MeshStandardMaterial({ color: 0x3f6212, roughness: 0.6, metalness: 0.3 })
-      );
-      mesh.position.copy(pos);
-      scene.add(mesh);
-      GRENADES.push({ m: mesh, p: pos, v: dir.multiplyScalar(26), fuse: 1.8, team: P.tm });
-      playSnd(320, 0.08, 0.15, 'triangle', 140);
-      bannerMsg('FRAG GRENADE OUT');
-    }
-
-    function triggerGrapple() {
-      if (grappleState.cd > 0 || P.hp <= 0 || P.veh) return;
-      const dir = new V3(0, 0, -1).applyEuler(new THREE.Euler(P.pit, P.yaw, 0, 'YXZ')).normalize();
-      const origin = P.p.clone().add(new V3(0, 1.6, 0));
-      let bestDist = 48;
-      let hitPoint = null;
-      for (let d = 4; d <= 48; d += 1.5) {
-        const pt = origin.clone().addScaledVector(dir, d);
-        if (pt.y <= 0.2) { hitPoint = pt; hitPoint.y = 0.2; bestDist = d; break; }
-        for (const ob of OB) {
-          if (Math.abs(pt.x - ob.x) <= ob.hw + 0.3 && Math.abs(pt.z - ob.z) <= ob.hd + 0.3 && pt.y <= ob.h + 0.3) {
-            hitPoint = pt;
-            bestDist = d;
-            break;
-          }
-        }
-        if (hitPoint) break;
-      }
-      if (!hitPoint) {
-        bannerMsg('GRAPPLE: NO SURFACE IN RANGE');
-        return;
-      }
-      grappleState.active = true;
-      grappleState.target.copy(hitPoint);
-      grappleState.timer = Math.min(0.85, bestDist / 42);
-      grappleState.cd = 6.0;
-      playSnd(620, 0.12, 0.16, 'sine', 920);
-      bannerMsg('GRAPPLE ENGAGED');
-    }
-
-    function updateGrenadesAndGrapple(dt) {
-      if (grenadeCd > 0) grenadeCd = Math.max(0, grenadeCd - dt);
-      if (grappleState.cd > 0) grappleState.cd = Math.max(0, grappleState.cd - dt);
-
-      if (grappleState.active) {
-        grappleState.timer -= dt;
-        const toTarget = grappleState.target.clone().sub(P.p);
-        const dist = toTarget.length();
-        if (dist < 2.2 || grappleState.timer <= 0 || P.hp <= 0 || P.veh) {
-          grappleState.active = false;
-        } else {
-          toTarget.normalize();
-          P.p.addScaledVector(toTarget, 42 * dt);
-          P.vy = 0;
-        }
-      }
-
-      for (let i = GRENADES.length - 1; i >= 0; i--) {
-        const g = GRENADES[i];
-        g.v.y -= 18 * dt;
-        g.p.addScaledVector(g.v, dt);
-        if (g.p.y < 0.2) {
-          g.p.y = 0.2;
-          g.v.y *= -0.4;
-          g.v.x *= 0.65;
-          g.v.z *= 0.65;
-        }
-        g.m.position.copy(g.p);
-        g.fuse -= dt;
-        if (g.fuse <= 0) {
-          scene.remove(g.m);
-          detonateExplosion(g.p, 'at', g.team, 1);
-          GRENADES.splice(i, 1);
-        }
-      }
-    }
-
-    function updateBaseCampProtection(dt) {
-      if (inLobby || matchEnded || mode === 'CTF') return;
-      if (P.hp > 0 && (P.tm === 0 || P.tm === 1)) {
-        const enemyBase = P.tm === 0 ? [215, 215] : [-215, -215];
-        const pos = P.veh ? P.veh.p : P.p;
-        if (Math.hypot(pos.x - enemyBase[0], pos.z - enemyBase[1]) < 44) {
-          bannerMsg('ENEMY BASE RESTRICTED — LEAVE IMMEDIATELY');
-          P.hp = Math.max(0, P.hp - 45 * dt);
-          if (P.hp <= 0) {
-            killPlayer('BASE DEFENSE');
-          }
-        }
-      }
-    }
-
     let lastTime = performance.now();
-    let smoothDt = 1 / 60;
     let lastMenuRenderAt = 0;
 
     function gameLoop(now) {
@@ -10511,9 +10514,7 @@
         lastTime = now;
         return;
       }
-      const rawDt = Math.max(0.001, Math.min(0.04, (now - lastTime) / 1000));
-      smoothDt = smoothDt * 0.8 + rawDt * 0.2;
-      const dt = smoothDt;
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
       const showMainMenu = $('main-menu-modal').style.display === 'flex';
       if (inLobby && !showMainMenu && !introActive && now - lastMenuRenderAt < 250) return;
@@ -10537,8 +10538,6 @@
 
       if (isLocked) {
         if (!networked || networkHost) updateCTFFlags();
-        updateGrenadesAndGrapple(dt);
-        updateBaseCampProtection(dt);
 
         W.forEach(w => {
           if (w.cd > 0) w.cd -= dt;
@@ -10603,6 +10602,7 @@
         });
 
         // The room host simulates guided weapons; clients render host snapshots.
+        updateThrowables(dt);
         if (!networked || networkHost) for (let i = MISSILES.length - 1; i >= 0; i--) {
           const k = MISSILES[i];
           k.life -= dt;
