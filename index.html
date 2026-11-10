@@ -2921,7 +2921,7 @@
         const spawnPos = (P.veh ? P.veh.p : P.p).clone().addScaledVector(forward, 7);
         const color = TC[P.tm] || 0x38bdf8;
         const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : type === 'car' ? mkAPC : mkSAMTruck;
-        const hp = type === 'heli' ? 750 : type === 'tank' ? 1800 : type === 'car' ? 950 : 1100;
+        const hp = type === 'heli' ? 600 : type === 'tank' ? 2400 : type === 'car' ? 1100 : 850;
         const mesh = makeMesh(color);
         const entity = addEntity(type, mesh, spawnPos.x, spawnPos.z, hp, P.tm, type === 'heli' ? 1.0 : 0, 0);
         entity.yaw = Math.atan2(forward.x, forward.z);
@@ -5245,17 +5245,17 @@
        HIGH-DETAIL FIRST-PERSON GUN MODELS & WEAPON ARSENAL
        ------------------------------------------------------------------------- */
     const W = [
-      { n: 'Combat Pistol', lv: 1, dmg: 17, rate: 0.25, mag: 15, rel: 1.1, spr: 0.012, zoom: 1.3, cls: 'Sidearm', type: 'pistol' },
-      { n: 'Vector SMG', lv: 1, dmg: 10, rate: 0.065, mag: 32, rel: 1.4, spr: 0.03, zoom: 1.5, auto: 1, cls: 'Close Quarters', type: 'smg' },
-      { n: 'Magnum .44', lv: 2, dmg: 48, rate: 0.5, mag: 6, rel: 2.0, spr: 0.005, zoom: 1.6, cls: 'Heavy Revolver', type: 'pistol' },
-      { n: 'SPAS Shotgun', lv: 2, dmg: 9, pel: 8, rate: 0.75, mag: 8, rel: 2.2, spr: 0.065, zoom: 1.2, cls: 'Breaching', type: 'shotgun' },
-      { n: 'M4A1 Carbine', lv: 3, dmg: 21, rate: 0.1, mag: 30, rel: 1.7, spr: 0.015, zoom: 2.4, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
-      { n: 'Micro SMG', lv: 3, dmg: 8, rate: 0.05, mag: 24, rel: 1.2, spr: 0.04, zoom: 1.3, auto: 1, cls: 'Auto Pistol', type: 'smg' },
-      { n: 'M39 DMR', lv: 4, dmg: 40, rate: 0.3, mag: 10, rel: 1.9, spr: 0.004, zoom: 3.8, scope: 1, cls: 'Marksman', type: 'sniper' },
+      { n: 'Combat Pistol', lv: 1, dmg: 24, rate: 0.25, mag: 15, rel: 1.1, spr: 0.012, zoom: 1.3, cls: 'Sidearm', type: 'pistol' },
+      { n: 'Vector SMG', lv: 1, dmg: 16, rate: 0.065, mag: 32, rel: 1.4, spr: 0.03, zoom: 1.5, auto: 1, cls: 'Close Quarters', type: 'smg' },
+      { n: 'Magnum .44', lv: 2, dmg: 58, rate: 0.5, mag: 6, rel: 2.0, spr: 0.005, zoom: 1.6, cls: 'Heavy Revolver', type: 'pistol' },
+      { n: 'SPAS Shotgun', lv: 2, dmg: 16, pel: 8, rate: 0.75, mag: 8, rel: 2.2, spr: 0.065, zoom: 1.2, cls: 'Breaching', type: 'shotgun' },
+      { n: 'M4A1 Carbine', lv: 3, dmg: 28, rate: 0.1, mag: 30, rel: 1.7, spr: 0.015, zoom: 2.4, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
+      { n: 'Micro SMG', lv: 3, dmg: 14, rate: 0.05, mag: 24, rel: 1.2, spr: 0.04, zoom: 1.3, auto: 1, cls: 'Auto Pistol', type: 'smg' },
+      { n: 'M39 DMR', lv: 4, dmg: 52, rate: 0.3, mag: 10, rel: 1.9, spr: 0.004, zoom: 3.8, scope: 1, cls: 'Marksman', type: 'sniper' },
       { n: 'AT-4 Rocket', lv: 4, rate: 1.8, mag: 1, rel: 2.5, zoom: 2.0, m: 'at', cls: 'Anti-Armor', type: 'rocket' },
-      { n: 'Barrett .50', lv: 5, dmg: 105, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
+      { n: 'Barrett .50', lv: 5, dmg: 125, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
       { n: 'Stinger AA', lv: 5, rate: 1.8, mag: 1, rel: 2.6, zoom: 2.0, m: 'aa', cls: 'Lock-On Anti-Air', type: 'rocket' },
-      { n: 'M249 SAW', lv: 6, dmg: 16, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' }
+      { n: 'M249 SAW', lv: 6, dmg: 25, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' }
     ];
     W.forEach(w => { w.a = w.mag; w.cd = 0; w.rl = 0; });
 
@@ -6303,7 +6303,7 @@
         if (!e.team || e.dead || e.tm === team) return;
         const dist = e.p.distanceTo(pos);
         if (dist < 14) {
-          const baseDmg = type === 'sam' ? 360 : 280;
+          const baseDmg = type === 'sam' ? 550 : type === 'agm' ? 520 : type === 'at' ? 450 : 420;
           const dmg = (e.type === 'inf' ? 180 : baseDmg) * (1 - dist / 15) * (type === 'aa' && e.type !== 'heli' && e.displayType !== 'heli' ? 0.3 : 1);
           applyDamage(e, dmg, attacker);
         }
@@ -6804,7 +6804,7 @@
           if (v.ammo > 0) {
             v.ammo--;
             v.cd = 0.07;
-            fireVehicleMG(v, 15, 0.02);
+            fireVehicleMG(v, 32, 0.02);
             v.m.chinGun.recoil = 0.14;
             v.m.chinGun.flashTimer = 0.065;
             if (v.ammo <= 0) v.reloading = v.reloadTime;
@@ -6820,7 +6820,7 @@
           if (v.ammo > 0) {
             v.ammo--;
             v.cd = 0.08;
-            fireVehicleMG(v, 14, 0.025);
+            fireVehicleMG(v, 35, 0.025);
             if (v.ammo <= 0) v.reloading = v.reloadTime;
           } else {
             v.reloading = v.reloadTime;
@@ -8911,10 +8911,10 @@
 
       const spawnVehicleFleet = (team, spawns, color) => {
         const vehicleTypes = [
-          ['car', 950, mkAPC],
-          ['heli', 750, mkHeli],
-          ['tank', 1800, mkTank],
-          ['sam', 1100, mkSAMTruck]
+          ['car', 1100, mkAPC],
+          ['heli', 600, mkHeli],
+          ['tank', 2400, mkTank],
+          ['sam', 850, mkSAMTruck]
         ];
         vehicleTypes.forEach(([type, hp, makeMesh], index) => {
           const sign = team ? 1 : -1;
@@ -8941,10 +8941,10 @@
         });
         // Neutral white vehicle spawns at opposite map corners away from Red/Blue bases
         [
-          ['tank', 1800, mkTank, -205, 205],
-          ['car', 950, mkAPC, -193, 205],
-          ['heli', 750, mkHeli, 205, -205],
-          ['sam', 1100, mkSAMTruck, 193, -205]
+          ['tank', 2400, mkTank, -205, 205],
+          ['car', 1100, mkAPC, -193, 205],
+          ['heli', 600, mkHeli, 205, -205],
+          ['sam', 850, mkSAMTruck, 193, -205]
         ].forEach(([type, hp, makeMesh, x, z]) => {
           const entity = addEntity(type, makeMesh(0xf8fafc), x, z, hp, -1, type === 'heli' ? 0.5 : 0, 0);
           entity.teamColorHex = 0xf8fafc;
@@ -8956,7 +8956,7 @@
         for (let i = 0; i < (isFFA ? 12 : 14); i++) {
           const tm = isFFA ? 10 + i : (i < 7 ? 0 : 1);
           const s = getSpawnPoint(tm);
-          const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm]), s[0], s[1], 65, tm);
+          const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm]), s[0], s[1], 100, tm);
           bot.role = i % 2;
           bot.patrolSlot = isFFA ? i : i % 7;
           bot.nm = BOT_NAMES[i % BOT_NAMES.length];
@@ -8965,7 +8965,7 @@
       }
 
       if (matchBotsEnabled && isFFA) {
-        [['heli', 650], ['tank', 1500], ['sam', 950]].forEach(([type, hp], index) => {
+        [['heli', 600], ['tank', 2400], ['sam', 850]].forEach(([type, hp], index) => {
           const team = 20 + index;
           const [x, z] = getSpawnPoint(team);
           const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : mkSAMTruck;
