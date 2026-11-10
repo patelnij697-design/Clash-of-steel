@@ -512,6 +512,7 @@
       filter: drop-shadow(0 0 7px rgba(244, 63, 94, 0.9));
     }
     #hit-marker {
+      display: none !important;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
@@ -2167,7 +2168,7 @@
   <div class="menu-modal" id="main-menu-modal" style="display:none;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 1.2.00</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 1.3.00</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -2205,6 +2206,14 @@
           <li>Enemy infantry now head for an available team vehicle as soon as they spawn or respawn.</li>
           <li>Expanded bot patrol lanes to an 8 × 8 grid covering the full battlefield.</li>
           <li>Rebuilt infantry and refreshed vehicle, terrain, building, tree, rock, and supply models.</li>
+        </ul>
+      </section>
+      <section class="update-release" aria-label="Version 1.3.00 updates">
+        <h3>VERSION 1.3.00 · BATTLE ROYALE &amp; ARSENAL EXPANSION</h3>
+        <ul>
+          <li>Added Battle Royale mode: 3rd-person C-17 deployment, unarmed drop, parachute &amp; ground weapon crates, 2.5-minute looting peace, and Players Remaining HUD.</li>
+          <li>Added 4 new weapons: SCAR-H Battle Rifle, P90 PDW, AA-12 Auto Shotgun, and Desert Eagle .50.</li>
+          <li>Added persistent burning vehicle wrecks with temporary terrain collision.</li>
         </ul>
       </section>
       <section class="update-release" aria-label="Version 1.2.00 updates">
@@ -2304,7 +2313,7 @@
         <button class="btn-secondary" id="btn-open-loadout">CUSTOMIZE LOADOUT</button>
       </div>
     </div>
-    <div id="game-version" aria-label="Game version 1.2.00">v1.2.00</div>
+    <div id="game-version" aria-label="Game version 1.3.00">v.1.3.00</div>
   </div>
 
   <div class="menu-modal" id="operator-customization-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="operator-customization-title">
@@ -5255,7 +5264,11 @@
       { n: 'AT-4 Rocket', lv: 4, rate: 1.8, mag: 1, rel: 2.5, zoom: 2.0, m: 'at', cls: 'Anti-Armor', type: 'rocket' },
       { n: 'Barrett .50', lv: 5, dmg: 125, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
       { n: 'Stinger AA', lv: 5, rate: 1.8, mag: 1, rel: 2.6, zoom: 2.0, m: 'aa', cls: 'Lock-On Anti-Air', type: 'rocket' },
-      { n: 'M249 SAW', lv: 6, dmg: 25, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' }
+      { n: 'M249 SAW', lv: 6, dmg: 25, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' },
+      { n: 'SCAR-H Battle Rifle', lv: 4, dmg: 38, rate: 0.14, mag: 20, rel: 1.9, spr: 0.01, zoom: 2.8, auto: 1, cls: 'Battle Rifle', type: 'rifle' },
+      { n: 'P90 PDW', lv: 2, dmg: 17, rate: 0.058, mag: 50, rel: 1.8, spr: 0.028, zoom: 1.6, auto: 1, cls: 'Submachine Gun', type: 'smg' },
+      { n: 'AA-12 Auto Shotgun', lv: 5, dmg: 14, pel: 7, rate: 0.28, mag: 12, rel: 2.3, spr: 0.07, zoom: 1.2, auto: 1, cls: 'Auto Shotgun', type: 'shotgun' },
+      { n: 'Desert Eagle .50', lv: 3, dmg: 64, rate: 0.42, mag: 7, rel: 1.7, spr: 0.008, zoom: 1.5, cls: 'Heavy Pistol', type: 'pistol' }
     ];
     W.forEach(w => { w.a = w.mag; w.cd = 0; w.rl = 0; });
 
@@ -5398,7 +5411,7 @@
       }
 
       if (index === 0) addSight(0.16);
-      const muzzleZ = [-0.42, -1.02, -0.4, -1.16, -1.22, -0.48, -1.45, -0.92, -1.7, -0.92, -1.42][index];
+      const muzzleZ = [-0.42, -1.02, -0.4, -1.16, -1.22, -0.48, -1.45, -0.92, -1.7, -0.92, -1.42, -1.28, -0.96, -1.18, -0.46][index] || -1.0;
       const muzzleSleeve = new THREE.Mesh(
         new THREE.CylinderGeometry(index === 8 ? 0.06 : 0.04, index === 8 ? 0.07 : 0.05, 0.11, 10),
         steel
@@ -5425,8 +5438,8 @@
     const weaponModels = W.map(makeWeaponModel);
     weaponModels[1].visible = true;
 
-    const PRI_WEAPONS = [1, 4, 10, 6, 8, 3];
-    const SEC_WEAPONS = [0, 2, 5, 7, 9];
+    const PRI_WEAPONS = [1, 4, 10, 6, 8, 3, 11, 12, 13];
+    const SEC_WEAPONS = [0, 2, 5, 7, 9, 14];
     const L = [1, 0];
 
     const P = {
@@ -5656,7 +5669,7 @@
     const supportsTouchControls = (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches)
       || navigator.maxTouchPoints > 0;
     let mouseDeltaX = 0, mouseDeltaY = 0;
-    const scoped = () => rm && !P.veh && W[P.w].zoom > 1;
+    const scoped = () => rm && !P.veh && P.w >= 0 && W[P.w] && W[P.w].zoom > 1;
     function enterGameplayControls() {
       $('pause-modal').style.display = 'none';
       if (supportsTouchControls) {
@@ -5860,7 +5873,7 @@
         P.ap = Math.max(-0.55, Math.min(0.65, P.ap - e.movementY * 0.0022 * gameSettings.mouseSensitivity));
         return;
       }
-      const s = 0.0022 * gameSettings.mouseSensitivity / (scoped() ? W[P.w].zoom : 1);
+      const s = 0.0022 * gameSettings.mouseSensitivity / (scoped() && W[P.w] ? W[P.w].zoom : 1);
       P.yaw -= e.movementX * s;
       P.pit = Math.max(-1.5, Math.min(1.5, P.pit - e.movementY * s));
     });
@@ -5873,6 +5886,7 @@
 
     function selectSlot(idx) {
       if (P.veh) return;
+      if (L[idx] < 0 || !W[L[idx]]) return;
       P.sl = idx;
       P.w = L[idx];
       $('slot-pri').classList.toggle('active', idx === 0);
@@ -5915,6 +5929,7 @@
         }
         return;
       }
+      if (P.w < 0 || !W[P.w]) return;
       const w = W[P.w];
       if ((!w.rl || w.rl <= 0) && w.a < w.mag) {
         w.rl = w.rel;
@@ -5951,7 +5966,41 @@
       FX.push({ m, life, maxLife: life, size });
     }
 
+    const WRECKS = [];
+    function spawnVehicleWreck(pos, size = 3.8) {
+      const grp = new THREE.Group();
+      const charMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.92, metalness: 0.3 });
+      const fireMat = new THREE.MeshBasicMaterial({ color: 0xff6a1a, transparent: true, opacity: 0.8 });
+      const hull = new THREE.Mesh(new THREE.BoxGeometry(size * 1.1, size * 0.45, size * 1.45), charMat);
+      hull.position.y = size * 0.22;
+      hull.rotation.y = Math.random() * Math.PI;
+      grp.add(hull);
+      const fire = new THREE.Mesh(new THREE.DodecahedronGeometry(size * 0.38, 0), fireMat);
+      fire.position.y = size * 0.55;
+      grp.add(fire);
+      grp.position.set(pos.x, 0, pos.z);
+      scene.add(grp);
+      const obs = { x: pos.x, z: pos.z, hw: size * 0.65, hd: size * 0.65, h: size * 0.55, isWreck: true };
+      O.push(obs);
+      WRECKS.push({ m: grp, fire, obs, life: 45 });
+    }
+    function updateVehicleWrecks(dt) {
+      for (let i = WRECKS.length - 1; i >= 0; i--) {
+        const w = WRECKS[i];
+        w.life -= dt;
+        w.fire.scale.setScalar(0.85 + Math.sin(performance.now() * 0.015 + i) * 0.22);
+        w.fire.rotation.y += dt * 2.5;
+        if (w.life <= 0) {
+          scene.remove(w.m);
+          const idx = O.indexOf(w.obs);
+          if (idx >= 0) O.splice(idx, 1);
+          WRECKS.splice(i, 1);
+        }
+      }
+    }
+
     function spawnVehicleExplosion(pos, size = 3.8) {
+      spawnVehicleWreck(pos, size);
       const group = new THREE.Group();
       group.position.copy(pos);
       const makeBlastPart = (geometry, color, opacity) => {
@@ -6402,6 +6451,7 @@
     }
 
     function firePlayerWeapon() {
+      if (P.w < 0 || !W[P.w]) return;
       const w = W[P.w];
       if (P.infAmmo) {
         w.a = w.mag;
@@ -6657,9 +6707,10 @@
       camera.rotation.set(P.pit, P.yaw, P.sliding ? -0.05 : 0, 'YXZ');
 
       // Weapon Sway, Recoil & Bobbing Animations
-      const w = W[P.w];
-      const weaponModel = weaponModels[P.w];
+      const w = P.w >= 0 ? W[P.w] : null;
+      const weaponModel = P.w >= 0 ? weaponModels[P.w] : null;
       weaponModels.forEach((model, index) => { model.visible = index === P.w; });
+      if (!w || !weaponModel) return;
       gunAnim.swayX = THREE.MathUtils.damp(gunAnim.swayX, -mouseDeltaX * 0.0008, 12, dt);
       gunAnim.swayY = THREE.MathUtils.damp(gunAnim.swayY, -mouseDeltaY * 0.0008, 12, dt);
       mouseDeltaX = mouseDeltaY = 0;
@@ -7103,7 +7154,7 @@
       const patrolCount = BOT_PATROL_COORDINATES.length ** 2;
       const allies = E.filter(other => other !== e && other.type === 'inf' && !other.dead
         && !other.drivingVeh && !other.remote && other.team
-        && (currentMode === 'ffa' || other.tm === e.tm));
+        && ((currentMode === 'ffa' || currentMode === 'br') || other.tm === e.tm));
       let bestPoint = null, bestScore = -Infinity;
       e.patrolVisit = visit + 1;
       const index = (slot * 17 + visit * 13) % patrolCount;
@@ -7357,6 +7408,9 @@
           }
         });
 
+        if ((brState.active && brState.peaceTimer > 0) || e.unarmed) {
+          bestTarget = null;
+        }
         e.tg = bestTarget;
         e.los = bestTarget ? (isHeli || bestTarget.type === 'heli' || hasLineOfSight(e.p, bestTarget.p)) : 0;
 
@@ -7364,7 +7418,7 @@
           const veh = e.targetVeh;
           const committedVehicle = e.aiState === 'board_veh' && veh
             && !veh.dead && !veh.driver && P.veh !== veh
-            && (currentMode === 'ffa' || veh.tm === e.tm);
+            && ((currentMode === 'ffa' || currentMode === 'br') || veh.tm === e.tm);
           if (!committedVehicle) {
             if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
             e.targetVeh = null;
@@ -7471,8 +7525,8 @@
       // Distribute infantry around contacts instead of sending the squad to one point.
       else if (isInf && (e.aiState === 'flank' || e.aiState === 'assault') && tp) {
         const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
-        const squadSize = currentMode === 'ffa' ? 12 : 7;
-        const teamOffset = currentMode === 'ffa' ? 0 : e.tm * Math.PI / 7;
+        const squadSize = (currentMode === 'ffa' || currentMode === 'br') ? 12 : 7;
+        const teamOffset = (currentMode === 'ffa' || currentMode === 'br') ? 0 : e.tm * Math.PI / 7;
         const angle = slot * (Math.PI * 2 / squadSize) + teamOffset;
         const radius = e.aiState === 'flank' ? 34 : 24;
         targetX = tp.x + Math.cos(angle) * radius;
@@ -8314,7 +8368,8 @@
 
     function drawUnifiedMissileLockHUD(ctx, w, h) {
       const v = P.veh;
-      const curW = W[P.w];
+      const curW = P.w >= 0 ? W[P.w] : null;
+      if (!curW) return;
       const hasMissile = (v && (v.type === 'heli' || v.type === 'sam')) || (!v && (curW.m === 'at' || curW.m === 'aa'));
       if (!hasMissile) return;
 
@@ -8543,7 +8598,8 @@
     const MODES = {
       tdm: { name: 'TEAM DEATHMATCH', desc: 'Blue Coalition vs Red Syndicate. First team to 30 combat kills.', target: 30 },
       ffa: { name: 'FREE FOR ALL', desc: 'Every operator for themselves. First soldier to 15 kills.', target: 15 },
-      ctf: { name: 'CAPTURE THE FLAG', desc: 'Infiltrate enemy base, secure the intelligence flag, and return home.', target: 3 }
+      ctf: { name: 'CAPTURE THE FLAG', desc: 'Infiltrate enemy base, secure the intelligence flag, and return home.', target: 3 },
+      br: { name: 'BATTLE ROYALE', desc: 'Drop from a C-17 with no weapons. Loot weapon crates & survive the shrinking zone.', target: 1 }
     };
     const BOT_NAMES = ['Viper', 'Ghost', 'Rook', 'Anvil', 'Bishop', 'Cobra', 'Dagger', 'Falcon', 'Havoc', 'Grizzly', 'Echo', 'Titan'];
     const PLAYER_APPEARANCES = [
@@ -8637,7 +8693,7 @@
     }
 
     function getSpawnPoint(team) {
-      if (currentMode === 'ffa' || team > 1) {
+      if (currentMode === 'ffa' || currentMode === 'br' || team > 1) {
         return [rnd(-220, 220), rnd(-220, 220)];
       }
       const b = B[team];
@@ -8733,7 +8789,7 @@
 
       $('roster-preview').innerHTML = sessionMode === 'private' && !privateRoomBotsEnabled
         ? '<b>PRIVATE ROOM:</b> Bots disabled — play with human operators only.'
-        : currentMode === 'ffa'
+        : (currentMode === 'ffa' || currentMode === 'br')
         ? `<b>12 BOT OPERATORS:</b> ${BOT_NAMES.join(', ')}`
         : `<span style="color:var(--color-blue)">BLUE SQUAD:</span> You + 7 bots (${BOT_NAMES.slice(0, 7).join(', ')})<br><span style="color:var(--color-red)">RED SQUAD:</span> 7 bots (${[...BOT_NAMES.slice(7), ...BOT_NAMES.slice(0, 2)].join(', ')})`;
       const deployButton = $('btn-deploy');
@@ -8860,10 +8916,145 @@
     $('btn-resume').onclick = () => { enterGameplayControls(); };
     $('btn-quit-lobby').onclick = () => { quitToLobby(); };
 
+    let brState = {
+      active: false,
+      phase: 'ground',
+      planePos: new V3(-220, 95, -220),
+      planeDir: new V3(1, 0, 1).normalize(),
+      planeSpeed: 28,
+      parachuteOpen: false,
+      zoneCenter: new V3(0, 0, 0),
+      zoneRadius: 240,
+      zoneMinRadius: 25,
+      zoneShrinkRate: 1.6,
+      zoneDamage: 8,
+      crates: [],
+      c17Mesh: null,
+      zoneMesh: null
+    };
+
+    function mkC17() {
+      const g = new THREE.Group();
+      const hullMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.48, roughness: 0.52 });
+      const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.65, roughness: 0.35 });
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0x0ea5e9, metalness: 0.9, roughness: 0.1, emissive: 0x0369a1, emissiveIntensity: 0.35 });
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.75 });
+
+      // Main fuselage & cargo bay
+      const fuselage = new THREE.Mesh(new THREE.BoxGeometry(5.8, 4.8, 29), hullMat);
+      g.add(fuselage);
+      // Nose & cockpit windshield
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(3.1, 6.8, 10), hullMat);
+      nose.rotation.x = Math.PI / 2;
+      nose.position.set(0, -0.35, 17.8);
+      g.add(nose);
+      const cockpit = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.3, 2.4), glassMat);
+      cockpit.position.set(0, 1.35, 14.5);
+      cockpit.rotation.x = 0.28;
+      g.add(cockpit);
+      // Open rear cargo ramp
+      const ramp = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.35, 4.5), darkMat);
+      ramp.position.set(0, -2.4, -15.5);
+      ramp.rotation.x = -0.32;
+      g.add(ramp);
+      // Swept high wings + winglets
+      [-1, 1].forEach(side => {
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(17.5, 0.55, 5.4), hullMat);
+        wing.position.set(side * 10.2, 2.1, 0.5);
+        wing.rotation.y = side * -0.22;
+        g.add(wing);
+        const winglet = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.6, 2.2), hullMat);
+        winglet.position.set(side * 18.6, 3.2, -1.4);
+        winglet.rotation.z = side * -0.18;
+        g.add(winglet);
+      });
+      // T-tail vertical & horizontal stabilizers
+      const tailFin = new THREE.Mesh(new THREE.BoxGeometry(0.7, 8.2, 4.8), hullMat);
+      tailFin.position.set(0, 5.6, -12.8);
+      tailFin.rotation.x = -0.25;
+      g.add(tailFin);
+      const hStab = new THREE.Mesh(new THREE.BoxGeometry(13.5, 0.48, 3.0), hullMat);
+      hStab.position.set(0, 9.2, -13.8);
+      g.add(hStab);
+      // Landing gear sponsons
+      [-2.9, 2.9].forEach(sx => {
+        const sponson = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 8.5), darkMat);
+        sponson.position.set(sx, -1.7, -1.5);
+        g.add(sponson);
+      });
+      // 4 Turbofan engines with glowing exhausts
+      [-13.2, -7.2, 7.2, 13.2].forEach(ex => {
+        const eng = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.9, 4.2, 12), darkMat);
+        eng.rotation.x = Math.PI / 2;
+        eng.position.set(ex, 0.9, 2.4);
+        g.add(eng);
+        const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.4, 10), glowMat);
+        exhaust.rotation.x = Math.PI / 2;
+        exhaust.position.set(ex, 0.9, 0.2);
+        g.add(exhaust);
+      });
+      return g;
+    }
+
+    function clearBRWorld() {
+      if (brState.c17Mesh) { scene.remove(brState.c17Mesh); brState.c17Mesh = null; }
+      if (brState.zoneMesh) { scene.remove(brState.zoneMesh); brState.zoneMesh = null; }
+      brState.crates.forEach(c => { if (c.m) scene.remove(c.m); });
+      brState.crates = [];
+      brState.active = false;
+    }
+
+    function spawnBRCrates(count = 24) {
+      const crateMat = new THREE.MeshStandardMaterial({ color: 0x3f4a3c, metalness: 0.4, roughness: 0.55 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.85 });
+      const beamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.42 });
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.75, side: THREE.DoubleSide });
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+        const dist = 30 + Math.random() * 165;
+        const x = Math.cos(angle) * dist;
+        const z = Math.sin(angle) * dist;
+        const weaponIndex = Math.floor(Math.random() * W.length);
+        const grp = new THREE.Group();
+        const box = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.25, 1.6), crateMat);
+        box.position.y = 0.625;
+        grp.add(box);
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.28, 0.22, 1.68), trimMat);
+        stripe.position.y = 0.95;
+        grp.add(stripe);
+        const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 14, 8), beamMat);
+        beacon.position.y = 7.2;
+        grp.add(beacon);
+        const ring = new THREE.Mesh(new THREE.RingGeometry(1.4, 1.85, 20), ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.08;
+        grp.add(ring);
+
+        const isAirdrop = i < 8;
+        let chute = null;
+        const startY = isAirdrop ? 75 + Math.random() * 45 : 0;
+        if (isAirdrop) {
+          chute = new THREE.Group();
+          const canopy = new THREE.Mesh(
+            new THREE.SphereGeometry(2.8, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55),
+            new THREE.MeshStandardMaterial({ color: 0xe2e8f0, side: THREE.DoubleSide, roughness: 0.7 })
+          );
+          canopy.position.y = 5.5;
+          chute.add(canopy);
+          grp.add(chute);
+        }
+
+        grp.position.set(x, startY, z);
+        scene.add(grp);
+        brState.crates.push({ id: i, x, y: startY, z, weaponIndex, opened: false, m: grp, chute, falling: isAirdrop });
+      }
+    }
+
     function startMatch() {
       matchStartedAt = Date.now();
       operatorStats.matches++;
       saveOperatorStats();
+      clearBRWorld();
       matchBotsEnabled = !networked
         ? true
         : networkHost
@@ -8885,8 +9076,18 @@
       if (FLAGS) FLAGS.forEach(f => scene.remove(f.m));
       FLAGS = null;
 
+      const isBR = currentMode === 'br';
       P.sl = 0;
-      P.w = L[0];
+      if (isBR) {
+        L[0] = -1;
+        L[1] = -1;
+        P.w = -1;
+        weaponModels.forEach(m => { m.visible = false; });
+      } else {
+        if (L[0] < 0) L[0] = 1;
+        if (L[1] < 0) L[1] = 0;
+        P.w = L[0];
+      }
       P.sh = 0;
       P.sp = 0;
       P.hp = 100;
@@ -8902,9 +9103,27 @@
       $('lobby-modal').style.display = 'none';
       W.forEach(w => { w.a = w.mag; w.rl = 0; });
 
-      spawnAllPickups();
+      if (isBR) {
+        brState.active = true;
+        brState.peaceTimer = 150;
+        brState.phase = 'plane';
+        brState.planePos.set(-220, 95, -220);
+        brState.planeDir.set(1, 0, 1).normalize();
+        brState.parachuteOpen = false;
+        brState.zoneRadius = 240;
+        brState.c17Mesh = mkC17();
+        brState.c17Mesh.position.copy(brState.planePos);
+        brState.c17Mesh.lookAt(brState.planePos.clone().add(brState.planeDir));
+        scene.add(brState.c17Mesh);
+        spawnBRCrates(24);
+        P.p.set(brState.planePos.x, brState.planePos.y - 3, brState.planePos.z);
+        P.yaw = -2.35;
+        bannerMsg('C-17 DEPLOYMENT — PRESS [SPACE] TO JUMP');
+      } else {
+        spawnAllPickups();
+      }
 
-      const isFFA = currentMode === 'ffa';
+      const isFFA = currentMode === 'ffa' || currentMode === 'br';
       const pSpawn = getSpawnPoint(P.tm);
       P.p.set(pSpawn[0], 0, pSpawn[1]);
       P.yaw = isFFA ? 0 : P.tm ? 0.785 : -2.35;
@@ -8959,6 +9178,7 @@
           const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm]), s[0], s[1], 100, tm);
           bot.role = i % 2;
           bot.patrolSlot = isFFA ? i : i % 7;
+          if (isBR) bot.unarmed = true;
           bot.nm = BOT_NAMES[i % BOT_NAMES.length];
           claimNearestTeamVehicle(bot);
         }
@@ -9736,6 +9956,13 @@
 
     function checkMatchVictory() {
       if (matchEnded) return;
+      if (currentMode === 'br') {
+        const aliveBots = E.filter(e => e.type === 'inf' && !e.dead).length;
+        if (aliveBots === 0 && P.hp > 0) {
+          endMatch(P.tm);
+        }
+        return;
+      }
       const target = MODES[currentMode].target;
       for (const k in scores) {
         if (scores[k] >= target) {
@@ -10006,7 +10233,26 @@
     }
 
     function updateHUD() {
-      const w = W[P.w];
+      if (currentMode === 'br') {
+        const aliveBots = E.filter(e => e.type === 'inf' && !e.dead).length;
+        const aliveTotal = aliveBots + (P.hp > 0 ? 1 : 0);
+        const peaceSec = Math.ceil(brState.peaceTimer || 0);
+        const peaceLabel = peaceSec > 0
+          ? ` · PEACE ${Math.floor(peaceSec / 60)}:${String(peaceSec % 60).padStart(2, '0')}`
+          : '';
+        if ($('match-target')) $('match-target').textContent = `BATTLE ROYALE · ALIVE: ${aliveTotal}${peaceLabel}`;
+      }
+      const w = P.w >= 0 ? W[P.w] : null;
+      if (!w) {
+        weaponModels.forEach(m => { m.visible = false; });
+        $('weapon-name').textContent = brState.active && brState.phase === 'plane' ? 'C-17 DROP BAY' : 'UNARMED';
+        $('weapon-class').textContent = brState.active && brState.phase === 'plane' ? 'PRESS [SPACE] TO JUMP' : 'LOOT A WEAPON CRATE';
+        $('ammo-cur').textContent = '--';
+        $('ammo-mag').textContent = '--';
+        $('slot-pri').textContent = L[0] >= 0 && W[L[0]] ? `[1] ${W[L[0]].n}` : '[1] EMPTY';
+        $('slot-sec').textContent = L[1] >= 0 && W[L[1]] ? `[2] ${W[L[1]].n}` : '[2] EMPTY';
+        return;
+      }
       const v = P.veh;
       const isSc = scoped();
       mobileMissileButton.disabled = !v || v.type !== 'heli';
@@ -10308,6 +10554,7 @@
       }
 
       updateWeather(dt, camera.position);
+      updateVehicleWrecks(dt);
 
       if (radarDishMesh) {
         radarDishMesh.rotation.y += dt * 0.8;
@@ -10315,6 +10562,74 @@
 
       if (isLocked) {
         if (!networked || networkHost) updateCTFFlags();
+        if (brState.active) {
+          if (brState.peaceTimer > 0) {
+            brState.peaceTimer = Math.max(0, brState.peaceTimer - dt);
+            if (brState.peaceTimer === 0) bannerMsg('LOOT PEACE ENDED — COMBAT ACTIVE!');
+          }
+          brState.planePos.addScaledVector(brState.planeDir, brState.planeSpeed * dt);
+          if (brState.c17Mesh) brState.c17Mesh.position.copy(brState.planePos);
+          if (brState.phase === 'plane') {
+            P.p.set(brState.planePos.x, brState.planePos.y - 3, brState.planePos.z);
+            P.vy = 0;
+            if (K['Space'] || brState.planePos.x > 220 || brState.planePos.z > 220) {
+              brState.phase = 'freefall';
+              P.vy = -8;
+              bannerMsg('FREEFALL — PARACHUTE AUTO-DEPLOYS AT 35M');
+              playSnd(420, 0.2, 0.25, 'sine');
+            }
+          } else if (brState.phase === 'freefall') {
+            if (P.p.y <= 35 && !brState.parachuteOpen) {
+              brState.parachuteOpen = true;
+              bannerMsg('PARACHUTE DEPLOYED');
+              playSnd(520, 0.15, 0.2, 'triangle');
+            }
+            P.vy = brState.parachuteOpen ? Math.max(P.vy - 18 * dt, -7) : Math.max(P.vy - 28 * dt, -26);
+            P.p.y += P.vy * dt;
+            if (P.p.y <= 0) {
+              P.p.y = 0;
+              P.vy = 0;
+              brState.phase = 'ground';
+              brState.parachuteOpen = false;
+              bannerMsg('LANDED — FIND WEAPON CRATES!');
+            }
+          }
+          for (const crate of brState.crates) {
+            if (crate.opened) continue;
+            if (crate.falling) {
+              crate.y -= 9 * dt;
+              if (crate.y <= 0) {
+                crate.y = 0;
+                crate.falling = false;
+                if (crate.chute) crate.chute.visible = false;
+              }
+              if (crate.m) crate.m.position.y = crate.y;
+            }
+            if (crate.m) crate.m.rotation.y += dt * 1.1;
+            if (brState.phase === 'ground' && !crate.falling && Math.hypot(P.p.x - crate.x, P.p.z - crate.z) <= 3.0) {
+              crate.opened = true;
+              if (crate.m) crate.m.visible = false;
+              const wIdx = crate.weaponIndex;
+              if (L[0] === -1) { L[0] = wIdx; P.sl = 0; }
+              else if (L[1] === -1) { L[1] = wIdx; P.sl = 1; }
+              else { L[P.sl] = wIdx; }
+              P.w = L[P.sl];
+              W[P.w].a = W[P.w].mag;
+              W[P.w].rl = 0;
+              bannerMsg(`LOOTED: ${W[P.w].n.toUpperCase()}`);
+              playSnd(680, 0.22, 0.2, 'sine');
+              break;
+            }
+            if (!crate.falling) {
+              const lootingBot = E.find(b => b.type === 'inf' && !b.dead && b.unarmed && Math.hypot(b.p.x - crate.x, b.p.z - crate.z) <= 3.0);
+              if (lootingBot) {
+                crate.opened = true;
+                if (crate.m) crate.m.visible = false;
+                lootingBot.unarmed = false;
+              }
+            }
+          }
+        }
 
         W.forEach(w => {
           if (w.cd > 0) w.cd -= dt;
@@ -10331,7 +10646,13 @@
           updateVehicle(P.veh, dt);
         } else {
           updatePlayerFoot(dt);
-          if (lm && (W[P.w].auto || lc)) firePlayerWeapon();
+          if (brState.active && brState.phase === 'plane') {
+            camera.position.copy(brState.planePos)
+              .addScaledVector(brState.planeDir, -36)
+              .add(new V3(0, 12, 0));
+            camera.lookAt(brState.planePos);
+          }
+          if (lm && P.w >= 0 && W[P.w] && (W[P.w].auto || lc)) firePlayerWeapon();
         }
         lc = 0;
 

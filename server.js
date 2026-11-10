@@ -297,7 +297,7 @@ function sendPresence(room) {
 function schedulePublicMatch(room, requestedConfig = {}) {
   if (room.kind === 'private' || room.matchConfig || room.matchStartTimer) return;
   room.pendingMatchConfig = {
-    mode: ['tdm', 'ffa', 'ctf'].includes(requestedConfig.mode) ? requestedConfig.mode : 'tdm',
+    mode: ['tdm', 'ffa', 'ctf', 'br'].includes(requestedConfig.mode) ? requestedConfig.mode : 'tdm',
     difficulty: Math.max(0, Math.min(2, Number(requestedConfig.difficulty) || 0)),
     botsEnabled: room.botsEnabled
   };
@@ -440,7 +440,7 @@ io.on('connection', socket => {
 
   socket.on('match:start', config => {
     const room = rooms.get(socket.data.roomId);
-    if (!room || room.kind !== 'private' || room.hostId !== socket.id || !config || !['tdm', 'ffa', 'ctf'].includes(config.mode)) return;
+    if (!room || room.kind !== 'private' || room.hostId !== socket.id || !config || !['tdm', 'ffa', 'ctf', 'br'].includes(config.mode)) return;
     room.matchConfig = {
       mode: config.mode,
       difficulty: Math.max(0, Math.min(2, Number(config.difficulty) || 0)),
@@ -461,9 +461,9 @@ io.on('connection', socket => {
     const room = rooms.get(socket.data.roomId);
     if (!room) return;
     const mode = payload?.mode;
-    if (!['tdm', 'ctf', 'ffa', 'koth'].includes(mode)) return;
+    if (!['tdm', 'ctf', 'ffa', 'br', 'koth'].includes(mode)) return;
     room.votes.set(socket.id, mode);
-    const tally = { tdm: 0, ctf: 0, ffa: 0, koth: 0 };
+    const tally = { tdm: 0, ctf: 0, ffa: 0, br: 0, koth: 0 };
     for (const v of room.votes.values()) {
       if (tally[v] !== undefined) tally[v]++;
     }
