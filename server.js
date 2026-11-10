@@ -366,11 +366,7 @@ io.on('connection', socket => {
     let room;
     if (kind === 'public' || kind === 'public-bots') {
       if (request.action && request.action !== 'join') return acknowledge({ error: 'Public rooms can only be joined.' });
-      const requestedMode = ['tdm', 'ctf', 'ffa', 'koth'].includes(request.mode) ? request.mode : 'tdm';
-      const roomKey = `${kind}:${requestedMode}`;
-      const isNewRoom = !rooms.has(roomKey);
-      room = rooms.get(roomKey) || makeRoom(roomKey, kind);
-      if (isNewRoom) room.mode = requestedMode;
+      room = rooms.get(kind) || makeRoom(kind, kind);
       room.botsEnabled = kind === 'public-bots';
     } else if (request.action === 'create') {
       let code;

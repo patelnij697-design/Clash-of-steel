@@ -2602,7 +2602,6 @@
 
       <div>
         <button class="btn-action" id="btn-resume">RESUME BATTLE</button>
-        <button class="btn-secondary" id="btn-free-cursor" style="color:#38bdf8;border-color:rgba(56,189,248,0.4)">FREE CURSOR</button>
         <button class="btn-secondary" id="btn-pause-dev" style="color:#10b981;border-color:rgba(16,185,129,0.4)">DEV PANEL</button>
         <button class="btn-secondary" id="btn-pause-settings">SETTINGS</button>
         <button class="btn-secondary" id="btn-quit-lobby">ABORT TO LOBBY</button>
@@ -3246,11 +3245,6 @@
       $('btn-main-dev').onclick = openDevModal;
       $('btn-settings-dev').onclick = openDevModal;
       $('btn-pause-dev').onclick = openDevModal;
-      $('btn-free-cursor').onclick = () => {
-        $('pause-modal').style.display = 'none';
-        if (document.pointerLockElement) document.exitPointerLock();
-        isLocked = true;
-      };
 
       $('btn-auth-close').onclick = () => { $('auth-modal').style.display = 'none'; };
       $('auth-tab-login').onclick = () => {
@@ -6502,6 +6496,7 @@
       let collided = 0;
       for (const o of OB) {
         if (pos.y >= o.h) continue;
+        if (o.minY !== undefined && pos.y + 1.8 <= o.minY) continue;
         const dx = pos.x - o.x;
         const dz = pos.z - o.z;
         const ox = o.hw + radius - Math.abs(dx);
@@ -6519,7 +6514,7 @@
 
     function useVehicle() {
       if (P.veh) { exitVehicle(); return; }
-      let best = null, bestDist = 8;
+      let best = null, bestDist = 8.5;
       E.forEach(e => {
         if (!e.team && !e.dead && !e.driver && e.p.distanceTo(P.p) < bestDist) {
           bestDist = e.p.distanceTo(P.p);
@@ -8699,7 +8694,9 @@
       botToggle.disabled = networked && (networkRoomKind !== 'private' || !networkHost);
       $('btn-leave-room').style.display = networked ? 'inline-block' : 'none';
 
-      $('mode-selector').innerHTML = Object.keys(MODES).map(k => `
+      const isPublicSession = sessionMode === 'public' || sessionMode === 'public-bots';
+      $('mode-selector').style.display = isPublicSession ? 'none' : 'grid';
+      $('mode-selector').innerHTML = isPublicSession ? '' : Object.keys(MODES).map(k => `
         <div class="tactical-card ${k === currentMode ? 'selected' : ''}" data-mode="${k}" role="button" tabindex="0" aria-pressed="${k === currentMode}">
           <h4>${MODES[k].name}</h4>
           <p>${MODES[k].desc}</p>
@@ -8753,13 +8750,6 @@
       if (modeCard) {
         currentMode = modeCard.dataset.mode;
         buildLobbyUI();
-        if ((sessionMode === 'public' || sessionMode === 'public-bots') && netSocket?.connected) {
-          if (networked) {
-            netSocket.emit('room:leave');
-            networked = false;
-          }
-          joinRoom(sessionMode, 'join');
-        }
       }
       const diffBtn = e.target.closest('[data-diff]');
       if (diffBtn) {
