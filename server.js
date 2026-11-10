@@ -18,7 +18,7 @@ const io = new Server(httpServer, {
 });
 const PORT = (process.env.PORT && process.env.PORT !== '8080') ? Number(process.env.PORT) : 3000;
 const HOST = '0.0.0.0';
-const DEV_PANEL_KEY = process.env.DEV_PANEL_KEY || 'clashofsteel';
+const DEV_PANEL_KEY = process.env.DEV_PANEL_KEY || '816999';
 const MAX_PLAYERS_PER_ROOM = 12;
 const MAX_CHAT_LENGTH = 240;
 const PUBLIC_MATCH_DELAY_MS = 8000;
