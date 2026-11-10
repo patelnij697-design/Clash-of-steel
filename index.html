@@ -2608,8 +2608,6 @@
       <div class="loadout-grid" id="loadout-pri"></div>
       <h3 style="font-family:var(--font-display);letter-spacing:1.5px;color:#f59e0b;text-align:left;margin:12px 0 4px">SECONDARY WEAPONS</h3>
       <div class="loadout-grid" id="loadout-sec"></div>
-      <h3 style="font-family:var(--font-display);letter-spacing:1.5px;color:#10b981;text-align:left;margin:12px 0 4px">TACTICAL EQUIPMENT</h3>
-      <div class="loadout-grid" id="loadout-tac"></div>
       <button class="btn-action" id="btn-loadout-done" style="margin-top:16px;">CONFIRM LOADOUT</button>
     </div>
   </div>
@@ -2638,6 +2636,8 @@
       <button class="mobile-action" data-mobile-action="reload" data-tap="reload" aria-label="Reload">RELOAD</button>
       <button class="mobile-action" data-mobile-action="missile" data-tap="missile" aria-label="Fire guided missile">MISSILE</button>
       <button class="mobile-action" data-mobile-action="swap" data-tap="swap" aria-label="Switch weapon slot">SWAP</button>
+      <button class="mobile-action" data-mobile-action="throw" data-tap="throw" aria-label="Throw grenade or shield bubble">THROW</button>
+      <button class="mobile-action" data-mobile-action="cyclethrow" data-tap="cyclethrow" aria-label="Cycle throwable">GEAR</button>
       <button class="mobile-action" data-mobile-action="loadout" data-tap="loadout" aria-label="Open loadout">ARMORY</button>
     </div>
     <button id="mobile-pause" type="button">PAUSE</button>
@@ -5324,11 +5324,10 @@
       { n: 'Barrett .50', lv: 5, dmg: 125, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
       { n: 'Stinger AA', lv: 5, rate: 1.8, mag: 1, rel: 2.6, zoom: 2.0, m: 'aa', cls: 'Lock-On Anti-Air', type: 'rocket' },
       { n: 'M249 SAW', lv: 6, dmg: 25, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' },
-      { n: 'AK-47', lv: 2, dmg: 34, rate: 0.11, mag: 30, rel: 1.9, spr: 0.02, zoom: 2.2, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
+      { n: 'AK-47 Rifle', lv: 2, dmg: 34, rate: 0.115, mag: 30, rel: 1.9, spr: 0.018, zoom: 2.2, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
       { n: 'MP5 Tactical', lv: 2, dmg: 19, rate: 0.075, mag: 30, rel: 1.5, spr: 0.022, zoom: 1.6, auto: 1, cls: 'Tactical SMG', type: 'smg' },
-      { n: 'Desert Eagle .50', lv: 3, dmg: 62, rate: 0.38, mag: 7, rel: 1.7, spr: 0.008, zoom: 1.5, cls: 'Heavy Sidearm', type: 'pistol' },
-      { n: 'SCAR-H', lv: 4, dmg: 38, rate: 0.13, mag: 20, rel: 2.0, spr: 0.012, zoom: 2.8, auto: 1, cls: 'Battle Rifle', type: 'rifle' },
-      { n: 'AA-12 Auto', lv: 5, dmg: 14, pel: 8, rate: 0.28, mag: 20, rel: 2.6, spr: 0.075, zoom: 1.2, auto: 1, cls: 'Auto Shotgun', type: 'shotgun' }
+      { n: 'AWP Magnum', lv: 4, dmg: 115, rate: 1.15, mag: 5, rel: 2.3, spr: 0.001, zoom: 6.5, scope: 1, cls: 'Bolt Sniper', type: 'sniper' },
+      { n: 'AA-12 Auto', lv: 4, dmg: 14, pel: 7, rate: 0.32, mag: 12, rel: 2.4, spr: 0.07, zoom: 1.2, auto: 1, cls: 'Auto Shotgun', type: 'shotgun' }
     ];
     W.forEach(w => { w.a = w.mag; w.cd = 0; w.rl = 0; });
 
@@ -5498,15 +5497,9 @@
     const weaponModels = W.map(makeWeaponModel);
     weaponModels[1].visible = true;
 
-    const PRI_WEAPONS = [1, 4, 10, 6, 8, 3, 11, 12, 14, 15];
-    const SEC_WEAPONS = [0, 2, 5, 7, 9, 13];
-    const TAC_EQUIPMENT = [
-      { n: 'Smoke Grenade', lv: 1, cls: 'Concealment', desc: 'Dense 10s smoke screen', power: 75, cd: 18 },
-      { n: 'Motion Sensor', lv: 1, cls: 'Reconnaissance', desc: '45m enemy radar pulse', power: 85, cd: 20 },
-      { n: 'Frag Grenade', lv: 2, cls: 'Explosive', desc: 'High-explosive blast', power: 115, cd: 16 },
-      { n: 'Medkit Syringe', lv: 2, cls: 'Field Trauma', desc: 'Instant +45 HP heal', power: 95, cd: 22 }
-    ];
-    const L = [1, 0, 0];
+    const PRI_WEAPONS = [1, 4, 10, 6, 8, 3];
+    const SEC_WEAPONS = [0, 2, 5, 7, 9];
+    const L = [1, 0];
 
     const P = {
       p: new V3(0, 0, 0),
@@ -5528,7 +5521,10 @@
       slideCd: 0,
       slideDir: new V3(),
       slideSpeed: 0,
-      slideEyeHeight: 1.7
+      slideEyeHeight: 1.7,
+      throwables: { frag: 2, grenade: 2, shield: 1 },
+      activeThrowable: 'frag',
+      throwCd: 0
     };
     const lvl = () => 1 + Math.floor(P.xp / 100);
 
@@ -5869,6 +5865,8 @@
       if (button.dataset.tap === 'reload') reloadActiveWeapon();
       if (button.dataset.tap === 'missile' && P.veh?.type === 'heli') fireHeliMissile();
       if (button.dataset.tap === 'swap' && !P.veh) selectSlot(1 - P.sl);
+      if (button.dataset.tap === 'throw' && !P.veh) throwActiveThrowable();
+      if (button.dataset.tap === 'cyclethrow' && !P.veh) cycleThrowable();
       if (button.dataset.tap === 'loadout') openLoadout();
     });
     $('mobile-action-pad').addEventListener('pointermove', event => {
@@ -6421,6 +6419,118 @@
           applyDamage(e, dmg, attacker);
         }
       });
+    }
+
+    const THROWABLES = [];
+    const SHIELD_BUBBLES = [];
+    const THROWABLE_ORDER = ['frag', 'grenade', 'shield'];
+    const THROWABLE_LABELS = { frag: 'FRAG', grenade: 'HE GRENADE', shield: 'SHIELD BUBBLE' };
+
+    function updateMobileThrowButton() {
+      const btn = document.querySelector('[data-mobile-action="throw"]');
+      if (!btn) return;
+      const type = P.activeThrowable || 'frag';
+      const count = P.throwables?.[type] ?? 0;
+      const short = type === 'frag' ? 'FRAG' : type === 'grenade' ? 'HE' : 'SHIELD';
+      btn.textContent = `${short} (${count})`;
+    }
+
+    function cycleThrowable() {
+      const idx = THROWABLE_ORDER.indexOf(P.activeThrowable);
+      P.activeThrowable = THROWABLE_ORDER[(idx + 1) % THROWABLE_ORDER.length];
+      updateMobileThrowButton();
+      bannerMsg(`THROWABLE: ${THROWABLE_LABELS[P.activeThrowable]} (${P.throwables[P.activeThrowable] || 0})`);
+    }
+
+    function spawnShieldBubble(pos, team = P.tm) {
+      const geo = new THREE.SphereGeometry(5.5, 24, 18);
+      const mat = new THREE.MeshBasicMaterial({
+        color: team === 1 ? 0xf43f5e : 0x38bdf8,
+        transparent: true,
+        opacity: 0.22,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(pos);
+      mesh.position.y = Math.max(0.2, pos.y);
+      scene.add(mesh);
+      SHIELD_BUBBLES.push({ mesh, p: mesh.position.clone(), team, life: 10, radius: 5.5 });
+      playSnd(520, 0.35, 0.25, 'sine', 880);
+    }
+
+    function throwActiveThrowable() {
+      if (P.veh || P.hp <= 0 || P.throwCd > 0) return;
+      const type = P.activeThrowable || 'frag';
+      if (!P.throwables || (P.throwables[type] || 0) <= 0) {
+        bannerMsg(`NO ${THROWABLE_LABELS[type]} LEFT`);
+        return;
+      }
+      P.throwables[type]--;
+      P.throwCd = 0.5;
+      updateMobileThrowButton();
+
+      const dir = new V3(0, 0, -1).applyEuler(new THREE.Euler(P.pit, P.yaw, 0, 'YXZ')).normalize();
+      const start = camera.position.clone().addScaledVector(dir, 0.9);
+      const vel = dir.multiplyScalar(22);
+      vel.y += 5.5;
+
+      const color = type === 'shield' ? 0x38bdf8 : type === 'grenade' ? 0xf59e0b : 0x4ade80;
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 10, 10),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.5, emissive: color, emissiveIntensity: 0.25 })
+      );
+      mesh.position.copy(start);
+      scene.add(mesh);
+      THROWABLES.push({ mesh, p: start, v: vel, type, team: P.tm, fuse: type === 'frag' ? 1.6 : type === 'grenade' ? 1.0 : 1.1 });
+      playSnd(240, 0.14, 0.18, 'triangle', 120);
+    }
+
+    function updateThrowables(dt) {
+      if (P.throwCd > 0) P.throwCd = Math.max(0, P.throwCd - dt);
+      for (let i = THROWABLES.length - 1; i >= 0; i--) {
+        const t = THROWABLES[i];
+        t.fuse -= dt;
+        t.v.y -= 18 * dt;
+        t.p.addScaledVector(t.v, dt);
+        if (t.p.y <= 0.2) {
+          t.p.y = 0.2;
+          t.v.y *= -0.35;
+          t.v.x *= 0.65;
+          t.v.z *= 0.65;
+          if (t.type === 'grenade' || t.type === 'shield') t.fuse = Math.min(t.fuse, 0.05);
+        }
+        t.mesh.position.copy(t.p);
+        if (t.fuse <= 0) {
+          scene.remove(t.mesh);
+          if (t.type === 'shield') {
+            spawnShieldBubble(t.p, t.team);
+          } else {
+            const radius = t.type === 'frag' ? 11 : 9;
+            const maxDmg = t.type === 'frag' ? 160 : 110;
+            spawnExplosion(t.p, 6, t.type === 'frag' ? 0xf97316 : 0xfbbf24, 0.6);
+            playSnd(95, 0.55, 0.4, 'sawtooth', 25);
+            E.forEach(e => {
+              if (!e.team || e.dead || e.tm === t.team) return;
+              const d = e.p.distanceTo(t.p);
+              if (d < radius) applyDamage(e, maxDmg * (1 - d / radius), 1);
+            });
+          }
+          THROWABLES.splice(i, 1);
+        }
+      }
+      for (let i = SHIELD_BUBBLES.length - 1; i >= 0; i--) {
+        const b = SHIELD_BUBBLES[i];
+        b.life -= dt;
+        b.mesh.material.opacity = Math.min(0.24, 0.1 + Math.sin(performance.now() * 0.005) * 0.04);
+        if (!P.veh && P.hp > 0 && P.tm === b.team && P.p.distanceTo(b.p) <= b.radius) {
+          P.sh = Math.min(50, P.sh + 8 * dt);
+        }
+        if (b.life <= 0) {
+          scene.remove(b.mesh);
+          SHIELD_BUBBLES.splice(i, 1);
+        }
+      }
     }
 
     function missileTargetPoint(target) {
@@ -9975,19 +10085,6 @@
 
       $('loadout-pri').innerHTML = PRI_WEAPONS.map(i => renderCard(i, 0)).join('');
       $('loadout-sec').innerHTML = SEC_WEAPONS.map(i => renderCard(i, 1)).join('');
-      $('loadout-tac').innerHTML = TAC_EQUIPMENT.map((t, idx) => {
-        const isLockedTac = t.lv > lvl();
-        return `
-          <div class="weapon-card ${L[2] === idx ? 'selected' : ''} ${isLockedTac ? 'locked' : ''}" data-tac="${idx}">
-            <b style="color:#fff;font-size:12px;">${t.n}</b>
-            <div style="color:${isLockedTac ? '#ef4444' : '#10b981'};font-size:10px;margin-bottom:4px;">
-              ${isLockedTac ? 'UNLOCKS LV ' + t.lv : t.cls}
-            </div>
-            <div style="font-size:10px;color:#cbd5e1;margin-bottom:6px;">${t.desc}</div>
-            <div style="font-size:9px;color:#94a3b8">COOLDOWN: ${t.cd}s</div>
-          </div>
-        `;
-      }).join('');
     }
 
     let loadoutOpenedFromLobby = 1;
@@ -10011,11 +10108,6 @@
       const card = e.target.closest('[data-w]');
       if (card && W[+card.dataset.w].lv <= lvl()) {
         L[+card.dataset.slot] = +card.dataset.w;
-        renderLoadoutUI();
-      }
-      const tacCard = e.target.closest('[data-tac]');
-      if (tacCard && TAC_EQUIPMENT[+tacCard.dataset.tac].lv <= lvl()) {
-        L[2] = +tacCard.dataset.tac;
         renderLoadoutUI();
       }
       if (e.target.id === 'btn-loadout-done') closeLoadout();
@@ -10510,6 +10602,7 @@
         });
 
         // The room host simulates guided weapons; clients render host snapshots.
+        updateThrowables(dt);
         if (!networked || networkHost) for (let i = MISSILES.length - 1; i >= 0; i--) {
           const k = MISSILES[i];
           k.life -= dt;
