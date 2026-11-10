@@ -2040,9 +2040,9 @@
 
   <!-- HUD Overlay Layer -->
   <div class="hud-layer" id="top-hud">
-    <div class="score-badge score-blue" id="score-blue">BLUE 0</div>
+    <div class="score-badge score-blue" id="score-blue">USA 0</div>
     <div class="match-target" id="match-target">TDM · FIRST TO 30</div>
-    <div class="score-badge score-red" id="score-red">0 RED</div>
+    <div class="score-badge score-red" id="score-red">0 USSR</div>
     <div id="weather-badge" title="Click to cycle weather">☀ CLEAR</div>
   </div>
   <div class="hud-layer" id="players-online">ROOM PLAYERS: <span id="room-player-count">—</span></div>
@@ -2168,7 +2168,7 @@
   <div class="menu-modal" id="main-menu-modal" style="display:none;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 1.3.00</span>
+        <span>CLASH OF STEEL <b>·</b> VERSION 1.35.00</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
       <h1 class="modal-title">CLASH OF STEEL</h1>
@@ -2200,6 +2200,15 @@
         <button type="button" class="btn-secondary" id="btn-updates-close">CLOSE</button>
       </div>
       <div class="modal-subtitle">CLASH OF STEEL · RELEASE NOTES</div>
+      <section class="update-release" aria-label="Version 1.35.00 updates">
+        <h3>VERSION 1.35.00 · OUR UPDATE</h3>
+        <ul>
+          <li>Overhauled Ironvale Canyon &amp; Airfield with true heightfield terrain, sculpted valley rim, canal &amp; 3 bridges, and industrial fuel depots.</li>
+          <li>Made roads solid 3D objects, removed tan terrain mounds, and aligned all structures &amp; hitboxes to terrain elevation.</li>
+          <li>Fixed vehicle terrain following for tanks, SAM trucks, APCs, and helicopters, plus added enemy base anti-spawncamp defense.</li>
+          <li>Converted on-foot aiming (ADS) to a toggle, added USA vs USSR team selection, and added Soviet-inspired T-80, Mi-24 Hind, 2K12 Kub, and BTR-80 models for USSR.</li>
+        </ul>
+      </section>
       <section class="update-release" aria-label="Version 1.1.10 updates">
         <h3>VERSION 1.1.10 · COMBAT AI & MODEL OVERHAUL</h3>
         <ul>
@@ -2262,6 +2271,16 @@
         <div class="multiplayer-heading">
           <span>PLAY ONLINE</span>
           <span id="server-status" role="status" aria-live="polite">Connecting</span>
+        </div>
+        <div class="mode-grid" id="team-selector" data-selector="team" style="margin-bottom:10px;grid-template-columns:1fr 1fr;">
+          <div class="tactical-card selected" data-team="0" role="button" tabindex="0" style="border-color:rgba(56,189,248,0.5);">
+            <h4 style="color:#38bdf8;">USA (BLUE)</h4>
+            <p>M1 Abrams · AH-64 Apache · M901 SAM · Stryker</p>
+          </div>
+          <div class="tactical-card" data-team="1" role="button" tabindex="0" style="border-color:rgba(244,63,94,0.4);">
+            <h4 style="color:#f43f5e;">USSR (RED)</h4>
+            <p>T-80 · Mi-24 Hind · 2K12 Kub · BTR-80</p>
+          </div>
         </div>
         <div class="mode-grid" id="session-selector" data-selector="session">
           <div class="tactical-card selected" data-session="public" role="button" tabindex="0">
@@ -3773,24 +3792,77 @@
       world.addBody(body);
     }
 
-    const groundGeometry = new THREE.PlaneGeometry(1200, 1200, 96, 96);
+    // =========================================================================
+    // OVERHAULED MAP: IRONVALE CANYON & AIRFIELD (TRUE HEIGHTFIELD TERRAIN)
+    // =========================================================================
+    function smoothstep(edge0, edge1, x) {
+      const t = THREE.MathUtils.clamp((x - edge0) / (edge1 - edge0), 0, 1);
+      return t * t * (3 - 2 * t);
+    }
+
+    function getTerrainHeight(x, z) {
+      // Base rolling hills & tactical ridges
+      const hill1 = Math.sin(x * 0.018) * Math.cos(z * 0.018) * 6.5;
+      const hill2 = Math.sin((x + z) * 0.028) * 3.2;
+      const ridge = Math.cos((x - z) * 0.022) * 3.8;
+      const detail = Math.sin(x * 0.065 + z * 0.045) * 1.1;
+      let h = hill1 + hill2 + ridge + detail + 1.5;
+
+      // Flatten team bases ([-215, -215] & [215, 215])
+      const dBase0 = Math.hypot(x + 215, z + 215);
+      const dBase1 = Math.hypot(x - 215, z - 215);
+      const baseMask = Math.min(smoothstep(46, 78, dBase0), smoothstep(46, 78, dBase1));
+
+      // Flatten central command plaza (0, 0)
+      const dCenter = Math.hypot(x, z);
+      const centerMask = smoothstep(28, 56, dCenter);
+
+      // Flatten main diagonal airfield runway (x == z) and cross-map roads
+      const dRunway = Math.abs(x - z) / Math.SQRT2;
+      const runwayMask = dCenter < 330 ? smoothstep(20, 42, dRunway) : 1;
+      const dRoadX = Math.min(Math.abs(x - 125), Math.abs(x + 125));
+      const dRoadZ = Math.min(Math.abs(z - 125), Math.abs(z + 125), Math.abs(z - 215), Math.abs(z + 215));
+      const roadMask = Math.min(smoothstep(9, 22, dRoadX), smoothstep(9, 22, dRoadZ));
+
+      h *= baseMask * centerMask * runwayMask * roadMask;
+
+      // Perimeter canyon cliffs beyond 295m
+      const edgeDist = Math.max(Math.abs(x), Math.abs(z));
+      if (edgeDist > 295) {
+        const rimFactor = Math.min(1, (edgeDist - 295) / 130);
+        h += rimFactor * (26 + 12 * Math.sin(x * 0.03) * Math.cos(z * 0.03));
+      }
+      return h;
+    }
+
+    const groundGeometry = new THREE.PlaneGeometry(1200, 1200, 128, 128);
     const groundPositions = groundGeometry.attributes.position;
     const groundColors = [];
-    const grassColor = new THREE.Color(0x667b49);
-    const dryColor = new THREE.Color(0x98835b);
-    const stoneColor = new THREE.Color(0x777663);
+    const grassColor = new THREE.Color(0x4f693a);
+    const dryColor = new THREE.Color(0x8c7853);
+    const stoneColor = new THREE.Color(0x63665a);
+    const scorchColor = new THREE.Color(0x3f3d38);
+    const sandColor = new THREE.Color(0xa68f63);
     const groundColor = new THREE.Color();
     for (let i = 0; i < groundPositions.count; i++) {
       const x = groundPositions.getX(i);
-      const z = groundPositions.getY(i);
-      const broadNoise = Math.sin(x * 0.016 + Math.sin(z * 0.011) * 1.8)
-        + Math.cos(z * 0.019 - x * 0.008) * 0.8;
-      const fineNoise = Math.sin((x + z) * 0.047) * Math.cos((x - z) * 0.039);
-      const grassBlend = THREE.MathUtils.clamp(0.52 + broadNoise * 0.22, 0, 1);
-      const rockyBlend = THREE.MathUtils.clamp((fineNoise - 0.25) * 0.42, 0, 0.22);
-      groundColor.copy(dryColor).lerp(grassColor, grassBlend).lerp(stoneColor, rockyBlend);
+      const z = -groundPositions.getY(i);
+      const h = getTerrainHeight(x, z);
+      groundPositions.setZ(i, h);
+
+      const distCenter = Math.hypot(x, z);
+      const broadNoise = Math.sin(x * 0.015 + Math.sin(z * 0.012) * 1.7)
+        + Math.cos(z * 0.018 - x * 0.009) * 0.85;
+      const grassBlend = THREE.MathUtils.clamp(0.48 + broadNoise * 0.24 - Math.max(0, h) * 0.04, 0, 1);
+      const rockyBlend = THREE.MathUtils.clamp((h - 3.5) * 0.1, 0, 0.55);
+      const scorchBlend = distCenter < 65 ? THREE.MathUtils.clamp((1 - distCenter / 65) * 0.45, 0, 0.45) : 0;
+      groundColor.copy(dryColor).lerp(grassColor, grassBlend).lerp(stoneColor, rockyBlend).lerp(scorchColor, scorchBlend);
+      if (Math.max(Math.abs(x), Math.abs(z)) > 295) {
+        groundColor.lerp(sandColor, 0.4);
+      }
       groundColors.push(groundColor.r, groundColor.g, groundColor.b);
     }
+    groundGeometry.computeVertexNormals();
     groundGeometry.setAttribute('color', new THREE.Float32BufferAttribute(groundColors, 3));
     const groundMesh = new THREE.Mesh(groundGeometry, mats.ground);
     groundMesh.rotation.x = -Math.PI / 2;
@@ -3798,16 +3870,56 @@
     scene.add(groundMesh);
 
     function mkRoad(width, length, x, z, rotation = 0) {
-      const road = new THREE.Mesh(new THREE.PlaneGeometry(width, length), mats.asphalt);
-      road.rotation.x = -Math.PI / 2;
-      road.rotation.z = rotation;
-      road.position.set(x, 0.03, z);
+      const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.28, length), mats.asphalt);
+      road.rotation.y = rotation;
+      road.position.set(x, 0.14, z);
       road.receiveShadow = true;
+      road.castShadow = true;
       scene.add(road);
     }
+    // Main diagonal airfield runway + cross-map tactical highway network
     mkRoad(36, 680, 0, 0, Math.PI / 4);
     [-125, 125].forEach(z => mkRoad(16, 620, 0, z));
     [-125, 125].forEach(x => mkRoad(16, 620, x, 0, Math.PI / 2));
+    // Perimeter ring road connecting outposts
+    mkRoad(12, 420, 0, -215, 0);
+    mkRoad(12, 420, 0, 215, 0);
+
+    // Tactical Canal / Dry-Bed Trench running perpendicular to runway (x + z = 0) with 3 Bridges
+    const canalMat = new THREE.MeshLambertMaterial({ color: 0x1e3a4c });
+    const canalBedMat = new THREE.MeshLambertMaterial({ color: 0x2c353d });
+    const canalGroup = new THREE.Group();
+    canalGroup.rotation.y = Math.PI / 4;
+    const canalWater = new THREE.Mesh(new THREE.PlaneGeometry(24, 580), canalMat);
+    canalWater.rotation.x = -Math.PI / 2;
+    canalWater.position.set(0, 0.02, 0);
+    canalGroup.add(canalWater);
+    for (const bankX of [-12.5, 12.5]) {
+      const bank = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.35, 580), canalBedMat);
+      bank.position.set(bankX, 0.16, 0);
+      bank.receiveShadow = true;
+      canalGroup.add(bank);
+    }
+    scene.add(canalGroup);
+
+    // 3 Reinforced Steel-and-Concrete Bridges across the canal
+    function mkBridge(x, z, rot) {
+      const g = new THREE.Group();
+      box(28, 0.55, 18, mats.concrete, 0, 0.28, 0, g);
+      box(28, 0.1, 15, mats.asphalt, 0, 0.58, 0, g);
+      for (const side of [-8.4, 8.4]) {
+        box(28, 1.1, 0.7, mats.steelDark, 0, 1.05, side, g);
+        for (let px = -12; px <= 12; px += 6) {
+          box(0.5, 1.5, 0.9, mats.hazardStripe, px, 1.25, side, g);
+        }
+      }
+      g.position.set(x, 0, z);
+      g.rotation.y = rot;
+      scene.add(g);
+    }
+    mkBridge(0, 0, Math.PI / 4);
+    mkBridge(-115, 115, Math.PI / 4);
+    mkBridge(115, -115, Math.PI / 4);
 
     // Tactical Airfield Runway Markings & Elevated Edge Guidance Lights
     const runwayGroup = new THREE.Group();
@@ -3864,19 +3976,21 @@
         cone.receiveShadow = true;
         g.add(cone);
       });
-      g.position.set(x, 0, z);
+      const ty = getTerrainHeight(x, z);
+      g.position.set(x, ty, z);
       scene.add(g);
-      OB.push({ x, z, hw: 0.8 * scale, hd: 0.8 * scale, h: 7 * scale });
+      OB.push({ x, z, hw: 0.8 * scale, hd: 0.8 * scale, h: ty + 7 * scale });
 
       const body = new CANNON.Body({ mass: 0 });
       body.addShape(new CANNON.Box(new CANNON.Vec3(0.8 * scale, 3.5 * scale, 0.8 * scale)));
-      body.position.set(x, 3.5 * scale, z);
+      body.position.set(x, ty + 3.5 * scale, z);
       world.addBody(body);
     }
 
     function mkRock(x, z, s) {
+      const ty = getTerrainHeight(x, z);
       const m = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 1), mats.rockGrey);
-      m.position.set(x, s * 0.7, z);
+      m.position.set(x, ty + s * 0.7, z);
       m.scale.set(1, 0.7 + Math.random() * 0.4, 1.1);
       m.rotation.set(rnd(0, 3), rnd(0, 3), rnd(0, 3));
       m.castShadow = true;
@@ -3890,7 +4004,7 @@
         const angle = shard * Math.PI * 2 / 3 + rnd(-0.3, 0.3);
         fragment.position.set(
           x + Math.cos(angle) * s * 0.8,
-          s * rnd(0.12, 0.28),
+          ty + s * rnd(0.12, 0.28),
           z + Math.sin(angle) * s * 0.8
         );
         fragment.rotation.set(rnd(0, 3), rnd(0, 3), rnd(0, 3));
@@ -3898,11 +4012,11 @@
         fragment.receiveShadow = true;
         scene.add(fragment);
       }
-      OB.push({ x, z, hw: s * 0.9, hd: s * 0.9, h: s * 1.3 });
+      OB.push({ x, z, hw: s * 0.9, hd: s * 0.9, h: ty + s * 1.3 });
 
       const body = new CANNON.Body({ mass: 0 });
       body.addShape(new CANNON.Sphere(s * 0.85));
-      body.position.set(x, s * 0.7, z);
+      body.position.set(x, ty + s * 0.7, z);
       world.addBody(body);
     }
 
@@ -3942,55 +4056,58 @@
       box(3.25, 0.2, 8.05, mats.steelDark, 0, 3.1, 0, g);
       box(3.25, 0.2, 8.05, mats.steelDark, 0, 0.1, 0, g);
       for (const side of [-1, 1]) {
-        for (const x of [-1.2, -0.6, 0, 0.6, 1.2]) {
-          box(0.08, 2.65, 0.07, mats.steelDark, x, 1.6, side * 4.03, g);
+        for (const cx of [-1.2, -0.6, 0, 0.6, 1.2]) {
+          box(0.08, 2.65, 0.07, mats.steelDark, cx, 1.6, side * 4.03, g);
         }
-        for (const z of [-3.1, -1.55, 0, 1.55, 3.1]) {
-          box(0.07, 2.65, 0.08, mats.steelDark, side * 1.63, 1.6, z, g);
+        for (const cz of [-3.1, -1.55, 0, 1.55, 3.1]) {
+          box(0.07, 2.65, 0.08, mats.steelDark, side * 1.63, 1.6, cz, g);
         }
       }
-      for (const x of [-1.55, 1.55]) {
-        for (const z of [-3.9, 3.9]) {
-          box(0.12, 3.0, 0.12, mats.steelLight, x, 1.6, z, g);
+      for (const cx of [-1.55, 1.55]) {
+        for (const cz of [-3.9, 3.9]) {
+          box(0.12, 3.0, 0.12, mats.steelLight, cx, 1.6, cz, g);
         }
       }
       box(0.1, 2.8, 0.1, mats.hazardStripe, 1.55, 1.6, 3.9, g);
-      g.position.set(x, 0, z);
+      const ty = getTerrainHeight(x, z);
+      g.position.set(x, ty, z);
       g.rotation.y = rot;
       scene.add(g);
       const hw = (Math.abs(Math.cos(rot)) * 3.2 + Math.abs(Math.sin(rot)) * 8) / 2;
       const hd = (Math.abs(Math.sin(rot)) * 3.2 + Math.abs(Math.cos(rot)) * 8) / 2;
-      OB.push({ x, z, hw, hd, h: 3.2 });
+      OB.push({ x, z, hw, hd, h: ty + 3.2 });
       OM.push(g);
 
       const body = new CANNON.Body({ mass: 0 });
       body.addShape(new CANNON.Box(new CANNON.Vec3(hw, 1.6, hd)));
-      body.position.set(x, 1.6, z);
+      body.position.set(x, ty + 1.6, z);
       world.addBody(body);
     }
 
-    function mkAbandonedBuilding(x, z) {
-      addObstacle(12, 2.8, 1.2, mats.concrete, x, z - 6, 1.4);
-      addObstacle(1.2, 3.4, 11, mats.concrete, x - 6, z, 1.7);
-      addObstacle(1.2, 2.2, 11, mats.concrete, x + 6, z, 1.1);
-      addObstacle(4, 2.6, 1.2, mats.concrete, x - 4, z + 6, 1.3);
-      addObstacle(4, 1.8, 1.2, mats.concrete, x + 4, z + 6, 0.9);
-      addObstacle(7, 0.7, 5, mats.steelDark, x + 1.5, z - 1.5, 3.2);
-      addObstacle(3, 0.8, 2.5, mats.rockGrey, x - 2, z + 2, 0.4);
-      for (const side of [-1, 1]) {
-        box(2.4, 1.1, 0.12, mats.visor, x + side * 2.7, 1.8, z - 6.08);
-        box(0.08, 1.15, 0.16, mats.steelDark, x + side * 2.7, 1.8, z - 6.16);
-        box(0.9, 1.4, 0.12, mats.steelDark, x + side * 4.7, 0.9, z + 6.08);
+    // Fortified Industrial Outpost / Hangar & Fuel Depot
+    function mkIndustrialOutpost(x, z) {
+      const ty = getTerrainHeight(x, z);
+      // Solid concrete foundation plinth so pad never floats on slopes
+      box(26, 2.6, 26, mats.concrete, x, ty - 1.26, z);
+
+      // Steel hangar walls + partial roof
+      addObstacle(14, 3.8, 1.2, mats.concrete, x, z - 8, ty + 1.9);
+      addObstacle(1.2, 4.2, 14, mats.concrete, x - 7, z - 1, ty + 2.1);
+      addObstacle(1.2, 4.2, 14, mats.concrete, x + 7, z - 1, ty + 2.1);
+      addObstacle(15, 0.6, 10, mats.steelDark, x, z - 3, ty + 4.4);
+      // Hazard-striped fuel silos
+      for (const sx of [-10, 10]) {
+        cyl(1.8, 1.8, 4.6, 12, mats.steelLight, x + sx, ty + 2.3, z + 5);
+        cyl(1.85, 1.85, 0.35, 12, mats.hazardStripe, x + sx, ty + 3.8, z + 5);
+        OB.push({ x: x + sx, z: z + 5, hw: 1.9, hd: 1.9, h: ty + 4.6 });
+        const b = new CANNON.Body({ mass: 0 });
+        b.addShape(new CANNON.Cylinder(1.8, 1.8, 4.6, 8));
+        b.position.set(x + sx, ty + 2.3, z + 5);
+        world.addBody(b);
       }
-      box(3.2, 0.18, 0.18, mats.steelDark, x, 3.0, z - 6.08);
-      box(2.1, 0.12, 0.16, mats.hazardStripe, x + 1.5, 2.25, z + 6.08);
-      for (const offset of [-2, 2]) {
-        const rubble = new THREE.Mesh(new THREE.DodecahedronGeometry(0.7, 0), mats.rockGrey);
-        rubble.position.set(x + offset, 0.45, z + 7.1);
-        rubble.rotation.set(rnd(0, 2), rnd(0, 3), rnd(0, 2));
-        rubble.castShadow = true;
-        scene.add(rubble);
-      }
+      // Low Jersey barriers for infantry cover
+      addObstacle(5, 1.2, 0.9, mats.camoTan, x - 4, z + 9, ty + 0.6);
+      addObstacle(5, 1.2, 0.9, mats.camoTan, x + 4, z + 9, ty + 0.6);
     }
 
     function mkWatchtower(x, z) {
@@ -4019,47 +4136,50 @@
         g.add(lamp);
       }
       cyl(0.06, 0.06, 2.4, 6, mats.steelLight, 0, 14.7, 0, g);
-      g.position.set(x, 0, z);
+      const ty = getTerrainHeight(x, z);
+      g.position.set(x, ty, z);
       scene.add(g);
-      OB.push({ x, z, hw: 3.0, hd: 3.0, h: 14 });
+      OB.push({ x, z, hw: 3.0, hd: 3.0, h: ty + 14 });
       OM.push(g);
 
       const body = new CANNON.Body({ mass: 0 });
       body.addShape(new CANNON.Box(new CANNON.Vec3(3.0, 7.0, 3.0)));
-      body.position.set(x, 7.0, z);
+      body.position.set(x, ty + 7.0, z);
       world.addBody(body);
     }
 
     let radarDishMesh = null;
     function mkCentralBunker() {
       const g = new THREE.Group();
-      box(16, 4.5, 16, mats.concrete, 0, 2.25, 0, g);
-      box(12, 0.8, 16.2, mats.steelDark, 0, 3.2, 0, g);
-      for (const sx of [-9, 9]) box(0.8, 1.2, 14, mats.camoTan, sx, 0.6, 0, g);
-      for (const sz of [-9, 9]) box(14, 1.2, 0.8, mats.camoTan, 0, 0.6, sz, g);
-      cyl(0.4, 0.6, 8, 6, mats.steelDark, 0, 8.5, 0, g);
+      // Reinforced multi-tier command fortress
+      box(18, 4.8, 18, mats.concrete, 0, 2.4, 0, g);
+      box(13, 1.6, 13, mats.steelDark, 0, 5.4, 0, g);
+      box(14, 0.8, 18.4, mats.steelDark, 0, 3.4, 0, g);
+      for (const sx of [-10.5, 10.5]) box(1.0, 1.4, 15, mats.camoTan, sx, 0.7, 0, g);
+      for (const sz of [-10.5, 10.5]) box(15, 1.4, 1.0, mats.camoTan, 0, 0.7, sz, g);
+      cyl(0.45, 0.65, 8.5, 6, mats.steelDark, 0, 9.8, 0, g);
       const dishGroup = new THREE.Group();
-      dishGroup.position.set(0, 12.5, 0);
-      const dish = new THREE.Mesh(new THREE.SphereGeometry(3.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), mats.steelLight);
+      dishGroup.position.set(0, 14.0, 0);
+      const dish = new THREE.Mesh(new THREE.SphereGeometry(3.8, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), mats.steelLight);
       dish.rotation.x = -Math.PI / 3;
       dishGroup.add(dish);
       cyl(0.15, 0.15, 3, 4, mats.hazardStripe, 0, 1.5, 1, dishGroup);
-      box(2.8, 0.08, 0.08, mats.hazardStripe, 0, 5.2, 0, g);
+      box(2.8, 0.08, 0.08, mats.hazardStripe, 0, 6.2, 0, g);
       for (const side of [-1, 1]) {
-        box(0.12, 0.28, 0.12, mats.steelDark, side * 5.8, 4.4, 0, g);
-        box(1.0, 0.08, 0.08, mats.hazardStripe, side * 5.8, 4.5, 0, g);
+        box(0.12, 0.28, 0.12, mats.steelDark, side * 6.4, 4.6, 0, g);
+        box(1.0, 0.08, 0.08, mats.hazardStripe, side * 6.4, 4.7, 0, g);
       }
       g.add(dishGroup);
       radarDishMesh = dishGroup;
 
       g.position.set(0, 0, 0);
       scene.add(g);
-      OB.push({ x: 0, z: 0, hw: 9, hd: 9, h: 5 });
+      OB.push({ x: 0, z: 0, hw: 10, hd: 10, h: 6.2 });
       OM.push(g);
 
       const body = new CANNON.Body({ mass: 0 });
-      body.addShape(new CANNON.Box(new CANNON.Vec3(9, 2.5, 9)));
-      body.position.set(0, 2.5, 0);
+      body.addShape(new CANNON.Box(new CANNON.Vec3(10, 3.1, 10)));
+      body.position.set(0, 3.1, 0);
       world.addBody(body);
     }
     mkCentralBunker();
@@ -4174,7 +4294,6 @@
         addObstacle(2, 4.2, highWallLength, mats.concrete, innerX, b[1] + gateOffset + gateHalfWidth + highWallLength / 2);
         addObstacle(highWallLength, 4.2, 2, mats.concrete, b[0] + gateOffset + gateHalfWidth + highWallLength / 2, innerZ);
       }
-      // Low HESCO-style firing positions reinforce the corners without closing the vehicle gates.
       addObstacle(12, 1.4, 1.8, mats.camoTan, b[0] - sign * 27, b[1] + sign * 20, 0.7);
       addObstacle(1.8, 1.4, 12, mats.camoTan, b[0] + sign * 20, b[1] - sign * 27, 0.7);
 
@@ -4186,66 +4305,42 @@
     mkBase(0);
     mkBase(1);
 
-    for (let i = 0; i < 55; i++) {
-      const tx = rnd(-270, 270), tz = rnd(-270, 270);
-      if (Math.hypot(tx, tz) < 25 || Math.hypot(tx + 215, tz + 215) < 55 || Math.hypot(tx - 215, tz - 215) < 55) continue;
-      mkTree(tx, tz, rnd(0.8, 1.4));
+    // Pine Forest Groves (clustered along flanks for infantry/tank ambush cover)
+    const groveCenters = [[-165, 55], [165, -55], [-75, -185], [75, 185], [-210, -105], [210, 105]];
+    for (const [gx, gz] of groveCenters) {
+      for (let t = 0; t < 8; t++) {
+        const tx = gx + rnd(-26, 26), tz = gz + rnd(-26, 26);
+        if (Math.hypot(tx, tz) < 28) continue;
+        mkTree(tx, tz, rnd(0.85, 1.45));
+      }
     }
-    for (let i = 0; i < 45; i++) {
-      const rx = rnd(-260, 260), rz = rnd(-260, 260);
-      if (Math.hypot(rx, rz) < 20 || Math.hypot(rx + 215, rz + 215) < 50 || Math.hypot(rx - 215, rz - 215) < 50) continue;
-      mkRock(rx, rz, rnd(1.8, 4.5));
-    }
-    [
-      [-150, -70, 22, 16, 3.5, 0x857a55],
-      [130, 20, 20, 18, 3.0, 0x6e7652],
-      [-60, 150, 24, 16, 4.0, 0x8c7953],
-      [100, -145, 22, 18, 3.2, 0x73745a],
-      [-190, 20, 18, 16, 2.8, 0x94815a],
-      [20, 190, 20, 16, 3.4, 0x77785b]
-    ].forEach(([x, z, width, depth, height, color]) => {
-      mkTerrainMound(x, z, width, depth, height, color);
-    });
-    [
-      [-190, -65, 24, 18, 2.4, 0x77734f],
-      [-185, 90, 30, 20, 3.2, 0x8c805b],
-      [-70, -205, 18, 30, 2.1, 0x6d7652],
-      [75, -205, 28, 20, 2.8, 0x827b59],
-      [195, -65, 24, 30, 3.5, 0x727653],
-      [190, 85, 20, 26, 2.3, 0x97845c],
-      [-65, 205, 30, 18, 3.1, 0x7d7957],
-      [70, 205, 22, 28, 2.5, 0x687450],
-      [-215, 65, 26, 18, 2.6, 0x8b7b56],
-      [215, -80, 18, 26, 2.2, 0x767553]
-    ].forEach(([x, z, width, depth, height, color]) => {
-      mkTerrainMound(x, z, width, depth, height, color);
-    });
-    const moundColors = [0x77734f, 0x8c805b, 0x6d7652, 0x827b59, 0x727653, 0x97845c];
-    for (let i = 0; i < 30; i++) {
-      const mx = rnd(-230, 230), mz = rnd(-230, 230);
-      if (Math.hypot(mx, mz) < 28 || Math.hypot(mx + 215, mz + 215) < 62 || Math.hypot(mx - 215, mz - 215) < 62) continue;
-      mkTerrainMound(mx, mz, rnd(12, 32), rnd(12, 34), rnd(1.2, 4.2), moundColors[i % moundColors.length]);
-    }
-    // Additional tactical ridges and rocky cover with real OB/OM/Cannon hitboxes
-    [
-      [-95, -45, 22, 14, 3.8, 0x5c5b43],
-      [95, 45, 22, 14, 3.8, 0x5c5b43],
-      [-65, 115, 26, 18, 4.5, 0x4f563e],
-      [65, -115, 26, 18, 4.5, 0x4f563e],
-      [0, -90, 18, 12, 3.2, 0x676246],
-      [0, 90, 18, 12, 3.2, 0x676246]
-    ].forEach(([tx, tz, tw, td, th, tc]) => {
-      mkTerrainMound(tx, tz, tw, td, th, tc);
-      mkRock(tx + rnd(-8, 8), tz + rnd(-6, 6), rnd(1.6, 2.8));
-    });
+    // Scattered tactical pines
     for (let i = 0; i < 20; i++) {
-      const cx = rnd(-230, 230), cz = rnd(-230, 230);
-      if (Math.hypot(cx, cz) < 24 || Math.hypot(cx + 215, cz + 215) < 60 || Math.hypot(cx - 215, cz - 215) < 60) continue;
+      const tx = rnd(-265, 265), tz = rnd(-265, 265);
+      if (Math.hypot(tx, tz) < 28 || Math.hypot(tx + 215, tz + 215) < 58 || Math.hypot(tx - 215, tz - 215) < 58) continue;
+      mkTree(tx, tz, rnd(0.8, 1.35));
+    }
+
+    // Rocky Canyon Outcrops & Ridges
+    for (let i = 0; i < 42; i++) {
+      const rx = rnd(-260, 260), rz = rnd(-260, 260);
+      if (Math.hypot(rx, rz) < 24 || Math.hypot(rx + 215, rz + 215) < 54 || Math.hypot(rx - 215, rz - 215) < 54) continue;
+      mkRock(rx, rz, rnd(1.8, 4.6));
+    }
+
+    // Tactical Terrain Mounds removed per user request
+
+    // Shipping Container Yards along key lanes
+    for (let i = 0; i < 18; i++) {
+      const cx = rnd(-225, 225), cz = rnd(-225, 225);
+      if (Math.hypot(cx, cz) < 28 || Math.hypot(cx + 215, cz + 215) < 62 || Math.hypot(cx - 215, cz - 215) < 62) continue;
       mkContainer(cx, cz, rnd(0, Math.PI), i);
     }
+
+    // 4 Fortified Industrial Outposts & Fuel Depots
     [
       [-145, -105], [105, -145], [-105, 145], [145, 105]
-    ].forEach(([x, z]) => mkAbandonedBuilding(x, z));
+    ].forEach(([x, z]) => mkIndustrialOutpost(x, z));
 
     /* -------------------------------------------------------------------------
        REMODELED UNITS & VEHICLES
@@ -5854,12 +5949,15 @@
 
     window.addEventListener('mousedown', e => {
       if (!isLocked) return;
-      if (e.button === 2) rm = 1;
-      else { lm = 1; lc = 1; }
+      if (e.button === 2) {
+        if (P.veh) rm = 1;
+        else rm = rm ? 0 : 1;
+      } else { lm = 1; lc = 1; }
     });
     window.addEventListener('mouseup', e => {
-      if (e.button === 2) rm = 0;
-      else lm = 0;
+      if (e.button === 2) {
+        if (P.veh) rm = 0;
+      } else lm = 0;
     });
     window.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -6612,7 +6710,7 @@
         }
         if (pos.y >= 7 && Math.abs(pos.x - gantryX) <= 7.5 && Math.abs(pos.z - gantryZ) <= 6.5) return 7.6;
       }
-      return 0;
+      return getTerrainHeight(pos.x, pos.z);
     }
 
     function getHelipadStairTarget(vehicle, pos) {
@@ -6819,6 +6917,7 @@
         const steerSpeed = v.type === 'tank' ? 1.1 : v.type === 'sam' ? 1.3 : 1.7;
         v.yaw += steer * steerSpeed * dt * (v.type === 'tank' ? 1 : Math.min(1, Math.abs(v.v) / 5) * Math.sign(v.v || 1));
         v.p.addScaledVector(fwd, v.v * dt);
+        v.p.y = getTerrainHeight(v.p.x, v.p.z);
         if (checkCollisionPush(v.p, v.type === 'sam' ? 2.5 : 2.2)) v.v *= 0.4;
 
         E.forEach(inf => {
@@ -6832,7 +6931,8 @@
         v.v *= (1 - 0.9 * dt);
         v.p.addScaledVector(fwd, v.v * dt);
         const climb = (K[keyBindings.jump] ? 1 : 0) - (K[keyBindings.sprint] ? 1 : 0);
-        v.p.y = Math.max(0.6, Math.min(85, v.p.y + climb * 16 * dt));
+        const minHeliY = getTerrainHeight(v.p.x, v.p.z) + 0.6;
+        v.p.y = Math.max(minHeliY, Math.min(85, v.p.y + climb * 16 * dt));
         if (checkCollisionPush(v.p, 2.8)) v.v *= 0.3;
 
         // Helicopter Banking & Pitch Flight Animations with YXZ rotation order
@@ -7799,6 +7899,7 @@
         }
       }
       if (isInf) e.p.y = getBaseWalkableHeight(e.p);
+      else if (!isHeli) e.p.y = getTerrainHeight(e.p.x, e.p.z);
 
       if (isHeli) {
         if (e.m.chinGun) {
@@ -8742,6 +8843,15 @@
     }
 
     function buildLobbyUI() {
+      if ($('team-selector')) {
+        $('team-selector').querySelectorAll('.tactical-card').forEach(card => {
+          card.onclick = () => {
+            $('team-selector').querySelectorAll('.tactical-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            P.tm = Number(card.dataset.team) || 0;
+          };
+        });
+      }
       $('session-selector').innerHTML = [
         ['public', 'PUBLIC', 'Human operators only. No AI squads.'],
         ['public-bots', 'PUBLIC + BOTS', 'Join public operators with AI squads in the battle.'],
@@ -10736,6 +10846,20 @@
 
         // Supply Pickups
         const playerPos = P.veh ? P.veh.p : P.p;
+        // Anti-Spawncamp: Enemy Base Defense Zone
+        if (B && B[1 - P.tm] && P.hp > 0) {
+          const eb = B[1 - P.tm];
+          const dx = playerPos.x - eb[0];
+          const dz = playerPos.z - eb[1];
+          if (Math.abs(dx) < 42 && Math.abs(dz) < 42 && playerPos.y < 18) {
+            const dist = Math.hypot(dx, dz) || 1;
+            const push = 28 * dt;
+            playerPos.x += (dx / dist) * push;
+            playerPos.z += (dz / dist) * push;
+            if (P.veh) P.veh.v *= 0.5;
+            bannerMsg('⚠ ENEMY BASE DEFENSE ZONE — RETREAT!');
+          }
+        }
         if (P.sp > 0) P.sp -= dt;
         PK.forEach((k, pickupIndex) => {
           if (!k.on) {
