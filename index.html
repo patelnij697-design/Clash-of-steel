@@ -4217,6 +4217,18 @@
       if (Math.hypot(mx, mz) < 28 || Math.hypot(mx + 215, mz + 215) < 62 || Math.hypot(mx - 215, mz - 215) < 62) continue;
       mkTerrainMound(mx, mz, rnd(12, 32), rnd(12, 34), rnd(1.2, 4.2), moundColors[i % moundColors.length]);
     }
+    // Additional tactical ridges and rocky cover with real OB/OM/Cannon hitboxes
+    [
+      [-95, -45, 22, 14, 3.8, 0x5c5b43],
+      [95, 45, 22, 14, 3.8, 0x5c5b43],
+      [-65, 115, 26, 18, 4.5, 0x4f563e],
+      [65, -115, 26, 18, 4.5, 0x4f563e],
+      [0, -90, 18, 12, 3.2, 0x676246],
+      [0, 90, 18, 12, 3.2, 0x676246]
+    ].forEach(([tx, tz, tw, td, th, tc]) => {
+      mkTerrainMound(tx, tz, tw, td, th, tc);
+      mkRock(tx + rnd(-8, 8), tz + rnd(-6, 6), rnd(1.6, 2.8));
+    });
     for (let i = 0; i < 20; i++) {
       const cx = rnd(-230, 230), cz = rnd(-230, 230);
       if (Math.hypot(cx, cz) < 24 || Math.hypot(cx + 215, cz + 215) < 60 || Math.hypot(cx - 215, cz - 215) < 60) continue;
@@ -8591,6 +8603,8 @@
     let scores = {};
     let FLAGS = null;
     let sessionMode = 'public';
+    let roomVotes = {};
+    let myModeVote = null;
     let networked = false, networkHost = false, networkHostId = null, networkRoomId = null, networkRoomKind = null, networkTeam = 0;
     let networkMatchConfig = null, networkGameState = null, networkWorldInitialized = false;
     let privateRoomBotsEnabled = true, matchBotsEnabled = true;
@@ -8695,8 +8709,17 @@
       $('btn-leave-room').style.display = networked ? 'inline-block' : 'none';
 
       const isPublicSession = sessionMode === 'public' || sessionMode === 'public-bots';
-      $('mode-selector').style.display = isPublicSession ? 'none' : 'grid';
-      $('mode-selector').innerHTML = isPublicSession ? '' : Object.keys(MODES).map(k => `
+      const activePublicMode = networkMatchConfig?.mode || currentMode || 'tdm';
+      $('mode-selector').style.display = 'grid';
+      $('mode-selector').innerHTML = isPublicSession
+        ? `<div style="grid-column:1/-1;font-size:11px;letter-spacing:1.2px;color:#38bdf8;margin-bottom:2px;">CURRENT GAMEMODE: <b>${(MODES[activePublicMode]?.name || 'TEAM DEATHMATCH').toUpperCase()}</b> · VOTE NEXT GAMEMODE:</div>` +
+          Object.keys(MODES).map(k => `
+            <div class="tactical-card ${k === myModeVote ? 'selected' : ''}" data-vote="${k}" role="button" tabindex="0" aria-pressed="${k === myModeVote}">
+              <h4>${MODES[k].name} <span style="color:#f59e0b;font-size:12px;">(${roomVotes[k] || 0})</span></h4>
+              <p>${MODES[k].desc}</p>
+            </div>
+          `).join('')
+        : Object.keys(MODES).map(k => `
         <div class="tactical-card ${k === currentMode ? 'selected' : ''}" data-mode="${k}" role="button" tabindex="0" aria-pressed="${k === currentMode}">
           <h4>${MODES[k].name}</h4>
           <p>${MODES[k].desc}</p>
@@ -8749,6 +8772,14 @@
       const modeCard = e.target.closest('[data-mode]');
       if (modeCard) {
         currentMode = modeCard.dataset.mode;
+        buildLobbyUI();
+      }
+      const voteCard = e.target.closest('[data-vote]');
+      if (voteCard) {
+        myModeVote = voteCard.dataset.vote;
+        if (networked && netSocket?.connected) {
+          netSocket.emit('room:vote', { mode: myModeVote });
+        }
         buildLobbyUI();
       }
       const diffBtn = e.target.closest('[data-diff]');
@@ -9561,7 +9592,16 @@
         awaitGameplayInput();
       }
     });
+    netSocket.on('room:votes', data => {
+      roomVotes = data?.votes || {};
+      buildLobbyUI();
+    });
     netSocket.on('match:end', result => {
+      if (result?.nextMode) {
+        currentMode = result.nextMode;
+        myModeVote = null;
+        roomVotes = {};
+      }
       if (!networkHost && !inLobby) endMatch(result.winnerTeam);
     });
     netSocket.on('host:changed', data => {

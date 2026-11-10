@@ -267,7 +267,9 @@ function makeRoom(id, kind) {
     pendingMatchConfig: null,
     matchStartsAt: null,
     matchStartTimer: null,
-    matchCountdownTimer: null
+    matchCountdownTimer: null,
+    mode: 'tdm',
+    votes: new Map()
   };
   rooms.set(id, room);
   return room;
@@ -455,12 +457,36 @@ io.on('connection', socket => {
     io.to(room.id).emit('room:settings', { botsEnabled: room.botsEnabled });
   });
 
+  socket.on('room:vote', payload => {
+    const room = rooms.get(socket.data.roomId);
+    if (!room) return;
+    const mode = payload?.mode;
+    if (!['tdm', 'ctf', 'ffa', 'koth'].includes(mode)) return;
+    room.votes.set(socket.id, mode);
+    const tally = { tdm: 0, ctf: 0, ffa: 0, koth: 0 };
+    for (const v of room.votes.values()) {
+      if (tally[v] !== undefined) tally[v]++;
+    }
+    io.to(room.id).emit('room:votes', { votes: tally, currentMode: room.mode });
+  });
+
   socket.on('match:end', result => {
     const room = rooms.get(socket.data.roomId);
     if (room && room.hostId === socket.id && Number.isInteger(result?.winnerTeam)) {
-      io.to(room.id).emit('match:end', { winnerTeam: result.winnerTeam });
+      if (room.votes.size > 0) {
+        const tally = {};
+        for (const v of room.votes.values()) tally[v] = (tally[v] || 0) + 1;
+        let bestMode = room.mode;
+        let bestCount = -1;
+        for (const [m, count] of Object.entries(tally)) {
+          if (count > bestCount) { bestCount = count; bestMode = m; }
+        }
+        room.mode = bestMode;
+        room.votes.clear();
+      }
+      io.to(room.id).emit('match:end', { winnerTeam: result.winnerTeam, nextMode: room.mode });
       if (room.kind !== 'private' && room.matchConfig) {
-        const nextConfig = room.matchConfig;
+        const nextConfig = { ...room.matchConfig, mode: room.mode };
         room.matchConfig = null;
         room.gameState = null;
         schedulePublicMatch(room, nextConfig);
