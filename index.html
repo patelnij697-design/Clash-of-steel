@@ -313,6 +313,32 @@
       color: #f43f5e;
       letter-spacing: 0.5px;
     }
+    .veh-ammo-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .veh-ammo-fill {
+      height: 100%;
+      width: 100%;
+      background: #38bdf8;
+      transition: width 0.12s ease-out;
+    }
+    .veh-ammo-fill.reloading {
+      background: #f59e0b;
+      transition: width 0.08s linear;
+    }
+    .veh-ammo-fill.low-ammo {
+      background: #f43f5e;
+      animation: vehAmmoPulse 0.7s ease-in-out infinite;
+    }
+    @keyframes vehAmmoPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
     #weapon-card[data-vehicle="tank"] .veh-w-ammo { color: #fbbf24; }
     #weapon-card[data-vehicle="heli"] .veh-w-ammo { color: #38bdf8; }
     #weapon-card[data-vehicle="sam"] .veh-w-ammo { color: #34d399; }
@@ -2070,6 +2096,7 @@
           <span class="veh-w-name" id="veh-w1-name">120MM CANNON</span>
         </div>
         <div class="veh-w-ammo" id="veh-w1-ammo"><span class="veh-ammo-cur" id="veh-w1-cur">1</span><small>/ <span class="veh-ammo-max" id="veh-w1-max">1</span></small></div>
+        <div class="veh-ammo-bar"><div class="veh-ammo-fill" id="veh-w1-fill"></div></div>
       </div>
       <div class="veh-weapon-row" id="veh-w2-row">
         <div class="veh-w-meta">
@@ -2077,6 +2104,7 @@
           <span class="veh-w-name" id="veh-w2-name">COAXIAL MG</span>
         </div>
         <div class="veh-w-ammo" id="veh-w2-ammo"><span class="veh-ammo-cur" id="veh-w2-cur">75</span><small>/ <span class="veh-ammo-max" id="veh-w2-max">75</span></small></div>
+        <div class="veh-ammo-bar"><div class="veh-ammo-fill" id="veh-w2-fill"></div></div>
       </div>
     </div>
     <div id="weapon-sec-info"></div>
@@ -2353,6 +2381,13 @@
         <div>
           <div class="appearance-label">ARMOR FINISH</div>
           <div class="appearance-grid" id="appearance-selector"></div>
+        </div>
+        <div>
+          <div class="appearance-label">FFA / BR VEHICLE MODELS</div>
+          <div class="appearance-grid" id="faction-selector" style="grid-template-columns:1fr 1fr;">
+            <button type="button" class="appearance-choice selected" data-faction="usa">USA MODELS</button>
+            <button type="button" class="appearance-choice" data-faction="ussr">USSR MODELS</button>
+          </div>
         </div>
       </section>
       <div id="operator-profile-status" role="status" aria-live="polite" style="min-height:18px;color:#fbbf24;font-size:11px;"></div>
@@ -2661,6 +2696,7 @@
       <button class="btn-secondary" type="submit" style="margin:0;padding:7px 10px;">SEND</button>
     </form>
   </div>
+  <audio id="bg-music" loop preload="auto" src="/assets/aistudio/Red-Starred_Avengers_USSR_KLICKAUD_8fa6a9ed.mp3"></audio>
   <div id="mobile-controls" aria-label="Touch controls">
     <div id="mobile-look-zone" aria-label="Drag to look"></div>
     <div id="mobile-stick" aria-label="Movement joystick"><div id="mobile-stick-knob"></div></div>
@@ -2675,6 +2711,7 @@
       <button class="mobile-action" data-mobile-action="missile" data-tap="missile" aria-label="Fire guided missile">MISSILE</button>
       <button class="mobile-action" data-mobile-action="swap" data-tap="swap" aria-label="Switch weapon slot">SWAP</button>
       <button class="mobile-action" data-mobile-action="loadout" data-tap="loadout" aria-label="Open loadout">ARMORY</button>
+      <button class="mobile-action" id="mobile-apc-board-btn" data-mobile-action="use" data-tap="use" style="display:none;border-color:#a78bfa;color:#c4b5fd;" aria-label="Board APC">BOARD APC</button>
     </div>
     <button id="mobile-pause" type="button">PAUSE</button>
   </div>
@@ -2950,7 +2987,8 @@
         const color = TC[P.tm] || 0x38bdf8;
         const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : type === 'car' ? mkAPC : mkSAMTruck;
         const hp = type === 'heli' ? 600 : type === 'tank' ? 2400 : type === 'car' ? 1100 : 850;
-        const mesh = makeMesh(color);
+        const faction = P.tm === 1 ? 'ussr' : 'usa';
+        const mesh = makeMesh(color, faction);
         const entity = addEntity(type, mesh, spawnPos.x, spawnPos.z, hp, P.tm, type === 'heli' ? 1.0 : 0, 0);
         entity.yaw = Math.atan2(forward.x, forward.z);
         entity.m.rotation.y = entity.yaw;
@@ -3876,6 +3914,11 @@
       road.receiveShadow = true;
       road.castShadow = true;
       scene.add(road);
+      const roadBody = new CANNON.Body({ mass: 0 });
+      roadBody.addShape(new CANNON.Box(new CANNON.Vec3(width / 2, 0.14, length / 2)));
+      roadBody.position.set(x, 0.14, z);
+      roadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
+      world.addBody(roadBody);
     }
     // Main diagonal airfield runway + cross-map tactical highway network
     mkRoad(36, 680, 0, 0, Math.PI / 4);
@@ -4345,8 +4388,17 @@
     /* -------------------------------------------------------------------------
        REMODELED UNITS & VEHICLES
        ------------------------------------------------------------------------- */
-    function mkInf(colorHex) {
+    function getFactionForTeam(tm) {
+      const mode = typeof MODES !== 'undefined' ? MODES[currentMode] : null;
+      if (mode?.ffa || mode?.br || tm < 0) return (typeof operatorProfile !== 'undefined' && operatorProfile.vehicleFaction) || 'usa';
+      return tm === 1 ? 'ussr' : 'usa';
+    }
+
+    function mkInf(colorHex, faction = 'usa') {
       const g = new THREE.Group();
+      if (faction === 'ussr') {
+        g.userData.faction = 'ussr';
+      }
       const uniform = new THREE.MeshStandardMaterial({ color: colorHex || 0x2563eb, roughness: 0.88 });
       const armor = new THREE.MeshStandardMaterial({ color: 0x4b5148, roughness: 0.72, metalness: 0.08 });
       const cloth = new THREE.MeshStandardMaterial({ color: 0x363b34, roughness: 0.95 });
@@ -4411,7 +4463,48 @@
       return g;
     }
 
-    function mkAPC(teamColor) {
+    function mkBTR80(teamColor) {
+      const g = new THREE.Group();
+      const bodyMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
+      // 8x8 amphibious hull
+      box(2.7, 1.05, 6.8, bodyMat, 0, 1.15, 0, g);
+      // Sloped boat-like bow & trim vane
+      const bow = box(2.5, 0.55, 1.8, bodyMat, 0, 1.25, 3.3, g);
+      bow.rotation.x = 0.42;
+      box(2.3, 0.12, 0.5, mats.steelDark, 0, 0.85, 3.85, g);
+      // Upper troop compartment
+      box(2.45, 0.65, 4.4, bodyMat, 0, 1.78, -0.4, g);
+      // Side troop hatches & vision blocks
+      for (const side of [-1, 1]) {
+        box(0.14, 0.55, 0.9, mats.steelDark, side * 1.35, 1.25, -0.2, g);
+        box(0.12, 0.25, 0.4, mats.visor, side * 1.28, 1.82, 1.2, g);
+      }
+      // 8x8 wheels (4 per side)
+      for (const z of [-2.4, -0.8, 0.8, 2.4]) {
+        for (const x of [-1.48, 1.48]) {
+          const w = cyl(0.56, 0.56, 0.44, 12, mats.steelDark, x, 0.56, z, g);
+          w.rotation.z = Math.PI / 2;
+          cyl(0.24, 0.24, 0.46, 8, mats.steelLight, x, 0.56, z, g).rotation.z = Math.PI / 2;
+        }
+      }
+      // Rear water-jet & exhaust deck
+      box(1.9, 0.14, 1.2, mats.steelDark, 0, 1.8, -3.0, g);
+      // BPU-1 conical turret
+      const tu = new THREE.Group();
+      tu.position.set(0, 2.15, 0.6);
+      cyl(0.55, 0.78, 0.55, 10, bodyMat, 0, 0.28, 0, tu);
+      // 14.5mm KPVT heavy machine gun + 7.62mm coax
+      const kvpt = cyl(0.055, 0.065, 2.3, 8, mats.steelLight, 0, 0.32, 1.25, tu);
+      kvpt.rotation.x = Math.PI / 2;
+      const coax = cyl(0.03, 0.03, 1.5, 6, mats.steelDark, 0.2, 0.3, 0.95, tu);
+      coax.rotation.x = Math.PI / 2;
+      g.add(tu);
+      g.tu = tu;
+      return g;
+    }
+
+    function mkAPC(teamColor, faction = 'usa') {
+      if (faction === 'ussr') return mkBTR80(teamColor);
       const g = new THREE.Group();
       const bodyMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
       box(2.8, 1.2, 6.2, bodyMat, 0, 1.1, 0, g);
@@ -4463,7 +4556,71 @@
       return g;
     }
 
-    function mkTank(teamColor) {
+    function mkT80(teamColor) {
+      const g = new THREE.Group();
+      const armorMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
+      const chassis = new THREE.Group();
+      g.add(chassis);
+      g.chassis = chassis;
+
+      // Low-profile Soviet hull
+      box(3.5, 0.95, 6.7, armorMat, 0, 0.92, 0, chassis);
+      const glacis = box(3.3, 0.28, 2.1, armorMat, 0, 1.24, 2.55, chassis);
+      glacis.rotation.x = 0.48;
+      // Kontakt-5 ERA bricks on front glacis
+      for (const x of [-1.1, -0.37, 0.37, 1.1]) {
+        const era = box(0.66, 0.22, 0.45, mats.steelDark, x, 1.32, 2.75, chassis);
+        era.rotation.x = 0.48;
+      }
+      // Tracks & 6 roadwheels per side
+      for (const x of [-1.85, 1.85]) {
+        box(0.58, 0.95, 6.9, mats.steelDark, x, 0.58, 0, chassis);
+        box(0.14, 0.58, 6.4, armorMat, x + (x > 0 ? 0.32 : -0.32), 0.84, 0, chassis);
+        for (const z of [-2.4, -1.44, -0.48, 0.48, 1.44, 2.4]) {
+          const wheel = cyl(0.4, 0.4, 0.22, 12, mats.steelDark, x * 1.08, 0.54, z, chassis);
+          wheel.rotation.z = Math.PI / 2;
+        }
+      }
+      // External cylindrical rear fuel drums & unditching log
+      for (const x of [-1.05, 1.05]) {
+        const drum = cyl(0.28, 0.28, 1.15, 10, armorMat, x, 1.22, -3.55, chassis);
+        drum.rotation.z = Math.PI / 2;
+      }
+      const log = cyl(0.16, 0.16, 2.9, 8, mats.camoTan, 0, 0.95, -3.52, chassis);
+      log.rotation.z = Math.PI / 2;
+
+      // Cast rounded Soviet turret with Kontakt-5 ERA wedge cheeks
+      const tu = new THREE.Group();
+      tu.position.set(0, 1.55, -0.1);
+      cyl(1.35, 1.58, 0.82, 14, armorMat, 0, 0.42, 0, tu);
+      for (const side of [-1, 1]) {
+        const eraCheek = box(0.95, 0.55, 0.65, mats.steelDark, side * 0.78, 0.45, 1.25, tu);
+        eraCheek.rotation.y = side * -0.45;
+      }
+      // Commander cupola, Luna IR spotlight, snorkel
+      cyl(0.36, 0.36, 0.28, 10, mats.steelDark, 0.55, 0.92, -0.25, tu);
+      cyl(0.18, 0.18, 0.22, 10, baseLightMaterial, -0.72, 0.55, 1.38, tu).rotation.x = Math.PI / 2;
+      cyl(0.08, 0.08, 1.8, 8, mats.steelDark, -0.95, 1.2, -0.6, tu);
+
+      // 125mm 2A46 smoothbore cannon with bore evacuator
+      const cannonAssembly = new THREE.Group();
+      cannonAssembly.position.set(0, 0.48, 1.45);
+      cyl(0.18, 0.21, 5.4, 10, mats.steelLight, 0, 0, 1.7, cannonAssembly).rotation.x = Math.PI / 2;
+      cyl(0.27, 0.27, 0.75, 10, mats.steelDark, 0, 0, 2.2, cannonAssembly).rotation.x = Math.PI / 2;
+      tu.add(cannonAssembly);
+      g.cannonAssembly = cannonAssembly;
+
+      // Coaxial 7.62mm PKT
+      const coaxMG = cyl(0.05, 0.05, 1.8, 6, mats.steelDark, 0.42, 0.48, 1.95, tu);
+      coaxMG.rotation.x = Math.PI / 2;
+
+      chassis.add(tu);
+      g.tu = tu;
+      return g;
+    }
+
+    function mkTank(teamColor, faction = 'usa') {
+      if (faction === 'ussr') return mkT80(teamColor);
       const g = new THREE.Group();
       const armorMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
       const chassis = new THREE.Group();
@@ -4534,7 +4691,91 @@
       return g;
     }
 
-    function mkHeli(teamColor) {
+    function mkMi24(teamColor) {
+      const g = new THREE.Group();
+      g.rotation.order = 'YXZ';
+      const hullMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
+      const trimMat = mats.steelDark;
+      const canopyMat = mats.glassCanopy;
+
+      // Heavy Mi-24 Hind fuselage & troop bay
+      box(1.9, 1.35, 6.4, hullMat, 0, 0.25, 0.1, g);
+      // Twin dorsal TV3-117 turbine nacelles
+      for (const side of [-1, 1]) {
+        cyl(0.38, 0.42, 3.2, 10, hullMat, side * 0.48, 1.15, -0.35, g).rotation.x = Math.PI / 2;
+        cyl(0.32, 0.32, 0.25, 10, trimMat, side * 0.48, 1.15, 1.28, g).rotation.x = Math.PI / 2;
+      }
+      // Stepped tandem double-bubble cockpit
+      const fCanopy = box(1.05, 0.72, 1.45, canopyMat, 0, 0.55, 2.75, g);
+      fCanopy.rotation.x = 0.25;
+      const rCanopy = box(1.12, 0.85, 1.55, canopyMat, 0, 0.98, 1.45, g);
+      rCanopy.rotation.x = 0.14;
+      // Nose chin sensor & YakB-12.7mm 4-barrel gatling turret
+      const chinGun = new THREE.Group();
+      chinGun.position.set(0, -0.38, 3.35);
+      box(0.45, 0.35, 0.55, trimMat, 0, 0, 0, chinGun);
+      const barrelAssembly = new THREE.Group();
+      cyl(0.06, 0.06, 1.15, 8, mats.steelLight, 0, -0.05, 0.65, barrelAssembly).rotation.x = Math.PI / 2;
+      const flash = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 6, 6),
+        new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0 })
+      );
+      flash.position.set(0, -0.05, 1.3);
+      barrelAssembly.add(flash);
+      barrelAssembly.flash = flash;
+      chinGun.add(barrelAssembly);
+      chinGun.barrelAssembly = barrelAssembly;
+      chinGun.recoil = 0;
+      chinGun.flashTimer = 0;
+      g.add(chinGun);
+      g.chinGun = chinGun;
+
+      // Stubby mid-fuselage weapon wings (anhedral) with UB-32 rocket pods & AT-6 Spiral rails
+      for (const side of [-1, 1]) {
+        const wing = box(2.3, 0.16, 1.25, hullMat, side * 1.95, 0.25, -0.1, g);
+        wing.rotation.z = side * -0.18;
+        cyl(0.24, 0.24, 1.3, 10, trimMat, side * 1.65, -0.02, -0.05, g).rotation.x = Math.PI / 2;
+        box(0.22, 0.22, 1.1, mats.steelLight, side * 2.75, -0.12, -0.05, g);
+      }
+
+      // Tail boom & swept vertical fin
+      box(0.75, 0.85, 5.4, hullMat, 0, 0.45, -5.4, g);
+      const fin = box(0.2, 1.75, 1.15, hullMat, 0, 1.4, -7.75, g);
+      fin.rotation.x = -0.25;
+      box(2.1, 0.12, 0.55, hullMat, 0, 0.55, -7.6, g);
+
+      // 5-blade main rotor
+      const rot = new THREE.Group();
+      rot.position.set(0, 1.75, -0.2);
+      cyl(0.26, 0.26, 0.35, 10, trimMat, 0, 0, 0, rot);
+      for (let i = 0; i < 5; i++) {
+        const blade = box(0.22, 0.04, 5.2, trimMat, 0, 0.08, 2.6, rot);
+        const pivot = new THREE.Group();
+        pivot.rotation.y = (i * Math.PI * 2) / 5;
+        pivot.add(blade);
+        rot.add(pivot);
+      }
+      g.add(rot);
+      g.rot = rot;
+
+      // Tail rotor
+      const tailRot = new THREE.Group();
+      tailRot.position.set(0.28, 1.95, -8.1);
+      for (let i = 0; i < 3; i++) {
+        const tb = box(0.04, 0.95, 0.14, trimMat, 0, 0.45, 0, tailRot);
+        const tp = new THREE.Group();
+        tp.rotation.x = (i * Math.PI * 2) / 3;
+        tp.add(tb);
+        tailRot.add(tp);
+      }
+      g.add(tailRot);
+      g.tailRot = tailRot;
+
+      return g;
+    }
+
+    function mkHeli(teamColor, faction = 'usa') {
+      if (faction === 'ussr') return mkMi24(teamColor);
       const g = new THREE.Group();
       g.rotation.order = 'YXZ';
       const hullMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
@@ -4739,7 +4980,56 @@
       return g;
     }
 
-    function mkSAMTruck(teamColor) {
+    function mk2K12(teamColor) {
+      const g = new THREE.Group();
+      const bodyMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x59644c);
+      const missileMat = makeVehiclePaint(0xe2e8f0);
+
+      // GM-578 tracked chassis
+      box(3.1, 0.95, 6.8, bodyMat, 0, 1.05, 0, g);
+      const glacis = box(2.9, 0.25, 1.5, bodyMat, 0, 1.28, 3.1, g);
+      glacis.rotation.x = 0.45;
+      // 6 roadwheels & tracks per side
+      for (const x of [-1.62, 1.62]) {
+        box(0.48, 0.88, 6.9, mats.steelDark, x, 0.56, 0, g);
+        for (const z of [-2.4, -1.44, -0.48, 0.48, 1.44, 2.4]) {
+          const w = cyl(0.38, 0.38, 0.22, 12, mats.steelDark, x * 1.06, 0.52, z, g);
+          w.rotation.z = Math.PI / 2;
+        }
+      }
+
+      // Rotating 2P25 triple-rail SAM launcher turntable
+      const tu = new THREE.Group();
+      tu.position.set(0, 1.58, -0.4);
+      cyl(1.15, 1.25, 0.45, 12, mats.steelDark, 0, 0.22, 0, tu);
+      const launcher = new THREE.Group();
+      launcher.position.set(0, 0.65, 0);
+      launcher.rotation.x = -0.38; // Angled upward
+      box(2.1, 0.22, 2.4, mats.steelDark, 0, 0, 0, launcher);
+      // Three 3M9 Kub missiles on launch rails
+      for (const x of [-0.75, 0, 0.75]) {
+        const m = cyl(0.16, 0.16, 4.4, 10, missileMat, x, 0.28, 0.3, launcher);
+        m.rotation.x = Math.PI / 2;
+        const nose = cyl(0.01, 0.16, 0.65, 10, mats.hazardStripe, x, 0.28, 2.82, launcher);
+        nose.rotation.x = Math.PI / 2;
+      }
+      tu.add(launcher);
+      g.add(tu);
+      g.tu = tu;
+
+      // Rear radar/turret housing
+      const radarDish = new THREE.Group();
+      radarDish.position.set(0, 1.75, -2.85);
+      box(0.85, 0.45, 0.6, mats.steelDark, 0, 0, 0, radarDish);
+      box(1.1, 0.5, 0.12, mats.steelLight, 0, 0.35, 0, radarDish);
+      g.add(radarDish);
+      g.radarDish = radarDish;
+
+      return g;
+    }
+
+    function mkSAMTruck(teamColor, faction = 'usa') {
+      if (faction === 'ussr') return mk2K12(teamColor);
       const g = new THREE.Group();
       const bodyMat = teamColor ? makeVehiclePaint(teamColor) : makeVehiclePaint(0x767553);
       
@@ -6672,29 +6962,50 @@
       return collided;
     }
 
+    function playVehicleEnterSnd(vehType) {
+      playSnd(110, 0.14, 0.22, 'triangle', 55);
+      setTimeout(() => {
+        if (vehType === 'heli') playSnd(160, 0.35, 0.16, 'sawtooth', 320);
+        else playSnd(85, 0.28, 0.18, 'sawtooth', 145);
+      }, 90);
+    }
+
     function useVehicle() {
       if (P.veh) { exitVehicle(); return; }
       let best = null, bestDist = 8.5;
       E.forEach(e => {
-        if (!e.team && !e.dead && !e.driver && e.p.distanceTo(P.p) < bestDist) {
+        if (e.dead || e.p.distanceTo(P.p) >= bestDist) return;
+        const canDrive = !e.team && !e.driver;
+        const canRideAPC = e.type === 'car' && e.driver && e.tm === P.tm && (!e.passengers || e.passengers.length < 3);
+        if (canDrive || canRideAPC) {
           bestDist = e.p.distanceTo(P.p);
           best = e;
         }
       });
       if (best) {
         P.veh = best;
-        setVehicleTeamColor(best, P.tm);
-        best.v = 0;
-        best.team = 1;
-        best.tm = P.tm;
-        best.driver = P;
+        best.enterAnim = 0.45;
+        playVehicleEnterSnd(best.type);
         P.ay = 0;
         P.ap = best.type === 'heli' ? -0.1 : 0.05;
-        const msg = best.type === 'tank' ? ' · [LMB] 120MM CANNON · [RMB] COAXIAL MG'
-                  : best.type === 'sam' ? ' · [LMB] SAM MISSILES · [RMB] 20MM CIWS'
-                  : best.type === 'heli' ? ` · [LMB] CHAIN GUN · [${keyLabel(keyBindings.missile)}] MISSILES`
-                  : ` · [LMB] AUTOCANNON · [${keyLabel(keyBindings.interact)}] TO EXIT`;
-        bannerMsg('ENTERED ' + best.type.toUpperCase() + msg);
+        if (best.driver) {
+          best.passengers = best.passengers || [];
+          best.passengers.push(P);
+          P.isPassenger = true;
+          bannerMsg(`BOARDED APC AS PASSENGER · [${keyLabel(keyBindings.interact)}] TO EXIT`);
+        } else {
+          P.isPassenger = false;
+          setVehicleTeamColor(best, P.tm);
+          best.v = 0;
+          best.team = 1;
+          best.tm = P.tm;
+          best.driver = P;
+          const msg = best.type === 'tank' ? (P.tm === 1 ? ' · [LMB] 125MM CANNON · [RMB] COAXIAL MG' : ' · [LMB] 120MM CANNON · [RMB] COAXIAL MG')
+                    : best.type === 'sam' ? ' · [LMB] SAM MISSILES · [RMB] 20MM CIWS'
+                    : best.type === 'heli' ? ` · [LMB] CHAIN GUN · [${keyLabel(keyBindings.missile)}] MISSILES`
+                    : ` · [LMB] AUTOCANNON · [${keyLabel(keyBindings.interact)}] TO EXIT`;
+          bannerMsg('ENTERED ' + best.type.toUpperCase() + msg);
+        }
       }
     }
 
@@ -6732,17 +7043,21 @@
 
     function setVehicleTeamColor(v, team) {
       if (!v || !v.m) return;
-      const nextHex = TC[team] ?? 0xf8fafc;
+      const nextHex = team >= 0 ? (TC[team] ?? 0xf8fafc) : 0xf8fafc;
+      const nextFaction = team >= 0 ? getFactionForTeam(team) : (v.faction || 'usa');
       const prevHex = v.teamColorHex;
-      v.tm = team;
+      v.tm = team >= 0 ? team : 0;
+      if (prevHex === nextHex && v.faction === nextFaction) return;
       v.teamColorHex = nextHex;
-      if (prevHex === undefined || prevHex === nextHex) return;
-      v.m.traverse(obj => {
-        if (obj.isMesh && obj.material && obj.material.color && obj.material.color.getHex() === prevHex) {
-          obj.material = obj.material.clone();
-          obj.material.color.setHex(nextHex);
-        }
-      });
+      v.faction = nextFaction;
+      const makeMesh = v.type === 'heli' ? mkHeli : v.type === 'tank' ? mkTank : v.type === 'car' ? mkAPC : mkSAMTruck;
+      const nextMesh = makeMesh(nextHex, nextFaction);
+      nextMesh.position.copy(v.m.position);
+      nextMesh.rotation.copy(v.m.rotation);
+      nextMesh.traverse(obj => { obj.userData.ent = v; });
+      scene.remove(v.m);
+      scene.add(nextMesh);
+      v.m = nextMesh;
     }
 
     function exitVehicle() {
@@ -6751,9 +7066,14 @@
       P.p.set(v.p.x + 4.5, v.p.y + 0.5, v.p.z);
       P.vy = 0;
       P.yaw = v.yaw + Math.PI;
-      v.team = 0;
-      v.tm = 0;
-      v.driver = null;
+      if (P.isPassenger) {
+        if (v.passengers) v.passengers = v.passengers.filter(p => p !== P);
+        P.isPassenger = false;
+      } else {
+        v.team = 0;
+        setVehicleTeamColor(v, -1);
+        v.driver = null;
+      }
       P.veh = null;
     }
 
@@ -6931,7 +7251,7 @@
         v.v *= (1 - 0.9 * dt);
         v.p.addScaledVector(fwd, v.v * dt);
         const climb = (K[keyBindings.jump] ? 1 : 0) - (K[keyBindings.sprint] ? 1 : 0);
-        const minHeliY = getTerrainHeight(v.p.x, v.p.z) + 0.6;
+        const minHeliY = getTerrainHeight(v.p.x, v.p.z) + 1.8;
         v.p.y = Math.max(minHeliY, Math.min(85, v.p.y + climb * 16 * dt));
         if (checkCollisionPush(v.p, 2.8)) v.v *= 0.3;
 
@@ -7600,6 +7920,8 @@
                 e.targetVeh.patrolSlot = e.patrolSlot;
                 e.targetVeh.patrolVisit = e.patrolVisit;
                 e.targetVeh.boardingBot = null;
+                e.targetVeh.enterAnim = 0.45;
+                playVehicleEnterSnd(e.targetVeh.type);
                 e.aiState = 'patrol';
                 bannerMsg(`${e.tm === P.tm ? 'ALLY' : 'ENEMY'} BOT MANNED THE ${e.targetVeh.type.toUpperCase()}`);
                 return;
@@ -8044,7 +8366,10 @@
         const isEnemy = v.team && v.tm !== P.tm;
         const teamColor = v.team ? (isEnemy ? '#f43f5e' : '#38bdf8') : '#10b981';
         const teamLabel = v.team ? (isEnemy ? 'ENEMY' : 'ALLY') : 'NEUTRAL';
-        const nameLabel = v.type === 'tank' ? 'M1A2 TANK' : v.type === 'heli' ? 'AH-64 HELI' : v.type === 'sam' ? 'M901 SAM TRUCK' : 'COMMAND APC';
+        const isUssr = v.tm === 1;
+        const nameLabel = isUssr
+          ? (v.type === 'tank' ? 'T-80 TANK' : v.type === 'heli' ? 'MI-24 HIND' : v.type === 'sam' ? '2K12 KUB SAM' : 'BTR-80 APC')
+          : (v.type === 'tank' ? 'M1A2 TANK' : v.type === 'heli' ? 'AH-64 HELI' : v.type === 'sam' ? 'M901 SAM TRUCK' : 'COMMAND APC');
 
         // Dark Glass Container Background
         hwCtx.fillStyle = 'rgba(10, 16, 26, 0.85)';
@@ -8478,7 +8803,9 @@
       const now = performance.now() * 0.001;
       const missileKind = v ? (v.type === 'heli' ? 'agm' : 'sam') : curW.m;
       const weaponTitle = v
-        ? (v.type === 'heli' ? 'AH-64 AGM-114 HELLFIRE' : 'M901 MIM-23 SAM AIR DEFENSE')
+        ? (v.tm === 1
+          ? (v.type === 'heli' ? 'MI-24 AT-6 SPIRAL' : '2K12 KUB 3M9 SAM')
+          : (v.type === 'heli' ? 'AH-64 AGM-114 HELLFIRE' : 'M901 MIM-23 SAM AIR DEFENSE'))
         : (curW.m === 'at' ? 'AT-4 WIRE-GUIDED ANTI-ARMOR' : 'FIM-92 STINGER ALL-ASPECT IR');
       const themeColor = missileKind === 'at' ? '#f59e0b' : missileKind === 'sam' ? '#10b981' : '#38bdf8';
 
@@ -8896,6 +9223,18 @@
       $('diff-selector').innerHTML = ['RECRUIT', 'OPERATOR', 'VETERAN'].map((name, i) => `
         <button class="btn-secondary ${i === selectedDiff ? 'selected' : ''}" data-diff="${i}" style="padding:6px 16px;font-size:12px;${i === selectedDiff ? 'border-color:var(--color-primary);color:#fff;' : ''}">${name}</button>
       `).join('');
+      const factionSel = $('faction-selector');
+      if (factionSel) {
+        const curFac = operatorProfile.vehicleFaction || 'usa';
+        factionSel.querySelectorAll('[data-faction]').forEach(btn => {
+          btn.classList.toggle('selected', btn.dataset.faction === curFac);
+          btn.onclick = () => {
+            operatorProfile.vehicleFaction = btn.dataset.faction;
+            saveOperatorProfile();
+            factionSel.querySelectorAll('[data-faction]').forEach(b => b.classList.toggle('selected', b === btn));
+          };
+        });
+      }
 
       $('roster-preview').innerHTML = sessionMode === 'private' && !privateRoomBotsEnabled
         ? '<b>PRIVATE ROOM:</b> Bots disabled — play with human operators only.'
@@ -8924,7 +9263,7 @@
         const chip = document.createElement('span');
         const isPrivateHost = networkRoomKind === 'private' && player.id === networkHostId;
         chip.className = `room-player-chip${isPrivateHost ? ' host' : ''}`;
-        chip.textContent = `${player.name || 'Operator'} · ${player.team === 0 ? 'BLUE' : player.team === 1 ? 'RED' : 'FREE'}${isPrivateHost ? ' · HOST' : ''}`;
+        chip.textContent = `${player.name || 'Operator'} · ${player.team === 0 ? 'USA' : player.team === 1 ? 'USSR' : 'FREE'}${isPrivateHost ? ' · HOST' : ''}`;
         list.appendChild(chip);
       });
     }
@@ -9202,7 +9541,7 @@
       P.sp = 0;
       P.hp = 100;
       P.veh = null;
-      P.tm = networked ? networkTeam : 0;
+      P.tm = networked ? networkTeam : (P.tm === 1 ? 1 : 0);
       P.vy = 0;
       P.pit = 0;
       scores = {};
@@ -9211,6 +9550,11 @@
       document.body.classList.add('in-mission');
       $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'none';
+      const bgMusic = $('bg-music');
+      if (bgMusic) {
+        bgMusic.volume = 0.28;
+        bgMusic.play().catch(() => {});
+      }
       W.forEach(w => { w.a = w.mag; w.rl = 0; });
 
       if (isBR) {
@@ -9251,19 +9595,24 @@
           const [x, z] = rooftopHelipad
             ? [B[team][0] + sign * 18, B[team][1] - sign * 18]
             : spawns[index];
-          const entity = addEntity(type, makeMesh(color), x, z, hp, team, rooftopHelipad ? 8 : type === 'heli' ? 0.5 : 0, 0);
+          const faction = getFactionForTeam(team);
+          const entity = addEntity(type, makeMesh(0xf8fafc, faction), x, z, hp, team, rooftopHelipad ? 8 : type === 'heli' ? 0.5 : 0, 0);
+          entity.teamColorHex = 0xf8fafc;
+          entity.faction = faction;
           entity.heliSlot = index;
         });
       };
 
       if (isFFA) {
-        const vehicleSpawns = [
-          [pSpawn[0] + 8, pSpawn[1] + 10],
-          [pSpawn[0] - 14, pSpawn[1] + 12],
-          [pSpawn[0] + 20, pSpawn[1] - 8],
-          [pSpawn[0] - 8, pSpawn[1] - 16]
-        ];
-        spawnVehicleFleet(P.tm, vehicleSpawns, TC[0]);
+        const vehicleSpawns = isBR
+          ? [[-185, -185], [185, -185], [-185, 185], [185, 185]]
+          : [
+              [pSpawn[0] + 8, pSpawn[1] + 10],
+              [pSpawn[0] - 14, pSpawn[1] + 12],
+              [pSpawn[0] + 20, pSpawn[1] - 8],
+              [pSpawn[0] - 8, pSpawn[1] - 16]
+            ];
+        spawnVehicleFleet(P.tm, vehicleSpawns, TC[P.tm] ?? TC[0]);
       } else {
         [0, 1].forEach(team => {
           spawnVehicleFleet(team, [0, 1, 2, 3].map(index => bayPos(team, index)), TC[team]);
@@ -9285,7 +9634,7 @@
         for (let i = 0; i < (isFFA ? 12 : 14); i++) {
           const tm = isFFA ? 10 + i : (i < 7 ? 0 : 1);
           const s = getSpawnPoint(tm);
-          const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm]), s[0], s[1], 100, tm);
+          const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm], getFactionForTeam(tm)), s[0], s[1], 100, tm);
           bot.role = i % 2;
           bot.patrolSlot = isFFA ? i : i % 7;
           if (isBR) bot.unarmed = true;
@@ -9340,11 +9689,12 @@
 
     function networkProxyMesh(type, team, appearanceId) {
       const color = type === 'inf' ? Number.parseInt(getAppearance(appearanceId).color.slice(1), 16) : team ? TC[1] : TC[0];
-      if (type === 'heli') return mkHeli(color);
-      if (type === 'tank') return mkTank(color);
-      if (type === 'sam') return mkSAMTruck(color);
-      if (type === 'car') return mkAPC(color);
-      return mkInf(color);
+      const faction = getFactionForTeam(team);
+      if (type === 'heli') return mkHeli(color, faction);
+      if (type === 'tank') return mkTank(color, faction);
+      if (type === 'sam') return mkSAMTruck(color, faction);
+      if (type === 'car') return mkAPC(color, faction);
+      return mkInf(color, faction);
     }
 
     function setNetworkProxyDisplay(entity, displayType, appearanceId = entity.appearance) {
@@ -10103,7 +10453,7 @@
       $('match-result').style.color = winnerTeam === P.tm ? 'var(--color-primary)' : 'var(--color-red)';
       $('match-result-detail').textContent = currentMode === 'ffa'
         ? `${MODES[currentMode].name} · WINNING SCORE ${scores[winnerTeam] || 0}`
-        : `${MODES[currentMode].name} · BLUE ${scores[0] || 0} — RED ${scores[1] || 0}`;
+        : `${MODES[currentMode].name} · USA ${scores[0] || 0} — USSR ${scores[1] || 0}`;
       $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'flex';
       document.body.classList.remove('in-mission');
@@ -10147,7 +10497,7 @@
           const ownFlag = FLAGS[c.tm];
           if (ownFlag.carrier == null && ownFlag.p.distanceTo(ownFlag.home) < 2 && carrierPos.distanceTo(ownFlag.home) < 6) {
             scores[c.tm] = (scores[c.tm] || 0) + 1;
-            bannerMsg((c.tm ? 'RED' : 'BLUE') + ' CAPTURED THE FLAG!');
+            bannerMsg((c.tm ? 'USSR' : 'USA') + ' CAPTURED THE FLAG!');
             f.carrier = null;
             f.p.copy(f.home);
             checkMatchVictory();
@@ -10378,6 +10728,14 @@
           mobileUseBtn.classList.toggle('vehicle-near', nearVeh);
         }
       }
+      const apcBoardBtn = $('mobile-apc-board-btn');
+      if (apcBoardBtn) {
+        const nearAPC = !P.veh && !inLobby && E.some(e =>
+          e.type === 'car' && !e.dead && e.p.distanceTo(P.p) < 8.5
+          && (!e.driver || (e.tm === P.tm && (!e.passengers || e.passengers.length < 3)))
+        );
+        apcBoardBtn.style.display = nearAPC ? 'flex' : 'none';
+      }
       ['vitals-card', 'weapon-card', 'mobile-controls'].forEach(id => {
         if (v) $(id).dataset.vehicle = v.type;
         else delete $(id).dataset.vehicle;
@@ -10390,7 +10748,7 @@
         $('match-target').textContent = `FFA · TARGET ${MODES.ffa.target}`;
       } else {
         $('score-blue').textContent = `BLUE ${s(0)}`;
-        $('score-red').textContent = `${s(1)} RED`;
+        $('score-red').textContent = `${s(1)} USSR`;
         $('match-target').textContent = `${currentMode.toUpperCase()} · TARGET ${MODES[currentMode].target}`;
       }
 
@@ -10406,8 +10764,8 @@
           : v.type === 'heli'
           ? `AH-64 · [WASD] FLY · [${keyLabel(keyBindings.jump)}/${keyLabel(keyBindings.sprint)}] ALTITUDE · [${keyLabel(keyBindings.missile)}] AIR/GROUND AGM · [${keyLabel(keyBindings.interact)}] EXIT`
           : v.type === 'sam'
-          ? `M901 · [WASD] DRIVE · [LMB] SAM · [RMB] CIWS · [${keyLabel(keyBindings.interact)}] EXIT`
-          : `COMMAND APC · [WASD] DRIVE · [LMB] 25MM · [${keyLabel(keyBindings.reload)}] RELOAD · [${keyLabel(keyBindings.interact)}] EXIT`;
+          ? `${P.veh.tm === 1 ? '2K12 KUB' : 'M901'} · [WASD] DRIVE · [LMB] SAM · [RMB] CIWS · [${keyLabel(keyBindings.interact)}] EXIT`
+          : `${P.veh.tm === 1 ? 'BTR-80' : 'COMMAND APC'} · [WASD] DRIVE · [LMB] ${P.veh.tm === 1 ? '14.5MM' : '25MM'} · [${keyLabel(keyBindings.reload)}] RELOAD · [${keyLabel(keyBindings.interact)}] EXIT`;
       } else {
         $('health-label').textContent = 'VITAL INTEGRITY';
         $('health-val').textContent = `${Math.max(0, Math.round(P.hp))}`;
@@ -10424,6 +10782,18 @@
       const vehW1Bind = $('veh-w1-bind');
       const vehW1Name = $('veh-w1-name');
       const vehW1Ammo = $('veh-w1-ammo');
+      const vehW1Fill = $('veh-w1-fill');
+      const vehW2Fill = $('veh-w2-fill');
+      const updateVehAmmoBar = (el, cur, max, reloadingRem, reloadTotal = 3.0) => {
+        if (!el) return;
+        const isReloading = reloadingRem > 0;
+        const pct = isReloading
+          ? Math.max(0, Math.min(100, (1 - reloadingRem / reloadTotal) * 100))
+          : Math.max(0, Math.min(100, (cur / Math.max(1, max)) * 100));
+        el.style.width = pct.toFixed(1) + '%';
+        el.classList.toggle('reloading', isReloading);
+        el.classList.toggle('low-ammo', !isReloading && cur <= Math.max(1, Math.floor(max * 0.25)));
+      };
       const vehW2Bind = $('veh-w2-bind');
       const vehW2Name = $('veh-w2-name');
       const vehW2Ammo = $('veh-w2-ammo');
@@ -10439,7 +10809,7 @@
         const missileBtn = $('mobile-action-pad')?.querySelector('[data-mobile-action="missile"]');
 
         if (v.type === 'sam') {
-          $('weapon-name').textContent = 'M901 SAM TRUCK';
+          $('weapon-name').textContent = P.veh.tm === 1 ? '2K12 KUB SAM' : 'M901 SAM TRUCK';
           $('weapon-class').textContent = 'AIR DEFENSE · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.mAmmo;
           $('ammo-mag').textContent = v.mMag;
@@ -10464,14 +10834,14 @@
           if (aimBtn) aimBtn.textContent = `CIWS (${v.reloading > 0 ? 'RLD' : v.ammo})`;
 
         } else if (v.type === 'tank') {
-          $('weapon-name').textContent = 'M1A2 ABRAMS TANK';
+          $('weapon-name').textContent = P.veh.tm === 1 ? 'T-80 MBT' : 'M1A2 ABRAMS TANK';
           $('weapon-class').textContent = 'HEAVY ARMOR · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = `[RMB] COAX MG ${v.mgAmmo} / ${v.mgMag}${v.mgReloading > 0 ? ` · RELOAD ${v.mgReloading.toFixed(1)}s` : ''}`;
 
           if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
-          if (vehW1Name) vehW1Name.textContent = '120MM CANNON';
+          if (vehW1Name) vehW1Name.textContent = P.veh.tm === 1 ? '125MM CANNON' : '120MM CANNON';
           if (vehW1Ammo) {
             vehW1Ammo.innerHTML = v.reloading > 0
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
@@ -10489,14 +10859,14 @@
           if (aimBtn) aimBtn.textContent = `COAX (${v.mgReloading > 0 ? 'RLD' : v.mgAmmo})`;
 
         } else if (v.type === 'heli') {
-          $('weapon-name').textContent = 'AH-64 APACHE';
+          $('weapon-name').textContent = P.veh.tm === 1 ? 'MI-24 HIND' : 'AH-64 APACHE';
           $('weapon-class').textContent = 'AIR CAVALRY · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = `[${keyLabel(keyBindings.missile)}] MISSILES ${v.mAmmo} / ${v.mMag}${v.mReloading > 0 ? ` · RELOAD ${v.mReloading.toFixed(1)}s` : ''}`;
 
           if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
-          if (vehW1Name) vehW1Name.textContent = '30MM CHAIN GUN';
+          if (vehW1Name) vehW1Name.textContent = P.veh.tm === 1 ? '12.7MM YAK-B' : '30MM CHAIN GUN';
           if (vehW1Ammo) {
             vehW1Ammo.innerHTML = v.reloading > 0
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
@@ -10512,9 +10882,22 @@
           }
           if (fireBtn) fireBtn.textContent = `CHAIN (${v.reloading > 0 ? 'RLD' : v.ammo})`;
           if (missileBtn) missileBtn.textContent = `AGM (${v.mReloading > 0 ? 'RLD' : v.mAmmo})`;
+        }
+        if (v.type === 'sam') {
+          updateVehAmmoBar(vehW1Fill, v.mAmmo, v.mMag, v.mReloading, 4.5);
+          updateVehAmmoBar(vehW2Fill, v.ammo, v.mag, v.reloading, 3.0);
+        } else if (v.type === 'tank') {
+          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, 3.5);
+          updateVehAmmoBar(vehW2Fill, v.mgAmmo, v.mgMag, v.mgReloading, 3.0);
+        } else if (v.type === 'heli') {
+          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, 3.0);
+          updateVehAmmoBar(vehW2Fill, v.mAmmo, v.mMag, v.mReloading, 4.5);
+        } else if (v.type === 'car') {
+          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, 2.8);
+          updateVehAmmoBar(vehW2Fill, 0, 1, 0, 1);
 
         } else {
-          $('weapon-name').textContent = 'COMMAND APC';
+          $('weapon-name').textContent = P.veh.tm === 1 ? 'BTR-80 APC' : 'COMMAND APC';
           $('weapon-class').textContent = 'GROUND · ARMORED CARRIER';
           $('ammo-cur').textContent = v.reloading > 0 ? 'RELOAD' : v.ammo;
           $('ammo-mag').textContent = v.mag;
@@ -10772,6 +11155,10 @@
           if (!e.team && isVehicleEntity(e)) {
             checkVehicleInactivity(e, dt);
           }
+          if (e.enterAnim > 0) {
+            e.enterAnim = Math.max(0, e.enterAnim - dt);
+            e.m.position.y += Math.sin((e.enterAnim / 0.45) * Math.PI) * -0.18;
+          }
 
           if (e.remote) {
             if (e.playerProxy) ensureLocalNetworkPlayer();
@@ -10861,6 +11248,25 @@
           }
         }
         if (P.sp > 0) P.sp -= dt;
+        if (!P.veh && P.hp > 0 && K[keyBindings.reload]) {
+          const nearAmmoCache = PK.find(k => k.on && k.type === 'ammo' && Math.hypot(playerPos.x - k.p.x, playerPos.z - k.p.z) <= 3.5);
+          if (nearAmmoCache) {
+            P.cacheRestockHold = (P.cacheRestockHold || 0) + dt;
+            if (P.cacheRestockHold >= 0.45) {
+              W.forEach(w => { w.a = w.mag; w.rl = 0; });
+              nearAmmoCache.on = 0;
+              nearAmmoCache.t = 25;
+              nearAmmoCache.m.visible = false;
+              P.cacheRestockHold = 0;
+              bannerMsg('FULL INVENTORY RESTOCKED');
+              playSnd(680, 0.22, 0.22, 'sine');
+            }
+          } else {
+            P.cacheRestockHold = 0;
+          }
+        } else {
+          P.cacheRestockHold = 0;
+        }
         PK.forEach((k, pickupIndex) => {
           if (!k.on) {
             if (networked && !networkHost) return;
