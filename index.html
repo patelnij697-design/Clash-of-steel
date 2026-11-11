@@ -6369,7 +6369,7 @@
       grp.position.set(pos.x, 0, pos.z);
       scene.add(grp);
       const obs = { x: pos.x, z: pos.z, hw: size * 0.65, hd: size * 0.65, h: size * 0.55, isWreck: true };
-      O.push(obs);
+      OB.push(obs);
       WRECKS.push({ m: grp, fire, obs, life: 45 });
     }
     function updateVehicleWrecks(dt) {
@@ -6380,8 +6380,8 @@
         w.fire.rotation.y += dt * 2.5;
         if (w.life <= 0) {
           scene.remove(w.m);
-          const idx = O.indexOf(w.obs);
-          if (idx >= 0) O.splice(idx, 1);
+          const idx = OB.indexOf(w.obs);
+          if (idx >= 0) OB.splice(idx, 1);
           WRECKS.splice(i, 1);
         }
       }
@@ -10882,20 +10882,6 @@
           }
           if (fireBtn) fireBtn.textContent = `CHAIN (${v.reloading > 0 ? 'RLD' : v.ammo})`;
           if (missileBtn) missileBtn.textContent = `AGM (${v.mReloading > 0 ? 'RLD' : v.mAmmo})`;
-        }
-        if (v.type === 'sam') {
-          updateVehAmmoBar(vehW1Fill, v.mAmmo, v.mMag, v.mReloading, 4.5);
-          updateVehAmmoBar(vehW2Fill, v.ammo, v.mag, v.reloading, 3.0);
-        } else if (v.type === 'tank') {
-          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, 3.5);
-          updateVehAmmoBar(vehW2Fill, v.mgAmmo, v.mgMag, v.mgReloading, 3.0);
-        } else if (v.type === 'heli') {
-          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, 3.0);
-          updateVehAmmoBar(vehW2Fill, v.mAmmo, v.mMag, v.mReloading, 4.5);
-        } else if (v.type === 'car') {
-          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, 2.8);
-          updateVehAmmoBar(vehW2Fill, 0, 1, 0, 1);
-
         } else {
           $('weapon-name').textContent = P.veh.tm === 1 ? 'BTR-80 APC' : 'COMMAND APC';
           $('weapon-class').textContent = 'GROUND · ARMORED CARRIER';
@@ -11308,16 +11294,43 @@
           }
         });
 
-        // Player Death & Redeploy
+        // Player Death Cam (3s) & Redeploy
         if (P.hp <= 0) {
-          onKill({ type: 'pl', tm: P.tm }, P.by);
-          if (FLAGS) FLAGS.forEach(f => { if (f.carrier === P) f.carrier = null; });
-          const spawnPt = getSpawnPoint(P.tm);
-          P.p.set(spawnPt[0], 0, spawnPt[1]);
-          P.hp = 100;
-          P.sh = 0;
-          P.veh = null;
-          bannerMsg('TACTICAL REDEPLOYMENT');
+          if (!P.deathCamActive) {
+            P.deathCamActive = true;
+            P.deathCamTimer = 3.0;
+            P.deathCamKiller = P.by || null;
+            onKill({ type: 'pl', tm: P.tm }, P.by);
+            if (FLAGS) FLAGS.forEach(f => { if (f.carrier === P) f.carrier = null; });
+            if (P.veh) {
+              if (P.isPassenger && P.veh.passengers) P.veh.passengers = P.veh.passengers.filter(p => p !== P);
+              else if (P.veh.driver === P) P.veh.driver = null;
+              P.veh = null;
+              P.isPassenger = false;
+            }
+            bannerMsg('ELIMINATED — DEATH CAM (3s)');
+          }
+          P.deathCamTimer -= dt;
+          const killer = P.deathCamKiller;
+          if (killer && killer.p) {
+            const ang = (3.0 - P.deathCamTimer) * 0.6;
+            camera.position.set(
+              killer.p.x + Math.sin(ang) * 7.5,
+              killer.p.y + 3.8,
+              killer.p.z + Math.cos(ang) * 7.5
+            );
+            camera.lookAt(killer.p.x, killer.p.y + 1.5, killer.p.z);
+          }
+          if (P.deathCamTimer <= 0) {
+            P.deathCamActive = false;
+            P.deathCamKiller = null;
+            const spawnPt = getSpawnPoint(P.tm);
+            P.p.set(spawnPt[0], 0, spawnPt[1]);
+            P.hp = 100;
+            P.sh = 0;
+            P.veh = null;
+            bannerMsg('TACTICAL REDEPLOYMENT');
+          }
         }
         updateNetwork(dt);
       }
