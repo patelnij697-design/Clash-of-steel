@@ -2055,7 +2055,9 @@
 
   <div id="loading-screen" role="status" aria-live="polite">
     <div class="loading-copy">
+      <div class="loading-kicker">CINEMATIC INTRO // VERSION 1</div>
       <h1 id="loading-caption">CLASH OF STEEL</h1>
+      <div class="loading-mission" style="font-size:12px;letter-spacing:2px;color:#94a3b8;margin-top:6px;">MISSION 01 · OPERATION STEEL RAIN</div>
       <div class="loading-progress" aria-hidden="true"><span></span></div>
     </div>
     <div class="loading-controls">
@@ -2302,11 +2304,11 @@
         </div>
         <div class="mode-grid" id="team-selector" data-selector="team" style="margin-bottom:10px;grid-template-columns:1fr 1fr;">
           <div class="tactical-card selected" data-team="0" role="button" tabindex="0" style="border-color:rgba(56,189,248,0.5);">
-            <h4 style="color:#38bdf8;">USA (BLUE)</h4>
+            <h4 style="color:#38bdf8;">USA</h4>
             <p>M1 Abrams · AH-64 Apache · M901 SAM · Stryker</p>
           </div>
           <div class="tactical-card" data-team="1" role="button" tabindex="0" style="border-color:rgba(244,63,94,0.4);">
-            <h4 style="color:#f43f5e;">USSR (RED)</h4>
+            <h4 style="color:#f43f5e;">USSR</h4>
             <p>T-80 · Mi-24 Hind · 2K12 Kub · BTR-80</p>
           </div>
         </div>
@@ -2619,8 +2621,8 @@
         <!-- Tactical Teleportation -->
         <div style="font-size:11px;font-weight:700;color:#a855f7;letter-spacing:1px;margin-bottom:8px;">QUANTUM TELEPORTATION</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
-          <button type="button" class="btn-secondary" id="btn-dev-tp-blue" style="padding:8px 6px;font-size:11px;">BLUE BASE</button>
-          <button type="button" class="btn-secondary" id="btn-dev-tp-red" style="padding:8px 6px;font-size:11px;">RED BASE</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-blue" style="padding:8px 6px;font-size:11px;">USA BASE</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-red" style="padding:8px 6px;font-size:11px;">USSR BASE</button>
           <button type="button" class="btn-secondary" id="btn-dev-tp-airfield" style="padding:8px 6px;font-size:11px;">AIRFIELD</button>
           <button type="button" class="btn-secondary" id="btn-dev-tp-helipad" style="padding:8px 6px;font-size:11px;">HELIPAD</button>
           <button type="button" class="btn-secondary" id="btn-dev-tp-tower" style="padding:8px 6px;font-size:11px;">WATCHTOWER</button>
@@ -2630,8 +2632,8 @@
         <!-- Match Director -->
         <div style="font-size:11px;font-weight:700;color:#ef4444;letter-spacing:1px;margin-bottom:8px;">MATCH DIRECTOR OVERRIDE</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <button type="button" class="btn-secondary" id="btn-dev-score-blue" style="padding:10px;color:#38bdf8;">+250 TEAM BLUE</button>
-          <button type="button" class="btn-secondary" id="btn-dev-score-red" style="padding:10px;color:#f43f5e;">+250 TEAM RED</button>
+          <button type="button" class="btn-secondary" id="btn-dev-score-blue" style="padding:10px;color:#38bdf8;">+250 USA</button>
+          <button type="button" class="btn-secondary" id="btn-dev-score-red" style="padding:10px;color:#f43f5e;">+250 USSR</button>
           <button type="button" class="btn-secondary" id="btn-dev-win-now" style="padding:10px;">⚡ INSTANT VICTORY</button>
           <button type="button" class="btn-secondary" id="btn-dev-toggle-bots" style="padding:10px;">🤖 TOGGLE BOTS</button>
         </div>
@@ -3031,7 +3033,7 @@
         if (typeof scores !== 'undefined' && scores) {
           scores[team] = (scores[team] || 0) + amount;
         }
-        bannerMsg(`DEV: +${amount} SCORE TO TEAM ${team ? 'RED' : 'BLUE'}`);
+        bannerMsg(`DEV: +${amount} SCORE TO ${team ? 'USSR' : 'USA'}`);
         playSnd(660, 0.2, 0.2, 'triangle');
       }
 
@@ -4153,6 +4155,12 @@
       addObstacle(5, 1.2, 0.9, mats.camoTan, x + 4, z + 9, ty + 0.6);
     }
 
+    function mkAbandonedBuilding(x, z) {
+      const ty = getTerrainHeight(x, z);
+      box(16, 6, 14, mats.concrete, x, ty + 3, z);
+      addObstacle(16, 6, 14, mats.concrete, x, z, ty + 3);
+    }
+
     function mkWatchtower(x, z) {
       const g = new THREE.Group();
       for (const lx of [-2.5, 2.5]) {
@@ -4394,7 +4402,8 @@
       return tm === 1 ? 'ussr' : 'usa';
     }
 
-    function mkInf(colorHex, faction = 'usa') {
+    function mkInf(colorHex) {
+      const faction = arguments[1] || 'usa';
       const g = new THREE.Group();
       if (faction === 'ussr') {
         g.userData.faction = 'ussr';
@@ -7574,7 +7583,7 @@
       const patrolCount = BOT_PATROL_COORDINATES.length ** 2;
       const allies = E.filter(other => other !== e && other.type === 'inf' && !other.dead
         && !other.drivingVeh && !other.remote && other.team
-        && ((currentMode === 'ffa' || currentMode === 'br') || other.tm === e.tm));
+        && (currentMode === 'ffa' || other.tm === e.tm || currentMode === 'br'));
       let bestPoint = null, bestScore = -Infinity;
       e.patrolVisit = visit + 1;
       const index = (slot * 17 + visit * 13) % patrolCount;
@@ -7838,7 +7847,7 @@
           const veh = e.targetVeh;
           const committedVehicle = e.aiState === 'board_veh' && veh
             && !veh.dead && !veh.driver && P.veh !== veh
-            && ((currentMode === 'ffa' || currentMode === 'br') || veh.tm === e.tm);
+            && (currentMode === 'ffa' || veh.tm === e.tm || currentMode === 'br');
           if (!committedVehicle) {
             if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
             e.targetVeh = null;
@@ -7947,7 +7956,7 @@
       // Distribute infantry around contacts instead of sending the squad to one point.
       else if (isInf && (e.aiState === 'flank' || e.aiState === 'assault') && tp) {
         const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
-        const squadSize = (currentMode === 'ffa' || currentMode === 'br') ? 12 : 7;
+        const squadSize = currentMode === 'ffa' ? 12 : 7;
         const teamOffset = (currentMode === 'ffa' || currentMode === 'br') ? 0 : e.tm * Math.PI / 7;
         const angle = slot * (Math.PI * 2 / squadSize) + teamOffset;
         const radius = e.aiState === 'flank' ? 34 : 24;
@@ -8339,110 +8348,139 @@
       if (inLobby) return;
 
       const camPos = camera.position;
-      const vehicles = E.filter(e => !e.dead && (e.type === 'tank' || e.type === 'car' || e.type === 'heli' || e.type === 'sam'));
+      const totalEntities = E.length;
 
-      vehicles.forEach(v => {
-        if (P.veh === v) return; // Don't draw overhead bar on player's own vehicle
-        const dist = camPos.distanceTo(v.p);
-        if (dist > 150) return; // Distance culling
+      for (let i = 0; i < totalEntities; i++) {
+        const ent = E[i];
+        if (!ent || ent.dead || ent.localPlayerProxy || ent === P.veh) continue;
+        if (ent.m && ent.m.visible === false) continue;
 
-        // Position directly above vehicle
-        projVec.set(v.p.x, v.p.y + (v.type === 'heli' ? 3.5 : 4.8), v.p.z);
-        projVec.project(camera);
+        const isRemoteVeh = ent.remote && ent.displayType && ent.displayType !== 'inf';
+        const isWorldVeh = ent.type === 'tank' || ent.type === 'car' || ent.type === 'heli' || ent.type === 'sam';
 
-        // Behind camera check
-        if (projVec.z >= 1.0) return;
+        if (isWorldVeh || isRemoteVeh) {
+          const vehType = isRemoteVeh ? ent.displayType : ent.type;
+          const dist = camPos.distanceTo(ent.p);
+          if (dist > 160) continue; // Distance culling
 
-        const sx = (projVec.x + 1) * 0.5 * innerWidth;
-        const sy = (1 - projVec.y) * 0.5 * innerHeight;
+          // Position directly above vehicle
+          projVec.set(ent.p.x, ent.p.y + (vehType === 'heli' ? 3.8 : 4.8), ent.p.z);
+          projVec.project(camera);
+          if (projVec.z >= 1.0) continue;
 
-        // Size scaling based on distance
-        const scale = Math.max(0.65, Math.min(1.2, 70 / dist));
-        const barW = 120 * scale;
-        const barH = 10 * scale;
-        const hpPercent = Math.max(0, Math.min(1, v.hp / v.mhp));
+          const sx = (projVec.x + 1) * 0.5 * innerWidth;
+          const sy = (1 - projVec.y) * 0.5 * innerHeight;
 
-        // Team Badge & Color
-        const isEnemy = v.team && v.tm !== P.tm;
-        const teamColor = v.team ? (isEnemy ? '#f43f5e' : '#38bdf8') : '#10b981';
-        const teamLabel = v.team ? (isEnemy ? 'ENEMY' : 'ALLY') : 'NEUTRAL';
-        const isUssr = v.tm === 1;
-        const nameLabel = isUssr
-          ? (v.type === 'tank' ? 'T-80 TANK' : v.type === 'heli' ? 'MI-24 HIND' : v.type === 'sam' ? '2K12 KUB SAM' : 'BTR-80 APC')
-          : (v.type === 'tank' ? 'M1A2 TANK' : v.type === 'heli' ? 'AH-64 HELI' : v.type === 'sam' ? 'M901 SAM TRUCK' : 'COMMAND APC');
+          const scale = Math.max(0.65, Math.min(1.2, 70 / dist));
+          const barW = 124 * scale;
+          const barH = 10 * scale;
+          const maxHp = ent.mhp || (vehType === 'tank' ? 2400 : vehType === 'car' ? 1100 : vehType === 'heli' ? 600 : 850);
+          const curHp = Number.isFinite(ent.hp) ? ent.hp : maxHp;
+          const hpPercent = Math.max(0, Math.min(1, curHp / maxHp));
 
-        // Dark Glass Container Background
-        hwCtx.fillStyle = 'rgba(10, 16, 26, 0.85)';
-        hwCtx.strokeStyle = teamColor;
-        hwCtx.lineWidth = 1.5;
-        hwCtx.beginPath();
-        hwCtx.roundRect(sx - barW / 2 - 8, sy - 28 * scale, barW + 16, 36 * scale, 4);
-        hwCtx.fill();
-        hwCtx.stroke();
+          const isEnemy = ent.team && ent.tm !== P.tm;
+          const teamColor = ent.team ? (isEnemy ? '#f43f5e' : '#38bdf8') : '#10b981';
+          const factionLabel = ent.team ? (ent.tm === 1 ? 'USSR' : 'USA') : 'NEUTRAL';
+          const isUssr = ent.tm === 1;
+          const vehName = isUssr
+            ? (vehType === 'tank' ? 'T-80 TANK' : vehType === 'heli' ? 'MI-24 HIND' : vehType === 'sam' ? '2K12 KUB SAM' : 'BTR-80 APC')
+            : (vehType === 'tank' ? 'M1A2 TANK' : vehType === 'heli' ? 'AH-64 HELI' : vehType === 'sam' ? 'M901 SAM TRUCK' : 'COMMAND APC');
+          const driverName = ent.nm || ent.driver?.nm;
+          const labelText = driverName
+            ? `${factionLabel} ${vehName} · ${driverName.toUpperCase()} [${Math.round(hpPercent * 100)}%]`
+            : `${factionLabel} ${vehName} [${Math.round(hpPercent * 100)}%]`;
 
-        // Title Text
-        hwCtx.font = `700 ${Math.round(10 * scale)}px "Chakra Petch", sans-serif`;
-        hwCtx.fillStyle = teamColor;
-        hwCtx.textAlign = 'center';
-        hwCtx.fillText(`${teamLabel} ${nameLabel} [${Math.round(hpPercent * 100)}%]`, sx, sy - 14 * scale);
-
-        // Health Bar Track
-        hwCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-        hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW, barH);
-
-        // Health Bar Fill
-        const hpColor = hpPercent > 0.5 ? '#10b981' : hpPercent > 0.25 ? '#f59e0b' : '#ef4444';
-        hwCtx.fillStyle = hpColor;
-        hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW * hpPercent, barH);
-
-        const boardingTime = v.boardingBot?.boardTimer || v.boardingTime || 0;
-        if (boardingTime > 0) {
-          const bTime = boardingTime.toFixed(1);
-          hwCtx.fillStyle = 'rgba(239, 68, 68, 0.95)';
-          hwCtx.strokeStyle = '#fff';
-          hwCtx.lineWidth = 1;
+          // Dark Glass Container Background
+          hwCtx.fillStyle = 'rgba(10, 16, 26, 0.88)';
+          hwCtx.strokeStyle = teamColor;
+          hwCtx.lineWidth = 1.5;
           hwCtx.beginPath();
-          hwCtx.roundRect(sx - 75 * scale, sy + 10 * scale, 150 * scale, 20 * scale, 3);
+          hwCtx.roundRect(sx - barW / 2 - 8, sy - 28 * scale, barW + 16, 36 * scale, 4);
           hwCtx.fill();
           hwCtx.stroke();
 
-          hwCtx.fillStyle = '#fff';
+          // Title Text
+          hwCtx.font = `700 ${Math.round(10 * scale)}px "Chakra Petch", sans-serif`;
+          hwCtx.fillStyle = teamColor;
+          hwCtx.textAlign = 'center';
+          hwCtx.fillText(labelText, sx, sy - 14 * scale);
+
+          // Health Bar Track
+          hwCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+          hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW, barH);
+
+          // Health Bar Fill
+          const hpColor = hpPercent > 0.5 ? '#10b981' : hpPercent > 0.25 ? '#f59e0b' : '#ef4444';
+          hwCtx.fillStyle = hpColor;
+          hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW * hpPercent, barH);
+
+          const boardingTime = ent.boardingBot?.boardTimer || ent.boardingTime || 0;
+          if (boardingTime > 0) {
+            const bTime = boardingTime.toFixed(1);
+            hwCtx.fillStyle = 'rgba(239, 68, 68, 0.95)';
+            hwCtx.strokeStyle = '#fff';
+            hwCtx.lineWidth = 1;
+            hwCtx.beginPath();
+            hwCtx.roundRect(sx - 75 * scale, sy + 10 * scale, 150 * scale, 20 * scale, 3);
+            hwCtx.fill();
+            hwCtx.stroke();
+
+            hwCtx.fillStyle = '#fff';
+            hwCtx.font = `700 ${Math.round(10 * scale)}px "JetBrains Mono", monospace`;
+            hwCtx.fillText(`⚠ ${bTime}s TILL BOT BOARDING`, sx, sy + 24 * scale);
+          }
+        } else if (ent.type === 'inf' && (ent.remote || ent.nm)) {
+          // Infantry / Soldier Health Bar (Players & Bots)
+          const dist = camPos.distanceTo(ent.p);
+          if (dist > 110) continue;
+
+          projVec.set(ent.p.x, ent.p.y + 2.35, ent.p.z);
+          projVec.project(camera);
+          if (projVec.z >= 1.0 || Math.abs(projVec.x) > 1.15 || Math.abs(projVec.y) > 1.15) continue;
+
+          const sx = (projVec.x + 1) * 0.5 * innerWidth;
+          const sy = (1 - projVec.y) * 0.5 * innerHeight;
+          const scale = Math.max(0.72, Math.min(1.0, 64 / dist));
+
+          const isEnemy = ent.tm !== P.tm;
+          const teamColor = isEnemy ? '#f43f5e' : '#38bdf8';
+          const teamTag = ent.tm === 1 ? 'USSR' : 'USA';
+          const name = ent.nm || 'OPERATOR';
+          const label = `${teamTag} · ${name.toUpperCase().slice(0, 16)}`;
+
+          const barW = 86 * scale;
+          const barH = 5 * scale;
+          const boxH = 28 * scale;
           hwCtx.font = `700 ${Math.round(10 * scale)}px "JetBrains Mono", monospace`;
-          hwCtx.fillText(`⚠ ${bTime}s TILL BOT BOARDING`, sx, sy + 24 * scale);
+          const boxW = Math.max(barW + 16 * scale, hwCtx.measureText(label).width + 16 * scale);
+
+          // Container
+          hwCtx.fillStyle = 'rgba(5, 10, 18, 0.86)';
+          hwCtx.strokeStyle = teamColor;
+          hwCtx.lineWidth = 1.2;
+          hwCtx.beginPath();
+          hwCtx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 4 * scale);
+          hwCtx.fill();
+          hwCtx.stroke();
+
+          // Text label
+          hwCtx.fillStyle = teamColor;
+          hwCtx.textAlign = 'center';
+          hwCtx.textBaseline = 'top';
+          hwCtx.fillText(label, sx, sy - boxH / 2 + 4 * scale);
+
+          // Health bar track
+          hwCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+          hwCtx.fillRect(sx - barW / 2, sy + 4 * scale, barW, barH);
+
+          // Health bar fill
+          const hpMax = ent.mhp || 100;
+          const hpPercent = Math.max(0, Math.min(1, (ent.hp || 0) / hpMax));
+          const hpColor = hpPercent > 0.5 ? '#10b981' : hpPercent > 0.25 ? '#f59e0b' : '#ef4444';
+          hwCtx.fillStyle = hpColor;
+          hwCtx.fillRect(sx - barW / 2, sy + 4 * scale, barW * hpPercent, barH);
         }
-      });
-
-      E.forEach(entity => {
-        if (entity.dead || entity.localPlayerProxy || (!entity.remote && (entity.type !== 'inf' || !entity.nm))) return;
-        const name = entity.nm || 'OPERATOR';
-        const distance = camera.position.distanceTo(entity.p);
-        if (distance > 110) return;
-        projVec.set(entity.p.x, entity.p.y + (entity.displayType === 'heli' ? 4.8 : entity.remote && entity.displayType ? 3.2 : 2.35), entity.p.z);
-        projVec.project(camera);
-        if (projVec.z >= 1 || Math.abs(projVec.x) > 1.15 || Math.abs(projVec.y) > 1.15) return;
-
-        const x = (projVec.x + 1) * 0.5 * innerWidth;
-        const y = (1 - projVec.y) * 0.5 * innerHeight;
-        const scale = Math.max(0.72, Math.min(1, 64 / distance));
-        const color = entity.remote
-          ? getAppearance(entity.appearance).color
-          : entity.tm === P.tm ? '#7dd3fc' : '#fda4af';
-        const label = name.toUpperCase().slice(0, 20);
-        hwCtx.font = `700 ${Math.round(11 * scale)}px "JetBrains Mono", monospace`;
-        const labelWidth = Math.min(180 * scale, hwCtx.measureText(label).width + 18 * scale);
-        const boxHeight = 24 * scale;
-        hwCtx.fillStyle = 'rgba(5, 10, 18, 0.84)';
-        hwCtx.strokeStyle = color;
-        hwCtx.lineWidth = 1;
-        hwCtx.beginPath();
-        hwCtx.roundRect(x - labelWidth / 2, y - boxHeight / 2, labelWidth, boxHeight, 5 * scale);
-        hwCtx.fill();
-        hwCtx.stroke();
-        hwCtx.fillStyle = color;
-        hwCtx.textAlign = 'center';
-        hwCtx.textBaseline = 'middle';
-        hwCtx.fillText(label, x, y, labelWidth - 10 * scale);
-      });
+      }
 
       // Render Dedicated High-Tech Air Reticles for Current Vehicle
       if (P.veh && isLocked) {
@@ -9024,7 +9062,7 @@
        GAME MODES, SCORING & TEAMS
        ------------------------------------------------------------------------- */
     const MODES = {
-      tdm: { name: 'TEAM DEATHMATCH', desc: 'Blue Coalition vs Red Syndicate. First team to 30 combat kills.', target: 30 },
+      tdm: { name: 'TEAM DEATHMATCH', desc: 'USA vs USSR. First team to 30 combat kills.', target: 30 },
       ffa: { name: 'FREE FOR ALL', desc: 'Every operator for themselves. First soldier to 15 kills.', target: 15 },
       ctf: { name: 'CAPTURE THE FLAG', desc: 'Infiltrate enemy base, secure the intelligence flag, and return home.', target: 3 },
       br: { name: 'BATTLE ROYALE', desc: 'Drop from a C-17 with no weapons. Loot weapon crates & survive the shrinking zone.', target: 1 }
@@ -9240,7 +9278,7 @@
         ? '<b>PRIVATE ROOM:</b> Bots disabled — play with human operators only.'
         : (currentMode === 'ffa' || currentMode === 'br')
         ? `<b>12 BOT OPERATORS:</b> ${BOT_NAMES.join(', ')}`
-        : `<span style="color:var(--color-blue)">BLUE SQUAD:</span> You + 7 bots (${BOT_NAMES.slice(0, 7).join(', ')})<br><span style="color:var(--color-red)">RED SQUAD:</span> 7 bots (${[...BOT_NAMES.slice(7), ...BOT_NAMES.slice(0, 2)].join(', ')})`;
+        : `<span style="color:var(--color-blue)">USA SQUAD:</span> You + 7 bots (${BOT_NAMES.slice(0, 7).join(', ')})<br><span style="color:var(--color-red)">USSR SQUAD:</span> 7 bots (${[...BOT_NAMES.slice(7), ...BOT_NAMES.slice(0, 2)].join(', ')})`;
       const deployButton = $('btn-deploy');
       const waitingForPublicMatch = networked && networkRoomKind !== 'private' && !networkMatchConfig;
       deployButton.disabled = waitingForPublicMatch;
@@ -9736,13 +9774,18 @@
       entity.tm = player.team;
       entity.team = 1;
       entity.dead = Number.isFinite(state.health) && state.health <= 0 ? 1 : 0;
-      entity.m.visible = !entity.dead;
       entity.p.set(state.x || 0, state.y || 0, state.z || 0);
       entity.yaw = state.vehicle ? (state.vehicleYaw || 0) : (state.yaw || 0);
       entity.hp = Number.isFinite(state.health) ? state.health : entity.hp;
+      entity.mhp = state.maxHealth || (state.vehicle ? (state.vehicle === 'tank' ? 2400 : state.vehicle === 'car' ? 1100 : state.vehicle === 'heli' ? 600 : 850) : 100);
       const displayType = ['heli', 'tank', 'sam', 'car'].includes(state.vehicle) ? state.vehicle : 'inf';
       setNetworkProxyDisplay(entity, displayType, entity.appearance);
-      entity.m.visible = !entity.dead && !state.vehicleId;
+      // Remote player vehicle mesh must remain visible to all other screens
+      if (entity.localPlayerProxy) {
+        entity.m.visible = false;
+      } else {
+        entity.m.visible = !entity.dead;
+      }
       entity.m.position.copy(entity.p);
       entity.m.rotation.y = entity.yaw;
       return entity;
@@ -9751,6 +9794,7 @@
     function ensureLocalNetworkPlayer() {
       if (!networkPlayerId) return;
       let entity = remotePlayers.get(networkPlayerId);
+      const targetDisplay = P.veh ? P.veh.type : 'inf';
       if (!entity) {
         entity = addEntity('inf', networkProxyMesh('inf', P.tm, operatorProfile.appearance), P.p.x, P.p.z, 100, P.tm, P.p.y);
         entity.remote = true;
@@ -9760,34 +9804,21 @@
         entity.nid = `player:${networkPlayerId}`;
         entity.nm = $('player-name').value.trim() || 'Operator';
         entity.displayType = 'inf';
-        entity.m.traverse(object => {
-          if (!object.material) return;
-          object.material = object.material.clone();
-          object.material.transparent = true;
-          object.material.opacity = 0;
-        });
+        entity.m.visible = false;
         remotePlayers.set(networkPlayerId, entity);
       }
       entity.tm = P.tm;
       entity.hp = P.veh ? P.veh.hp : P.hp;
       entity.dead = entity.hp <= 0 ? 1 : 0;
-      entity.m.visible = !entity.dead;
       entity.p.copy(P.veh ? P.veh.p : P.p);
       entity.yaw = P.veh ? P.veh.yaw : P.yaw;
       entity.appearance = operatorProfile.appearance;
-      setNetworkProxyDisplay(entity, P.veh ? P.veh.type : 'inf', operatorProfile.appearance);
+      if (entity.displayType !== targetDisplay) {
+        setNetworkProxyDisplay(entity, targetDisplay, operatorProfile.appearance);
+      }
+      entity.m.visible = false;
       entity.m.position.copy(entity.p);
       entity.m.rotation.y = entity.yaw;
-      upsertNetworkPlayer({
-        id: networkPlayerId,
-        name: entity.nm,
-        team: P.tm,
-        state: {
-          x: entity.p.x, y: entity.p.y, z: entity.p.z,
-          yaw: P.yaw, vehicle: P.veh ? P.veh.type : null,
-          vehicleYaw: entity.yaw, health: entity.hp
-        }
-      });
     }
 
     function removeNetworkPlayer(id) {
@@ -9987,7 +10018,7 @@
         entity.boardingTime = Number.isFinite(item.boardingTime)
           ? Math.max(0, Math.min(BOT_BOARDING_DELAY, item.boardingTime))
           : 0;
-        entity.m.visible = !item.dead;
+        entity.m.visible = !item.dead && !entity.driver;
         entity.v = item.v || 0;
       });
       if (state.scores) scores = state.scores;
@@ -10223,18 +10254,22 @@
       networkRoster.set(state.id, player);
       if (!inLobby) {
         const proxy = upsertNetworkPlayer(player);
-        if (networkHost) {
-          if (previousVehicleId && previousVehicleId !== state.vehicleId) {
-            const previousVehicle = E.find(entity => entity.nid === previousVehicleId);
-            if (previousVehicle && previousVehicle.driver === proxy) {
-              previousVehicle.driver = null;
-              previousVehicle.team = 0;
-              previousVehicle.tm = 0;
-            }
+        if (previousVehicleId && previousVehicleId !== state.vehicleId) {
+          const previousVehicle = E.find(entity => entity.nid === previousVehicleId);
+          if (previousVehicle) {
+            previousVehicle.driver = null;
+            previousVehicle.team = 0;
+            previousVehicle.tm = 0;
+            previousVehicle.p.set(state.x || (proxy ? proxy.p.x : 0), state.y || (proxy ? proxy.p.y : 0), state.z || (proxy ? proxy.p.z : 0));
+            previousVehicle.m.position.copy(previousVehicle.p);
+            previousVehicle.m.visible = true;
+            setVehicleTeamColor(previousVehicle, -1);
           }
-          const vehicle = state.vehicleId && E.find(entity => entity.nid === state.vehicleId);
+        }
+        if (state.vehicleId) {
+          const vehicle = E.find(entity => entity.nid === state.vehicleId);
           if (vehicle) {
-            if (vehicle.driver && vehicle.driver !== proxy) {
+            if (networkHost && vehicle.driver && vehicle.driver !== proxy) {
               netSocket.emit('player:vehicle-denied', state.id);
             } else {
               vehicle.driver = proxy;
@@ -10243,6 +10278,7 @@
               vehicle.p.set(state.x, state.y, state.z);
               vehicle.yaw = state.vehicleYaw || 0;
               vehicle.hp = state.health;
+              vehicle.m.visible = false; // Remote player proxy mesh displays active vehicle!
             }
           }
         }
@@ -10584,6 +10620,8 @@
     const radarCanvas = $('radar-canvas');
     const rCtx = radarCanvas.getContext('2d');
     let radarSweep = 0;
+    const _radarCamDir = new V3();
+    const _radarBaseV3 = new V3();
 
     function drawTacticalRadar() {
       const w = 140, h = 140, cx = 70, cy = 70, radius = 64;
@@ -10612,9 +10650,9 @@
       rCtx.arc(cx, cy, radius, radarSweep, radarSweep + 0.4);
       rCtx.fill();
 
-      const camDir = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
-      const fl = Math.hypot(camDir.x, camDir.z) || 1;
-      const fa = camDir.x / fl, fb = camDir.z / fl;
+      _radarCamDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+      const fl = Math.hypot(_radarCamDir.x, _radarCamDir.z) || 1;
+      const fa = _radarCamDir.x / fl, fb = _radarCamDir.z / fl;
 
       const plotBlip = (worldPos, color, size = 3) => {
         const dx = worldPos.x - pp.x, dz = worldPos.z - pp.z;
@@ -10630,7 +10668,7 @@
       };
 
       if (currentMode !== 'ffa') {
-        B.forEach((b, t) => plotBlip(new V3(b[0], 0, b[1]), t ? 'var(--color-red)' : 'var(--color-blue)', 7));
+        B.forEach((b, t) => plotBlip(_radarBaseV3.set(b[0], 0, b[1]), t ? '#f43f5e' : '#38bdf8', 7));
       }
       E.forEach(e => {
         if (e.dead) return;
@@ -10747,7 +10785,7 @@
         $('score-red').textContent = `TOP: ${Math.max(0, ...Object.keys(scores).filter(k => k !== '0').map(k => scores[k]))}`;
         $('match-target').textContent = `FFA · TARGET ${MODES.ffa.target}`;
       } else {
-        $('score-blue').textContent = `BLUE ${s(0)}`;
+        $('score-blue').textContent = `USA ${s(0)}`;
         $('score-red').textContent = `${s(1)} USSR`;
         $('match-target').textContent = `${currentMode.toUpperCase()} · TARGET ${MODES[currentMode].target}`;
       }
@@ -11147,7 +11185,11 @@
           }
 
           if (e.remote) {
-            if (e.playerProxy) ensureLocalNetworkPlayer();
+            if (e.playerProxy) {
+              e.p.copy(P.veh ? P.veh.p : P.p);
+              e.yaw = P.veh ? P.veh.yaw : P.yaw;
+              e.hp = P.veh ? P.veh.hp : P.hp;
+            }
             e.m.position.copy(e.p);
             e.m.rotation.y = e.yaw;
             return;
