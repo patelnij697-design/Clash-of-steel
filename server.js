@@ -13,6 +13,7 @@ app.use(express.json());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   maxHttpBufferSize: 100_000,
+  perMessageDeflate: false,
   pingInterval: 10000,
   pingTimeout: 20000
 });
@@ -341,7 +342,7 @@ function validPlayerState(state) {
     && Math.abs(state.y) <= 200
     && Math.abs(state.z) <= 1000
     && state.health >= 0
-    && state.health <= 1000
+    && state.health <= 5000
     && Number.isFinite(state.pitch || 0)
     && Math.abs(state.pitch || 0) <= Math.PI;
 }
@@ -407,7 +408,7 @@ io.on('connection', socket => {
 
   socket.on('player:state', state => {
     const room = rooms.get(socket.data.roomId);
-    if (!room || !validPlayerState(state) || !rateAllowed(socket, 'lastPlayerState', 40)) return;
+    if (!room || !validPlayerState(state) || !rateAllowed(socket, 'lastPlayerState', 28)) return;
     const player = room.players.get(socket.id);
     if (!player) return;
     const safeState = {
@@ -421,7 +422,8 @@ io.on('connection', socket => {
       vehicle: typeof state.vehicle === 'string' ? state.vehicle.slice(0, 12) : null,
       vehicleId: typeof state.vehicleId === 'string' ? state.vehicleId.slice(0, 32) : null,
       vehicleYaw: Number.isFinite(state.vehicleYaw) ? state.vehicleYaw : 0,
-      maxHealth: Number.isFinite(state.maxHealth) ? Math.max(1, Math.min(1000, state.maxHealth)) : 100,
+      isPassenger: state.isPassenger === true,
+      maxHealth: Number.isFinite(state.maxHealth) ? Math.max(1, Math.min(5000, state.maxHealth)) : 100,
       hasAmmo: state.hasAmmo === true,
       boostActive: state.boostActive === true
     };
@@ -496,7 +498,7 @@ io.on('connection', socket => {
 
   socket.on('game:state', state => {
     const room = rooms.get(socket.data.roomId);
-    if (!room || room.hostId !== socket.id || !state || typeof state !== 'object' || !rateAllowed(socket, 'lastGameState', 80)) return;
+    if (!room || room.hostId !== socket.id || !state || typeof state !== 'object' || !rateAllowed(socket, 'lastGameState', 42)) return;
     room.gameState = state;
     socket.to(room.id).emit('game:state', state);
   });

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Clash of Steel</title>
+  <title>Cold Steel</title>
   <meta name="description" content="Tactical 3D combat shooter with infantry, tanks, helicopters, capture the flag, and customizable loadouts.">
-  <meta property="og:title" content="Clash of Steel">
+  <meta property="og:title" content="Cold Steel">
   <meta property="og:description" content="Tactical 3D combat shooter with infantry, tanks, helicopters, capture the flag, and customizable loadouts.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,9 +62,7 @@
     body:not(.in-mission) #hud-world-canvas { visibility:hidden; }
     
     .tactical-panel {
-      background: var(--bg-glass);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(9, 15, 25, 0.86);
       border: 1px solid var(--border-glass);
       border-radius: 6px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -80,6 +78,10 @@
       align-items: center;
       gap: 16px;
       padding: 6px 18px;
+      background: rgba(9, 15, 25, 0.86);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 8px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
     }
     .score-badge {
       font-family: var(--font-display);
@@ -89,17 +91,19 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
     }
     .score-blue { color: var(--color-blue); text-shadow: 0 0 10px var(--color-blue-glow); }
     .score-red { color: var(--color-red); text-shadow: 0 0 10px var(--color-red-glow); }
     .match-target {
       font-size: 11px;
       letter-spacing: 1.5px;
-      color: #94a3b8;
+      color: #e2e8f0;
       text-transform: uppercase;
-      border-left: 1px solid rgba(255,255,255,0.15);
-      border-right: 1px solid rgba(255,255,255,0.15);
+      border-left: 1px solid rgba(255,255,255,0.18);
+      border-right: 1px solid rgba(255,255,255,0.18);
       padding: 0 12px;
+      white-space: nowrap;
     }
     #weather-badge {
       font-size: 11px;
@@ -387,8 +391,7 @@
     }
     .kf-item {
       padding: 4px 10px;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(12, 19, 32, 0.88);
       border-left: 2px solid var(--color-primary);
       border-radius: 2px;
       color: #e2e8f0;
@@ -423,11 +426,10 @@
       letter-spacing: 2px;
       color: #f43f5e;
       text-shadow: 0 0 12px rgba(244, 63, 94, 0.8);
-      background: rgba(10, 16, 26, 0.75);
+      background: rgba(10, 16, 26, 0.88);
       border: 1px solid rgba(244, 63, 94, 0.4);
       padding: 4px 16px;
       border-radius: 4px;
-      backdrop-filter: blur(6px);
       transition: all 0.15s ease-out;
       pointer-events: none;
     }
@@ -568,9 +570,7 @@
       position: fixed;
       inset: 0;
       z-index: 20;
-      background: rgba(5, 9, 15, 0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(5, 9, 15, 0.94);
       display: flex;
       align-items: flex-start;
       justify-content: center;
@@ -1099,9 +1099,7 @@
     }
     #main-menu-modal .menu-home {
       width:min(720px,60vw);
-      background:linear-gradient(145deg,rgba(20,32,52,.84),rgba(8,14,24,.78));
-      backdrop-filter:blur(7px);
-      -webkit-backdrop-filter:blur(7px);
+      background:linear-gradient(145deg,rgba(16,26,44,.94),rgba(8,14,24,.92));
     }
     #menu-vehicle-caption {
       position:fixed;
@@ -1456,21 +1454,7 @@
       font:700 10px "JetBrains Mono",monospace;
       touch-action:manipulation;
     }
-    @media (pointer:coarse), (max-width:700px) {
-      #vitals-card, #weapon-card { top:auto; bottom:calc(16px + env(safe-area-inset-bottom)); }
-      #mobile-action-pad {
-        grid-template-areas:
-          "slide jump fire"
-          "reload aim fire"
-          "swap use missile"
-          "loadout descend .";
-      }
-      .mobile-action[data-mobile-action="fire"] {
-        grid-area:fire;
-        border-radius:50%;
-      }
-      #mobile-stick { bottom:calc(112px + env(safe-area-inset-bottom)); }
-    }
+    /* Mobile layout overrides below handle HUD cards, joystick, and radial action pad */
 
     @media (pointer:coarse), (max-width:768px) {
       #controls-dock { display:none !important; }
@@ -1498,21 +1482,19 @@
         left: 50%;
         transform: translateX(-50%);
         width: auto;
-        min-width: 140px;
-        max-width: calc(100vw - 180px);
+        min-width: 120px;
+        max-width: calc(100vw - 204px);
         justify-content: center;
         gap: 8px;
-        padding: 4px 12px;
-        background: rgba(10, 16, 26, 0.75);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 20px;
+        padding: 4px 10px;
+        background: rgba(9, 15, 25, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 16px;
         z-index: 10;
       }
       .score-badge {
         gap: 4px;
-        font-size: clamp(12px, 3.2vw, 15px);
+        font-size: clamp(11px, 3vw, 14px);
         letter-spacing: 0.5px;
       }
       .match-target { display:none; }
@@ -1535,9 +1517,7 @@
         font-weight: 700;
         border-radius: 8px;
         border: 1px solid rgba(148, 163, 184, 0.4);
-        background: rgba(10, 18, 30, 0.85);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        background: rgba(10, 18, 30, 0.88);
         color: #f8fafc;
         z-index: 15;
       }
@@ -1553,26 +1533,22 @@
         font-weight: 700;
         border-radius: 8px;
         border: 1px solid rgba(56, 189, 248, 0.45);
-        background: rgba(10, 18, 30, 0.85);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        background: rgba(10, 18, 30, 0.88);
         color: #38bdf8;
         z-index: 15;
         grid-area: auto !important;
       }
 
-      /* TOP-LEFT HEALTH & VITALS CARD (Adjacent to radar, never blocking joystick!) */
+      /* TOP-LEFT HEALTH & VITALS CARD (Below radar, never overlapping top HUD) */
       #vitals-card {
-        top: calc(8px + env(safe-area-inset-top));
-        left: calc(82px + env(safe-area-inset-left));
+        top: calc(82px + env(safe-area-inset-top));
+        left: calc(8px + env(safe-area-inset-left));
         bottom: auto !important;
-        width: clamp(118px, 26vw, 160px);
+        width: clamp(118px, 28vw, 156px);
         min-width: 0;
         padding: 5px 8px;
-        background: rgba(10, 16, 26, 0.78);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(9, 15, 25, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.14);
         border-radius: 8px;
         z-index: 9;
       }
@@ -1598,42 +1574,40 @@
         height: 6px;
         margin-bottom: 3px;
         border-radius: 3px;
-        background: rgba(15, 23, 42, 0.8);
+        background: rgba(15, 23, 42, 0.85);
       }
       #veh-hint { display:none !important; }
 
-      /* BOTTOM-CENTER WEAPON & AMMO CARD (Translucent HUD Pill, completely clear of controls) */
+      /* BOTTOM-LEFT WEAPON & AMMO CARD (Above joystick, clear of right action buttons) */
       #weapon-card {
         top: auto !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        left: calc(8px + env(safe-area-inset-left)) !important;
+        transform: none !important;
         right: auto !important;
-        bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+        bottom: calc(138px + env(safe-area-inset-bottom)) !important;
         width: auto !important;
-        min-width: 120px;
-        max-width: 200px;
-        padding: 4px 12px;
-        background: rgba(10, 16, 26, 0.72);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 20px;
+        min-width: 112px;
+        max-width: 170px;
+        padding: 5px 10px;
+        background: rgba(9, 15, 25, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 10px;
+        justify-content: space-between;
+        gap: 8px;
         z-index: 9;
       }
       #weapon-card[data-vehicle] {
         top: auto !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        left: calc(8px + env(safe-area-inset-left)) !important;
+        transform: none !important;
         right: auto !important;
-        bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+        bottom: calc(138px + env(safe-area-inset-bottom)) !important;
         display: block !important;
-        width: min(280px, calc(100vw - 24px)) !important;
-        min-width: 0;
-        max-width: 280px;
+        width: min(210px, calc(100vw - 230px)) !important;
+        min-width: 140px;
+        max-width: 220px;
         padding: 6px 8px;
         text-align: left;
         border-radius: 8px;
@@ -1703,6 +1677,8 @@
       }
       .mobile-action {
         position: absolute !important;
+        min-height: 0;
+        padding: 2px;
         pointer-events: auto;
         user-select: none;
         -webkit-user-select: none;
@@ -1715,9 +1691,7 @@
         font-weight: 700;
         letter-spacing: 0.5px;
         border-radius: 50%;
-        background: rgba(10, 18, 30, 0.82);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
+        background: rgba(10, 18, 30, 0.88);
         border: 1px solid rgba(148, 163, 184, 0.42);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
         color: #f1f5f9;
@@ -1727,6 +1701,12 @@
         transform: scale(0.92);
         background: rgba(14, 116, 144, 0.85);
         border-color: #38bdf8;
+        color: #ffffff;
+      }
+      .mobile-action[data-mobile-action="aim"].active {
+        background: rgba(14, 165, 233, 0.42);
+        border-color: #38bdf8;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.65);
         color: #ffffff;
       }
       .mobile-action[hidden] {
@@ -1869,10 +1849,12 @@
         height: 60px;
       }
       #vitals-card {
-        left: calc(72px + env(safe-area-inset-left));
+        top: calc(74px + env(safe-area-inset-top));
+        left: calc(8px + env(safe-area-inset-left));
         width: clamp(108px, 28vw, 135px);
         padding: 4px 6px;
       }
+      #weather-badge { display: none; }
       #mobile-stick {
         width: 110px;
         height: 110px;
@@ -2055,14 +2037,16 @@
 
   <div id="loading-screen" role="status" aria-live="polite">
     <div class="loading-copy">
-      <div class="loading-kicker">CINEMATIC INTRO // VERSION 1</div>
-      <h1 id="loading-caption">CLASH OF STEEL</h1>
-      <div class="loading-mission" style="font-size:12px;letter-spacing:2px;color:#94a3b8;margin-top:6px;">MISSION 01 · OPERATION STEEL RAIN</div>
+      <h1 id="loading-caption">COLD STEEL</h1>
       <div class="loading-progress" aria-hidden="true"><span></span></div>
     </div>
     <div class="loading-controls">
-      <button type="button" id="toggle-intro-audio" aria-pressed="false">AUDIO OFF</button>
-      <button type="button" id="skip-loading">SKIP INTRO</button>
+      <button type="button" id="toggle-intro-audio" aria-pressed="false" aria-label="Toggle intro audio" title="Toggle intro audio">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+      </button>
+      <button type="button" id="skip-loading" aria-label="Skip intro" title="Skip intro">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+      </button>
     </div>
   </div>
 
@@ -2198,10 +2182,10 @@
   <div class="menu-modal" id="main-menu-modal" style="display:none;">
     <div class="modal-box menu-home">
       <div class="menu-home-status">
-        <span>CLASH OF STEEL <b>·</b> VERSION 1.35.00</span>
+        <span>COLD STEEL <b>·</b> VERSION 1.35.00</span>
         <span id="main-menu-connection" role="status" aria-live="polite">Connecting</span>
       </div>
-      <h1 class="modal-title">CLASH OF STEEL</h1>
+      <h1 class="modal-title">COLD STEEL</h1>
       <div class="modal-subtitle">COMBINED ARMS · TACTICAL MULTIPLAYER</div>
       <p style="max-width:560px;color:#cbd5e1;font-size:13px;line-height:1.7;">
         Deploy as an infantry operator or take command of armored and air-defense vehicles. Join the public battlefield, host a private room, or train offline.
@@ -2229,7 +2213,7 @@
         <h2 class="modal-title" id="updates-title" style="font-size:30px;margin:0;">FIELD UPDATES</h2>
         <button type="button" class="btn-secondary" id="btn-updates-close">CLOSE</button>
       </div>
-      <div class="modal-subtitle">CLASH OF STEEL · RELEASE NOTES</div>
+      <div class="modal-subtitle">COLD STEEL · RELEASE NOTES</div>
       <section class="update-release" aria-label="Version 1.35.00 updates">
         <h3>VERSION 1.35.00 · OUR UPDATE</h3>
         <ul>
@@ -2308,7 +2292,7 @@
             <p>M1 Abrams · AH-64 Apache · M901 SAM · Stryker</p>
           </div>
           <div class="tactical-card" data-team="1" role="button" tabindex="0" style="border-color:rgba(244,63,94,0.4);">
-            <h4 style="color:#f43f5e;">USSR</h4>
+            <h4 style="color:#f43f5e;">USSR (RED)</h4>
             <p>T-80 · Mi-24 Hind · 2K12 Kub · BTR-80</p>
           </div>
         </div>
@@ -2385,7 +2369,7 @@
           <div class="appearance-grid" id="appearance-selector"></div>
         </div>
         <div>
-          <div class="appearance-label">FFA / BR VEHICLE MODELS</div>
+          <div class="appearance-label">DEFAULT VEHICLE VARIANT <span style="color:#64748b;font-weight:400;">(FFA &amp; white spawns roll 50/50 USA/USSR)</span></div>
           <div class="appearance-grid" id="faction-selector" style="grid-template-columns:1fr 1fr;">
             <button type="button" class="appearance-choice selected" data-faction="usa">USA MODELS</button>
             <button type="button" class="appearance-choice" data-faction="ussr">USSR MODELS</button>
@@ -2442,7 +2426,7 @@
           <small id="settings-keyboard-reference"></small>
         </div>
         <div class="setting-field">MOBILE REFERENCE
-          <small>Left stick: move/drive · drag right side: aim · FIRE: shoot · AIM: scope or vehicle secondary fire · SLIDE: tactical slide · USE: enter/exit · JUMP: jump or helicopter climb · DESCEND: sprint or helicopter descent · RELOAD: reload · MISSILE: helicopter guided missile · SWAP: weapon slot · ARMORY: loadout · PAUSE: tactical pause. Context-specific actions hide when unavailable.</small>
+          <small>Left stick: move/drive · drag right side or drag while holding FIRE: shoot &amp; aim · AIM: toggle scope (or hold for vehicle secondary fire) · SLIDE: tactical slide · USE: enter/exit · JUMP: jump or helicopter climb · DESCEND: sprint or helicopter descent · RELOAD: reload · MISSILE: helicopter guided missile · SWAP: weapon slot · ARMORY: loadout · PAUSE: tactical pause. Context-specific actions hide when unavailable.</small>
         </div>
       </div>
       <p id="settings-status" role="status" aria-live="polite" style="min-height:18px;color:#94a3b8;font-size:11px;"></p>
@@ -2622,7 +2606,7 @@
         <div style="font-size:11px;font-weight:700;color:#a855f7;letter-spacing:1px;margin-bottom:8px;">QUANTUM TELEPORTATION</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
           <button type="button" class="btn-secondary" id="btn-dev-tp-blue" style="padding:8px 6px;font-size:11px;">USA BASE</button>
-          <button type="button" class="btn-secondary" id="btn-dev-tp-red" style="padding:8px 6px;font-size:11px;">USSR BASE</button>
+          <button type="button" class="btn-secondary" id="btn-dev-tp-red" style="padding:8px 6px;font-size:11px;">RED BASE</button>
           <button type="button" class="btn-secondary" id="btn-dev-tp-airfield" style="padding:8px 6px;font-size:11px;">AIRFIELD</button>
           <button type="button" class="btn-secondary" id="btn-dev-tp-helipad" style="padding:8px 6px;font-size:11px;">HELIPAD</button>
           <button type="button" class="btn-secondary" id="btn-dev-tp-tower" style="padding:8px 6px;font-size:11px;">WATCHTOWER</button>
@@ -2632,8 +2616,8 @@
         <!-- Match Director -->
         <div style="font-size:11px;font-weight:700;color:#ef4444;letter-spacing:1px;margin-bottom:8px;">MATCH DIRECTOR OVERRIDE</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <button type="button" class="btn-secondary" id="btn-dev-score-blue" style="padding:10px;color:#38bdf8;">+250 USA</button>
-          <button type="button" class="btn-secondary" id="btn-dev-score-red" style="padding:10px;color:#f43f5e;">+250 USSR</button>
+          <button type="button" class="btn-secondary" id="btn-dev-score-blue" style="padding:10px;color:#38bdf8;">+250 TEAM USA</button>
+          <button type="button" class="btn-secondary" id="btn-dev-score-red" style="padding:10px;color:#f43f5e;">+250 TEAM RED</button>
           <button type="button" class="btn-secondary" id="btn-dev-win-now" style="padding:10px;">⚡ INSTANT VICTORY</button>
           <button type="button" class="btn-secondary" id="btn-dev-toggle-bots" style="padding:10px;">🤖 TOGGLE BOTS</button>
         </div>
@@ -2703,8 +2687,8 @@
     <div id="mobile-look-zone" aria-label="Drag to look"></div>
     <div id="mobile-stick" aria-label="Movement joystick"><div id="mobile-stick-knob"></div></div>
     <div id="mobile-action-pad">
-      <button class="mobile-action primary" data-mobile-action="fire" data-hold="fire" aria-label="Fire weapon">FIRE</button>
-      <button class="mobile-action" data-mobile-action="aim" data-hold="aim" aria-label="Aim or secondary fire">AIM</button>
+      <button class="mobile-action primary" data-mobile-action="fire" data-hold="fire" aria-label="Hold and drag to fire and aim">FIRE</button>
+      <button class="mobile-action" data-mobile-action="aim" data-hold="aim" aria-pressed="false" aria-label="Toggle aim or hold to fire secondary">AIM</button>
       <button class="mobile-action" data-mobile-action="slide" data-tap="slide" aria-label="Tactical slide">SLIDE</button>
       <button class="mobile-action" data-mobile-action="use" data-tap="use" aria-label="Enter or exit vehicle">USE</button>
       <button class="mobile-action" data-mobile-action="jump" data-hold="jump" aria-label="Jump or climb">JUMP</button>
@@ -2724,7 +2708,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     /* =========================================================================
-       CLASH OF STEEL - ADVANCED WARFARE SIMULATION
+       COLD STEEL - ADVANCED WARFARE SIMULATION
        - Legacy Cannon.js static map bodies; gameplay movement/collision stays in the existing game logic
        - High-Detail Animated Weapon Models (Recoil kick, sway, reload animations, muzzle flash)
        - In-World 3D Floating Vehicle Health Bars & Telemetry
@@ -2991,7 +2975,10 @@
         const hp = type === 'heli' ? 600 : type === 'tank' ? 2400 : type === 'car' ? 1100 : 850;
         const faction = P.tm === 1 ? 'ussr' : 'usa';
         const mesh = makeMesh(color, faction);
-        const entity = addEntity(type, mesh, spawnPos.x, spawnPos.z, hp, P.tm, type === 'heli' ? 1.0 : 0, 0);
+        const groundY = getTerrainHeight(spawnPos.x, spawnPos.z);
+        const entity = addEntity(type, mesh, spawnPos.x, spawnPos.z, hp, P.tm, groundY + (type === 'heli' ? 1.0 : 0), 0);
+        entity.faction = faction;
+        entity.spawnFaction = faction;
         entity.yaw = Math.atan2(forward.x, forward.z);
         entity.m.rotation.y = entity.yaw;
         bannerMsg(`DEV: AIRDROPPED ${type.toUpperCase()}`);
@@ -2999,7 +2986,7 @@
       }
 
       function devTeleport(dest) {
-        let targetX = 0, targetY = 1.0, targetZ = 0;
+        let targetX = 0, targetY = null, targetZ = 0;
         if (dest === 'blue') {
           targetX = B[0][0]; targetZ = B[0][1];
         } else if (dest === 'red') {
@@ -3011,11 +2998,12 @@
           targetZ = B[P.tm][1] - (P.tm ? 1 : -1) * 18;
           targetY = 8.5;
         } else if (dest === 'tower') {
-          targetX = 0; targetZ = 120; targetY = 10.5;
+          targetX = 0; targetZ = 120; targetY = getTerrainHeight(0, 120) + 10.5;
         } else if (dest === 'flag') {
           const enemyTeam = P.tm ? 0 : 1;
           targetX = B[enemyTeam][0]; targetZ = B[enemyTeam][1];
         }
+        if (targetY === null) targetY = getTerrainHeight(targetX, targetZ) + 0.5;
         if (P.veh) {
           P.veh.p.set(targetX, targetY, targetZ);
           P.veh.v = 0;
@@ -3033,7 +3021,7 @@
         if (typeof scores !== 'undefined' && scores) {
           scores[team] = (scores[team] || 0) + amount;
         }
-        bannerMsg(`DEV: +${amount} SCORE TO ${team ? 'USSR' : 'USA'}`);
+        bannerMsg(`DEV: +${amount} SCORE TO TEAM ${team ? 'USSR' : 'USA'}`);
         playSnd(660, 0.2, 0.2, 'triangle');
       }
 
@@ -3490,7 +3478,7 @@
         dimensions = [Math.max(1, Math.round(innerWidth * scale)), Math.max(1, Math.round(innerHeight * scale))];
       }
       const pixelRatioLimit = gameSettings.graphics === 'low' ? 1
-        : gameSettings.graphics === 'balanced' ? 1.5 : 2;
+        : gameSettings.graphics === 'balanced' ? 1.25 : 1.5;
       renderer.setPixelRatio(Math.min(devicePixelRatio || 1, pixelRatioLimit));
       renderer.setSize(dimensions[0], dimensions[1], false);
       renderer.shadowMap.enabled = gameSettings.graphics !== 'low';
@@ -3500,7 +3488,7 @@
       document.body.classList.toggle('high-contrast', gameSettings.highContrast);
     }
     applyDisplaySettings();
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
 
     // 2D In-World HUD Canvas for Vehicle Health Bars & Boarding Timers
     const hudWorldCanvas = $('hud-world-canvas');
@@ -3708,7 +3696,7 @@
     sunLight.shadow.camera.bottom = -d;
     scene.add(sunLight);
     applyShadowQuality = () => {
-      const size = gameSettings.graphics === 'high' ? 2048 : gameSettings.graphics === 'balanced' ? 1024 : 512;
+      const size = gameSettings.graphics === 'high' ? 1024 : gameSettings.graphics === 'balanced' ? 1024 : 512;
       sunLight.shadow.mapSize.set(size, size);
       sunLight.shadow.needsUpdate = true;
     };
@@ -4155,12 +4143,6 @@
       addObstacle(5, 1.2, 0.9, mats.camoTan, x + 4, z + 9, ty + 0.6);
     }
 
-    function mkAbandonedBuilding(x, z) {
-      const ty = getTerrainHeight(x, z);
-      box(16, 6, 14, mats.concrete, x, ty + 3, z);
-      addObstacle(16, 6, 14, mats.concrete, x, z, ty + 3);
-    }
-
     function mkWatchtower(x, z) {
       const g = new THREE.Group();
       for (const lx of [-2.5, 2.5]) {
@@ -4388,6 +4370,69 @@
       mkContainer(cx, cz, rnd(0, Math.PI), i);
     }
 
+    // Close-Quarters Combat (CQC) Shoot-House Compounds (axis-aligned walls for exact doorway/interior collision)
+    function mkCQBCompound(x, z, doorDir = 0) {
+      const ty = getTerrainHeight(x, z);
+      box(22, 2.4, 22, mats.concrete, x, ty - 1.16, z);
+      const wallH = 3.8;
+      const wallY = ty + wallH / 2;
+      const wallT = 0.9;
+      // North & South outer walls with 4.6m center doorway breaches
+      addObstacle(8.2, wallH, wallT, mats.concrete, x - 6.4, z - 10, wallY);
+      addObstacle(8.2, wallH, wallT, mats.concrete, x + 6.4, z - 10, wallY);
+      addObstacle(8.2, wallH, wallT, mats.concrete, x - 6.4, z + 10, wallY);
+      addObstacle(8.2, wallH, wallT, mats.concrete, x + 6.4, z + 10, wallY);
+      // East & West outer walls with side breach doorways
+      addObstacle(wallT, wallH, 7.6, mats.concrete, x - 10, z - 6.2, wallY);
+      addObstacle(wallT, wallH, 7.6, mats.concrete, x - 10, z + 6.2, wallY);
+      addObstacle(wallT, wallH, 7.6, mats.concrete, x + 10, z - 6.2, wallY);
+      addObstacle(wallT, wallH, 7.6, mats.concrete, x + 10, z + 6.2, wallY);
+      // Interior CQC partition walls creating 3 interconnected rooms + flanking hallway
+      if (doorDir % 2 === 0) {
+        addObstacle(7.5, 3.4, 0.75, mats.steelLight, x - 4.2, z - 2.2, ty + 1.7);
+        addObstacle(0.75, 3.4, 7.5, mats.steelLight, x + 3.2, z + 2.2, ty + 1.7);
+      } else {
+        addObstacle(7.5, 3.4, 0.75, mats.steelLight, x + 4.2, z + 2.2, ty + 1.7);
+        addObstacle(0.75, 3.4, 7.5, mats.steelLight, x - 3.2, z - 2.2, ty + 1.7);
+      }
+      // Interior tactical cover crates & sandbag barriers
+      addObstacle(2.2, 1.35, 1.4, mats.camoTan, x - 5.5, z + 5.2, ty + 0.675);
+      addObstacle(1.6, 1.45, 2.2, mats.camoGreen, x + 5.8, z - 5.4, ty + 0.725);
+      addObstacle(3.2, 1.15, 0.9, mats.hazardStripe, x, z + 0.2, ty + 0.575);
+      // Partial overhead catwalk beams & tactical interior light
+      box(20.5, 0.35, 3.2, mats.steelDark, x, ty + wallH + 0.15, z - 5.5);
+      box(20.5, 0.35, 3.2, mats.steelDark, x, ty + wallH + 0.15, z + 5.5);
+      const interiorLamp = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.14, 0.5), baseLightMaterial);
+      interiorLamp.position.set(x, ty + wallH - 0.1, z);
+      scene.add(interiorLamp);
+    }
+
+    // Tight Shipping Container CQC Yards
+    function mkContainerYard(x, z) {
+      mkContainer(x - 4.5, z - 5.5, 0, 0);
+      mkContainer(x + 4.5, z - 5.5, 0, 2);
+      mkContainer(x - 5.2, z + 5.5, Math.PI / 2, 1);
+      mkContainer(x + 5.2, z + 5.5, Math.PI / 2, 3);
+      const ty = getTerrainHeight(x, z);
+      addObstacle(3.6, 1.2, 0.9, mats.concrete, x, z, ty + 0.6);
+    }
+
+    [
+      [-56, 56, 0], [56, -56, 1], [-64, -46, 1], [64, 46, 0], [0, -96, 0], [0, 96, 1]
+    ].forEach(([x, z, dir]) => mkCQBCompound(x, z, dir));
+
+    [
+      [-115, 20], [115, -20], [-20, 128], [20, -128]
+    ].forEach(([x, z]) => mkContainerYard(x, z));
+
+    // Central Plaza CQC Sandbag & Concrete Cover Rings
+    [
+      [-26, -8, 1.2, 5.5], [26, 8, 1.2, 5.5], [-8, 26, 5.5, 1.2], [8, -26, 5.5, 1.2]
+    ].forEach(([cx, cz, w, d]) => {
+      const ty = getTerrainHeight(cx, cz);
+      addObstacle(w, 1.35, d, mats.camoTan, cx, cz, ty + 0.675);
+    });
+
     // 4 Fortified Industrial Outposts & Fuel Depots
     [
       [-145, -105], [105, -145], [-105, 145], [145, 105]
@@ -4402,8 +4447,7 @@
       return tm === 1 ? 'ussr' : 'usa';
     }
 
-    function mkInf(colorHex) {
-      const faction = arguments[1] || 'usa';
+    function mkInf(colorHex, faction = 'usa') {
       const g = new THREE.Group();
       if (faction === 'ussr') {
         g.userData.faction = 'ussr';
@@ -5428,8 +5472,12 @@
     function setIntroAudio(enabled) {
       introAudioEnabled = enabled;
       const button = $('toggle-intro-audio');
-      button.textContent = enabled ? 'AUDIO ON' : 'AUDIO OFF';
       button.setAttribute('aria-pressed', String(enabled));
+      button.setAttribute('aria-label', enabled ? 'Mute intro audio' : 'Enable intro audio');
+      button.title = enabled ? 'Mute intro audio' : 'Enable intro audio';
+      button.innerHTML = enabled
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
       if (enabled) {
         const context = getAudio();
         if (!introMusic) {
@@ -5480,7 +5528,10 @@
       oscillator.start(now);
       oscillator.stop(now + (isImpact ? 0.8 : 0.34));
     }
-    $('toggle-intro-audio').addEventListener('click', () => setIntroAudio(!introAudioEnabled));
+    $('toggle-intro-audio').addEventListener('click', e => {
+      e.stopPropagation();
+      setIntroAudio(!introAudioEnabled);
+    });
 
     let introActive = true;
     let introElapsed = 0;
@@ -5510,7 +5561,11 @@
       setTimeout(() => { loadingScreen.style.display = 'none'; }, 700);
     }
 
-    $('skip-loading').addEventListener('click', finishLoadingIntro);
+    $('skip-loading').addEventListener('click', e => {
+      e.stopPropagation();
+      finishLoadingIntro();
+    });
+    loadingScreen.addEventListener('click', finishLoadingIntro);
 
     function updateLoadingIntro(dt) {
       introElapsed += dt;
@@ -5619,7 +5674,7 @@
       if (introPreviousElapsed < 6.6 && t >= 6.6) playIntroSound('impact');
       introPreviousElapsed = t;
 
-      $('loading-caption').textContent = 'CLASH OF STEEL';
+      $('loading-caption').textContent = 'COLD STEEL';
       if (t >= 12) finishLoadingIntro();
     }
 
@@ -5648,23 +5703,34 @@
        HIGH-DETAIL FIRST-PERSON GUN MODELS & WEAPON ARSENAL
        ------------------------------------------------------------------------- */
     const W = [
-      { n: 'Combat Pistol', lv: 1, dmg: 24, rate: 0.25, mag: 15, rel: 1.1, spr: 0.012, zoom: 1.3, cls: 'Sidearm', type: 'pistol' },
-      { n: 'Vector SMG', lv: 1, dmg: 16, rate: 0.065, mag: 32, rel: 1.4, spr: 0.03, zoom: 1.5, auto: 1, cls: 'Close Quarters', type: 'smg' },
-      { n: 'Magnum .44', lv: 2, dmg: 58, rate: 0.5, mag: 6, rel: 2.0, spr: 0.005, zoom: 1.6, cls: 'Heavy Revolver', type: 'pistol' },
-      { n: 'SPAS Shotgun', lv: 2, dmg: 16, pel: 8, rate: 0.75, mag: 8, rel: 2.2, spr: 0.065, zoom: 1.2, cls: 'Breaching', type: 'shotgun' },
-      { n: 'M4A1 Carbine', lv: 3, dmg: 28, rate: 0.1, mag: 30, rel: 1.7, spr: 0.015, zoom: 2.4, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
-      { n: 'Micro SMG', lv: 3, dmg: 14, rate: 0.05, mag: 24, rel: 1.2, spr: 0.04, zoom: 1.3, auto: 1, cls: 'Auto Pistol', type: 'smg' },
-      { n: 'M39 DMR', lv: 4, dmg: 52, rate: 0.3, mag: 10, rel: 1.9, spr: 0.004, zoom: 3.8, scope: 1, cls: 'Marksman', type: 'sniper' },
+      { n: 'Combat Pistol', lv: 1, dmg: 24, rate: 0.25, mag: 15, rel: 1.1, spr: 0.012, zoom: 1.3, spd: 300, cls: 'Sidearm', type: 'pistol' },
+      { n: 'Vector SMG', lv: 1, dmg: 16, rate: 0.065, mag: 32, rel: 1.4, spr: 0.03, zoom: 1.5, spd: 330, auto: 1, cls: 'Close Quarters', type: 'smg' },
+      { n: 'Magnum .44', lv: 2, dmg: 58, rate: 0.5, mag: 6, rel: 2.0, spr: 0.005, zoom: 1.6, spd: 350, cls: 'Heavy Revolver', type: 'pistol' },
+      { n: 'SPAS Shotgun', lv: 2, dmg: 16, pel: 8, rate: 0.75, mag: 8, rel: 2.2, spr: 0.065, zoom: 1.2, spd: 290, cls: 'Breaching', type: 'shotgun' },
+      { n: 'M4A1 Carbine', lv: 3, dmg: 28, rate: 0.1, mag: 30, rel: 1.7, spr: 0.015, zoom: 2.4, spd: 430, auto: 1, cls: 'Assault Rifle', type: 'rifle' },
+      { n: 'Micro SMG', lv: 3, dmg: 14, rate: 0.05, mag: 24, rel: 1.2, spr: 0.04, zoom: 1.3, spd: 320, auto: 1, cls: 'Auto Pistol', type: 'smg' },
+      { n: 'M39 DMR', lv: 4, dmg: 52, rate: 0.3, mag: 10, rel: 1.9, spr: 0.004, zoom: 3.8, spd: 480, scope: 1, cls: 'Marksman', type: 'sniper' },
       { n: 'AT-4 Rocket', lv: 4, rate: 1.8, mag: 1, rel: 2.5, zoom: 2.0, m: 'at', cls: 'Anti-Armor', type: 'rocket' },
-      { n: 'Barrett .50', lv: 5, dmg: 125, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
+      { n: 'Barrett .50', lv: 5, dmg: 125, rate: 1.3, mag: 5, rel: 2.4, spr: 0.001, zoom: 7.0, spd: 540, scope: 1, cls: 'Heavy Sniper', type: 'sniper' },
       { n: 'Stinger AA', lv: 5, rate: 1.8, mag: 1, rel: 2.6, zoom: 2.0, m: 'aa', cls: 'Lock-On Anti-Air', type: 'rocket' },
-      { n: 'M249 SAW', lv: 6, dmg: 25, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, auto: 1, cls: 'Light Machine Gun', type: 'lmg' },
-      { n: 'SCAR-H Battle Rifle', lv: 4, dmg: 38, rate: 0.14, mag: 20, rel: 1.9, spr: 0.01, zoom: 2.8, auto: 1, cls: 'Battle Rifle', type: 'rifle' },
-      { n: 'P90 PDW', lv: 2, dmg: 17, rate: 0.058, mag: 50, rel: 1.8, spr: 0.028, zoom: 1.6, auto: 1, cls: 'Submachine Gun', type: 'smg' },
-      { n: 'AA-12 Auto Shotgun', lv: 5, dmg: 14, pel: 7, rate: 0.28, mag: 12, rel: 2.3, spr: 0.07, zoom: 1.2, auto: 1, cls: 'Auto Shotgun', type: 'shotgun' },
-      { n: 'Desert Eagle .50', lv: 3, dmg: 64, rate: 0.42, mag: 7, rel: 1.7, spr: 0.008, zoom: 1.5, cls: 'Heavy Pistol', type: 'pistol' }
+      { n: 'M249 SAW', lv: 6, dmg: 25, rate: 0.085, mag: 100, rel: 4.2, spr: 0.035, zoom: 1.7, spd: 410, auto: 1, cls: 'Light Machine Gun', type: 'lmg' },
+      { n: 'SCAR-H Battle Rifle', lv: 4, dmg: 38, rate: 0.14, mag: 20, rel: 1.9, spr: 0.01, zoom: 2.8, spd: 440, auto: 1, cls: 'Battle Rifle', type: 'rifle' },
+      { n: 'P90 PDW', lv: 2, dmg: 17, rate: 0.058, mag: 50, rel: 1.8, spr: 0.028, zoom: 1.6, spd: 340, auto: 1, cls: 'Submachine Gun', type: 'smg' },
+      { n: 'AA-12 Auto Shotgun', lv: 5, dmg: 14, pel: 7, rate: 0.28, mag: 12, rel: 2.3, spr: 0.07, zoom: 1.2, spd: 290, auto: 1, cls: 'Auto Shotgun', type: 'shotgun' },
+      { n: 'Desert Eagle .50', lv: 3, dmg: 64, rate: 0.42, mag: 7, rel: 1.7, spr: 0.008, zoom: 1.5, spd: 350, cls: 'Heavy Pistol', type: 'pistol' }
     ];
     W.forEach(w => { w.a = w.mag; w.cd = 0; w.rl = 0; });
+    function getWeaponBulletSpeed(w) {
+      if (!w) return 380;
+      if (Number.isFinite(w.spd)) return w.spd;
+      if (w.type === 'sniper') return w.dmg >= 100 ? 540 : 480;
+      if (w.type === 'rifle') return 430;
+      if (w.type === 'lmg') return 410;
+      if (w.type === 'smg') return 330;
+      if (w.type === 'shotgun') return 290;
+      if (w.type === 'pistol') return w.dmg >= 55 ? 350 : 300;
+      return 380;
+    }
 
     const weaponMaterials = {
       receiver: new THREE.MeshStandardMaterial({ color: 0x202832, metalness: 0.72, roughness: 0.34 }),
@@ -6035,9 +6101,10 @@
         box(0.08, 0.16, 0.08, mats.steelLight, side * 0.4, 1.78, side * 0.4, g);
       }
       cyl(0.08, 0.08, 0.16, 8, pmat, 0, 4.8, 0, g);
-      g.position.set(x, 0, z);
+      const groundY = getTerrainHeight(x, z);
+      g.position.set(x, groundY, z);
       scene.add(g);
-      PK.push({ m: g, type, p: new V3(x, 0, z), t: 0, on: 1, c: '#' + PT[type].c.toString(16).padStart(6, '0') });
+      PK.push({ m: g, type, p: new V3(x, groundY, z), t: 0, on: 1, c: '#' + PT[type].c.toString(16).padStart(6, '0') });
     }
     function spawnAllPickups() {
       PK.forEach(k => scene.remove(k.m));
@@ -6066,6 +6133,7 @@
     const scoped = () => rm && !P.veh && P.w >= 0 && W[P.w] && W[P.w].zoom > 1;
     function enterGameplayControls() {
       $('pause-modal').style.display = 'none';
+      if (!inLobby) document.body.dataset.state = 'playing';
       if (supportsTouchControls) {
         mobileControlsActive = true;
         isLocked = true;
@@ -6076,12 +6144,19 @@
     }
     function awaitGameplayInput() {
       if (supportsTouchControls) enterGameplayControls();
-      else $('pause-modal').style.display = 'flex';
+      else {
+        $('pause-modal').style.display = 'flex';
+        if (!inLobby) document.body.dataset.state = 'paused';
+      }
     }
     function leaveGameplayControls() {
       mobileControlsActive = false;
+      mobileLookPointer = null;
+      mobileAimPointer = null;
+      mobileFirePointer = null;
       isLocked = false;
       lm = rm = lc = 0;
+      syncMobileAimButton();
       Object.keys(K).forEach(key => { K[key] = 0; });
       $('mobile-controls').classList.remove('active');
       if (document.pointerLockElement) document.exitPointerLock();
@@ -6131,6 +6206,31 @@
     });
 
     let mobileLookPointer = null, mobileLookX = 0, mobileLookY = 0;
+    let mobileAimPointer = null, mobileAimX = 0, mobileAimY = 0;
+    let mobileFirePointer = null, mobileFireX = 0, mobileFireY = 0;
+    const mobileAimButton = $('mobile-action-pad').querySelector('[data-mobile-action="aim"]');
+    function syncMobileAimButton() {
+      if (!mobileAimButton) return;
+      const isAimActive = Boolean(rm);
+      mobileAimButton.classList.toggle('active', isAimActive);
+      mobileAimButton.setAttribute('aria-pressed', String(isAimActive));
+    }
+    function applyTouchLookDelta(dx, dy) {
+      const w = P.w >= 0 ? W[P.w] : null;
+      const zoomScale = !P.veh && scoped() && w && w.zoom > 1.5
+        ? 1 / Math.min(2.2, Math.sqrt(w.zoom * 0.7))
+        : 1;
+      const sens = 0.006 * gameSettings.mouseSensitivity * zoomScale;
+      if (P.veh) {
+        P.ay = P.veh.type === 'heli'
+          ? Math.max(-1.4, Math.min(1.4, P.ay - dx * sens))
+          : P.ay - dx * sens;
+        P.ap = Math.max(-0.55, Math.min(0.65, P.ap - dy * sens));
+      } else {
+        P.yaw -= dx * sens;
+        P.pit = Math.max(-1.5, Math.min(1.5, P.pit - dy * sens));
+      }
+    }
     const mobileLookZone = $('mobile-look-zone');
     mobileLookZone.addEventListener('pointerdown', event => {
       if (!mobileControlsActive) return;
@@ -6145,28 +6245,35 @@
       const dx = event.clientX - mobileLookX, dy = event.clientY - mobileLookY;
       mobileLookX = event.clientX;
       mobileLookY = event.clientY;
-      if (P.veh) {
-        P.ay = P.veh.type === 'heli'
-          ? Math.max(-1.4, Math.min(1.4, P.ay - dx * 0.006 * gameSettings.mouseSensitivity))
-          : P.ay - dx * 0.006 * gameSettings.mouseSensitivity;
-        P.ap = Math.max(-0.55, Math.min(0.65, P.ap - dy * 0.006 * gameSettings.mouseSensitivity));
-      } else {
-        P.yaw -= dx * 0.006 * gameSettings.mouseSensitivity;
-        P.pit = Math.max(-1.5, Math.min(1.5, P.pit - dy * 0.006 * gameSettings.mouseSensitivity));
-      }
+      applyTouchLookDelta(dx, dy);
     });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
       mobileLookZone.addEventListener(type, () => { mobileLookPointer = null; });
     });
 
-    $('mobile-action-pad').addEventListener('pointerdown', event => {
+    const mobileActionPad = $('mobile-action-pad');
+    mobileActionPad.addEventListener('pointerdown', event => {
       const button = event.target.closest('[data-hold], [data-tap]');
       if (!button || !mobileControlsActive) return;
       event.preventDefault();
-      button.setPointerCapture(event.pointerId);
+      if (typeof button.setPointerCapture === 'function') {
+        try { button.setPointerCapture(event.pointerId); } catch {}
+      }
       button.classList.add('pressed');
-      if (button.dataset.hold === 'fire') { lm = 1; lc = 1; }
-      if (button.dataset.hold === 'aim') rm = 1;
+      if (button.dataset.hold === 'fire') {
+        lm = 1;
+        lc = 1;
+        mobileFirePointer = event.pointerId;
+        mobileFireX = event.clientX;
+        mobileFireY = event.clientY;
+      }
+      if (button.dataset.hold === 'aim') {
+        rm = P.veh ? 1 : (rm ? 0 : 1);
+        mobileAimPointer = event.pointerId;
+        mobileAimX = event.clientX;
+        mobileAimY = event.clientY;
+        syncMobileAimButton();
+      }
       if (button.dataset.hold === 'jump') K[keyBindings.jump] = 1;
       if (button.dataset.hold === 'descend') K[keyBindings.sprint] = 1;
       if (button.dataset.tap === 'slide' && !P.veh) triggerSlide();
@@ -6176,21 +6283,47 @@
       if (button.dataset.tap === 'swap' && !P.veh) selectSlot(1 - P.sl);
       if (button.dataset.tap === 'loadout') openLoadout();
     });
-    const releaseMobileAction = event => {
-      const button = event.target.closest('[data-hold], [data-tap]');
-      if (!button) return;
-      button.classList.remove('pressed');
-      if (button.dataset.hold === 'fire') lm = 0;
-      if (button.dataset.hold === 'aim') rm = 0;
-      if (button.dataset.hold === 'jump') K[keyBindings.jump] = 0;
-      if (button.dataset.hold === 'descend') K[keyBindings.sprint] = 0;
-    };
-    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => {
-      $('mobile-action-pad').addEventListener(type, releaseMobileAction);
+    mobileActionPad.addEventListener('pointermove', event => {
+      if (!mobileControlsActive) return;
+      if (mobileFirePointer === event.pointerId) {
+        event.preventDefault();
+        const dx = event.clientX - mobileFireX;
+        const dy = event.clientY - mobileFireY;
+        mobileFireX = event.clientX;
+        mobileFireY = event.clientY;
+        applyTouchLookDelta(dx, dy);
+      } else if (mobileAimPointer === event.pointerId) {
+        event.preventDefault();
+        const dx = event.clientX - mobileAimX;
+        const dy = event.clientY - mobileAimY;
+        mobileAimX = event.clientX;
+        mobileAimY = event.clientY;
+        applyTouchLookDelta(dx, dy);
+      }
     });
+    const releaseMobileAction = event => {
+      const button = event.target?.closest ? event.target.closest('[data-hold], [data-tap]') : null;
+      if (button) button.classList.remove('pressed');
+      if (button?.dataset.hold === 'fire' || mobileFirePointer === event.pointerId) {
+        lm = 0;
+        if (mobileFirePointer === event.pointerId) mobileFirePointer = null;
+      }
+      if (button?.dataset.hold === 'aim' || mobileAimPointer === event.pointerId) {
+        if (P.veh) rm = 0;
+        if (mobileAimPointer === event.pointerId) mobileAimPointer = null;
+        syncMobileAimButton();
+      }
+      if (button?.dataset.hold === 'jump') K[keyBindings.jump] = 0;
+      if (button?.dataset.hold === 'descend') K[keyBindings.sprint] = 0;
+    };
+    ['pointerup', 'pointercancel'].forEach(type => {
+      mobileActionPad.addEventListener(type, releaseMobileAction);
+    });
+    mobileActionPad.addEventListener('lostpointercapture', releaseMobileAction, true);
     $('mobile-pause').addEventListener('click', () => {
       leaveGameplayControls();
       $('pause-modal').style.display = 'flex';
+      if (!inLobby) document.body.dataset.state = 'paused';
     });
 
     window.addEventListener('keydown', e => {
@@ -6234,6 +6367,7 @@
         e.preventDefault();
         leaveGameplayControls();
         $('pause-modal').style.display = 'flex';
+        if (!inLobby) document.body.dataset.state = 'paused';
       }
       if (bindingAction === 'slide' && !P.veh) triggerSlide();
       if (bindingAction === 'armory') { e.preventDefault(); openLoadout(); }
@@ -6277,7 +6411,9 @@
 
     document.addEventListener('pointerlockchange', () => {
       isLocked = mobileControlsActive || document.pointerLockElement === canvas;
-      $('pause-modal').style.display = (!isLocked && !inLobby && $('loadout-modal').style.display !== 'flex' && $('dev-panel-modal').style.display !== 'flex') ? 'flex' : 'none';
+      const shouldPause = !isLocked && !inLobby && $('loadout-modal').style.display !== 'flex' && $('dev-panel-modal').style.display !== 'flex';
+      $('pause-modal').style.display = shouldPause ? 'flex' : 'none';
+      if (!inLobby) document.body.dataset.state = shouldPause ? 'paused' : 'playing';
       if (!isLocked) lm = rm = 0;
     });
 
@@ -6375,9 +6511,10 @@
       const fire = new THREE.Mesh(new THREE.DodecahedronGeometry(size * 0.38, 0), fireMat);
       fire.position.y = size * 0.55;
       grp.add(fire);
-      grp.position.set(pos.x, 0, pos.z);
+      const gy = getTerrainHeight(pos.x, pos.z);
+      grp.position.set(pos.x, gy, pos.z);
       scene.add(grp);
-      const obs = { x: pos.x, z: pos.z, hw: size * 0.65, hd: size * 0.65, h: size * 0.55, isWreck: true };
+      const obs = { x: pos.x, z: pos.z, hw: size * 0.65, hd: size * 0.65, minY: gy, h: gy + size * 0.55, isWreck: true };
       OB.push(obs);
       WRECKS.push({ m: grp, fire, obs, life: 45 });
     }
@@ -6433,14 +6570,16 @@
     }
 
     const TRACERS = [];
-    function drawTracer(start, end, color = 0xfde047) {
+    const TRACER_GEOMETRY = new THREE.BoxGeometry(0.055, 0.055, 1);
+    function drawTracer(start, end, color = 0xfde047, duration = 0.085) {
       const len = start.distanceTo(end);
-      if (len < 1) return;
-      const m = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, len), new THREE.MeshBasicMaterial({ color, transparent: true }));
+      if (len < 0.15) return;
+      const m = new THREE.Mesh(TRACER_GEOMETRY, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }));
+      m.scale.set(1, 1, len);
       m.position.copy(start).lerp(end, 0.5);
       m.lookAt(end);
       scene.add(m);
-      TRACERS.push({ m, life: 0.12 });
+      TRACERS.push({ m, life: duration, maxLife: duration });
     }
 
     function hitMarkerPulse() {
@@ -6487,7 +6626,8 @@
       if (target.hp <= 0) {
         target.dead = 1;
         target.m.visible = false;
-        target.rs = target.type === 'inf' ? 5 : target.team ? 16 : 22;
+        const isBRMatch = currentMode === 'br' || brState.active;
+        target.rs = (isBRMatch && target.type === 'inf') ? 1e9 : (target.type === 'inf' ? 5 : target.team ? 16 : 22);
         if (isVehicleEntity(target)) spawnVehicleExplosion(target.p, target.type === 'tank' ? 4.6 : 3.8);
         else spawnExplosion(target.p, target.type === 'inf' ? 2 : 7, 0xf97316, 0.7);
         onKill(target, attacker);
@@ -6532,25 +6672,38 @@
     const RC = new THREE.Raycaster();
     const BULLETS = [];
     const BULLET_GRAVITY = 9.8;
-    const BULLET_GEOMETRY = new THREE.SphereGeometry(0.09, 6, 6);
-    const BULLET_MATERIAL = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+    const BULLET_GEOMETRY = new THREE.BoxGeometry(0.065, 0.065, 1);
+    const BULLET_MATERIAL_FRIENDLY = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+    const BULLET_MATERIAL_ENEMY = new THREE.MeshBasicMaterial({ color: 0xfb923c });
     let bulletSequence = 0;
 
-    function spawnBullet(origin, direction, damage, attacker = 1, speed = 220, id = null, remote = false, teamOverride = null, aimed = false) {
-      const mesh = new THREE.Mesh(BULLET_GEOMETRY, BULLET_MATERIAL);
-      mesh.position.copy(origin);
-      scene.add(mesh);
+    function spawnBullet(origin, direction, damage, attacker = 1, speed = 380, id = null, remote = false, teamOverride = null, aimed = false) {
+      const dir = direction.clone();
+      if (dir.lengthSq() > 0) dir.normalize();
+      else dir.set(0, 0, -1);
       const team = Number.isInteger(teamOverride) ? teamOverride
         : typeof attacker === 'object' ? attacker.tm : P.tm;
+      const isFriendly = team === P.tm;
+      const mat = isFriendly ? BULLET_MATERIAL_FRIENDLY : BULLET_MATERIAL_ENEMY;
+      const tracerColor = isFriendly ? 0xfef08a : 0xfb923c;
+      const mesh = new THREE.Mesh(BULLET_GEOMETRY, mat);
+      const streakLen = Math.max(1.8, Math.min(8.5, speed * 0.02));
+      mesh.scale.set(1, 1, Math.min(streakLen, 2.2));
+      mesh.position.copy(origin).addScaledVector(dir, 0.5);
+      mesh.lookAt(origin.clone().addScaledVector(dir, 10));
+      scene.add(mesh);
       const bullet = {
         id: id || `bullet-${++bulletSequence}`,
         m: mesh,
         p: origin.clone(),
-        velocity: direction.clone().normalize().multiplyScalar(speed),
+        velocity: dir.multiplyScalar(speed),
+        speed,
+        streakLen,
+        tracerColor,
         damage,
         attacker,
         team,
-        life: 2.5,
+        life: 2.2,
         remote,
         aimed: Boolean(aimed)
       };
@@ -6558,23 +6711,44 @@
       return bullet;
     }
 
-    function raycastBullet(origin, dir, damage, attacker = 1, aimed = false) {
+    function raycastBullet(origin, dir, damage, attacker = 1, aimed = false, speed = 380) {
       if (networked && !networkHost) {
         netSocket.emit('combat:action', {
           kind: 'shot',
           x: origin.x, y: origin.y, z: origin.z,
           dx: dir.x, dy: dir.y, dz: dir.z,
-          damage
+          damage,
+          speed,
+          aimed: Boolean(aimed)
         });
         return;
       }
-      return spawnBullet(origin, dir, damage, attacker, 220, null, false, null, aimed);
+      return spawnBullet(origin, dir, damage, attacker, speed, null, false, null, aimed);
     }
 
     function updateBullets(dt) {
+      const aliveTargetsByTeam = new Map();
+      const getTargetsForTeam = team => {
+        let list = aliveTargetsByTeam.get(team);
+        if (!list) {
+          list = E.filter(e => e.team && !e.dead && e.tm !== team).map(e => e.m).concat(OM);
+          aliveTargetsByTeam.set(team, list);
+        }
+        return list;
+      };
+
       for (let index = BULLETS.length - 1; index >= 0; index--) {
         const bullet = BULLETS[index];
-        if (bullet.remote) continue;
+        if (bullet.remote) {
+          const prevRemote = bullet.p.clone();
+          bullet.p.addScaledVector(bullet.velocity, dt);
+          bullet.m.position.copy(bullet.p);
+          if (bullet.velocity.lengthSq() > 0.01) {
+            bullet.m.lookAt(bullet.p.clone().add(bullet.velocity));
+          }
+          drawTracer(prevRemote, bullet.p, bullet.tracerColor, 0.055);
+          continue;
+        }
 
         bullet.life -= dt;
         if (!bullet.aimed) {
@@ -6584,23 +6758,24 @@
         bullet.p.addScaledVector(bullet.velocity, dt);
         const segment = bullet.p.clone().sub(previous);
         const segmentLength = segment.length();
+        const segmentDir = segmentLength > 0 ? segment.clone().multiplyScalar(1 / segmentLength) : new V3(0, 0, -1);
+
         let hitObj = null;
         if (segmentLength > 0) {
-          RC.set(previous, segment.multiplyScalar(1 / segmentLength));
+          RC.set(previous, segmentDir);
           RC.far = segmentLength;
-          const targets = E.filter(e => e.team && !e.dead && e.tm !== bullet.team).map(e => e.m);
-          hitObj = RC.intersectObjects(targets.concat(OM), true)[0] || null;
+          hitObj = RC.intersectObjects(getTargetsForTeam(bullet.team), true)[0] || null;
         }
-        const hitGround = bullet.p.y <= 0;
+        const terrainY = getTerrainHeight(bullet.p.x, bullet.p.z);
+        const hitGround = bullet.p.y <= terrainY;
 
         let hitPlayer = false;
         let playerAlong = 0;
         if (P.hp > 0 && P.tm !== bullet.team) {
           const playerCenter = (P.veh ? P.veh.p : P.p).clone().add(new V3(0, P.veh ? 1.3 : 1.0, 0));
-          const segmentDirection = segmentLength ? segment.clone().normalize() : new V3();
           const toPlayer = playerCenter.clone().sub(previous);
-          playerAlong = Math.max(0, Math.min(segmentLength, toPlayer.dot(segmentDirection)));
-          const closest = previous.clone().addScaledVector(segmentDirection, playerAlong);
+          playerAlong = Math.max(0, Math.min(segmentLength, toPlayer.dot(segmentDir)));
+          const closest = previous.clone().addScaledVector(segmentDir, playerAlong);
           const radius = P.veh ? 2.1 : 0.55;
           if (closest.distanceToSquared(playerCenter) <= radius * radius && (!hitObj || playerAlong < hitObj.distance)) {
             hitPlayer = true;
@@ -6608,10 +6783,20 @@
         }
 
         if (hitObj || hitPlayer || hitGround || bullet.life <= 0) {
-          const impact = hitObj ? hitObj.point : hitPlayer
-            ? previous.clone().lerp(bullet.p, segmentLength ? Math.min(1, playerAlong / segmentLength) : 0)
-            : hitGround ? bullet.p.clone().setY(0) : bullet.p;
-          drawTracer(previous, impact);
+          let impact = bullet.p;
+          if (hitObj) {
+            impact = hitObj.point;
+          } else if (hitPlayer) {
+            impact = previous.clone().lerp(bullet.p, segmentLength ? Math.min(1, playerAlong / segmentLength) : 0);
+          } else if (hitGround) {
+            const prevTerrainY = getTerrainHeight(previous.x, previous.z);
+            const prevAbove = Math.max(0, previous.y - prevTerrainY);
+            const currBelow = Math.max(0.001, terrainY - bullet.p.y);
+            const frac = prevAbove / (prevAbove + currBelow);
+            impact = previous.clone().lerp(bullet.p, THREE.MathUtils.clamp(frac, 0, 1));
+            impact.y = getTerrainHeight(impact.x, impact.z);
+          }
+          drawTracer(previous, impact, bullet.tracerColor, 0.09);
           if (hitPlayer) {
             hurtPlayer(bullet.damage, bullet.attacker);
           } else if (hitObj) {
@@ -6625,13 +6810,20 @@
               applyDamage(entity, bullet.damage * multiplier, bullet.attacker, previous);
             }
             spawnExplosion(impact, 0.25, 0xfef08a, 0.1);
+          } else if (hitGround) {
+            spawnExplosion(impact, 0.2, 0xd6b88d, 0.09);
           }
           scene.remove(bullet.m);
           BULLETS.splice(index, 1);
           continue;
         }
 
+        if (segmentLength >= 0.35) {
+          drawTracer(previous, bullet.p, bullet.tracerColor, 0.055);
+        }
+        bullet.m.scale.set(1, 1, Math.min(bullet.streakLen, Math.max(1.2, segmentLength * 0.9)));
         bullet.m.position.copy(bullet.p);
+        bullet.m.lookAt(bullet.p.clone().add(segmentDir));
       }
     }
 
@@ -6890,6 +7082,7 @@
         ? d.clone().normalize()
         : applyMinorAimAssist(o, d, 0.048);
       const spread = isAimed ? (w.type === 'shotgun' ? 0.012 : 0) : (w.spr || 0.015);
+      const bulletSpeed = getWeaponBulletSpeed(w);
       const pellets = w.pel || 1;
       for (let i = 0; i < pellets; i++) {
         const q = aimDir.clone();
@@ -6898,7 +7091,7 @@
           q.y += rnd(-spread, spread);
           q.z += rnd(-spread, spread);
         }
-        raycastBullet(o, q.normalize(), w.dmg, 1, isAimed);
+        raycastBullet(o, q.normalize(), w.dmg, 1, isAimed, bulletSpeed);
       }
     }
 
@@ -6992,6 +7185,9 @@
         }
       });
       if (best) {
+        rm = 0;
+        mobileAimPointer = null;
+        syncMobileAimButton();
         P.veh = best;
         best.enterAnim = 0.45;
         playVehicleEnterSnd(best.type);
@@ -7009,7 +7205,8 @@
           best.team = 1;
           best.tm = P.tm;
           best.driver = P;
-          const msg = best.type === 'tank' ? (P.tm === 1 ? ' · [LMB] 125MM CANNON · [RMB] COAXIAL MG' : ' · [LMB] 120MM CANNON · [RMB] COAXIAL MG')
+          const isUssrVeh = best.faction ? best.faction === 'ussr' : P.tm === 1;
+          const msg = best.type === 'tank' ? (isUssrVeh ? ' · [LMB] 125MM CANNON · [RMB] COAXIAL MG' : ' · [LMB] 120MM CANNON · [RMB] COAXIAL MG')
                     : best.type === 'sam' ? ' · [LMB] SAM MISSILES · [RMB] 20MM CIWS'
                     : best.type === 'heli' ? ` · [LMB] CHAIN GUN · [${keyLabel(keyBindings.missile)}] MISSILES`
                     : ` · [LMB] AUTOCANNON · [${keyLabel(keyBindings.interact)}] TO EXIT`;
@@ -7052,8 +7249,12 @@
 
     function setVehicleTeamColor(v, team) {
       if (!v || !v.m) return;
-      const nextHex = team >= 0 ? (TC[team] ?? 0xf8fafc) : 0xf8fafc;
-      const nextFaction = team >= 0 ? getFactionForTeam(team) : (v.faction || 'usa');
+      const isSolo = !isTeamFactionMode(currentMode);
+      const nextHex = (!isSolo && team >= 0) ? (TC[team] ?? 0xf8fafc) : 0xf8fafc;
+      const isWhiteOrFFA = team < 0 || v.homeTeam === -1 || isSolo;
+      const nextFaction = isWhiteOrFFA
+        ? (v.spawnFaction || v.faction || 'usa')
+        : getFactionForTeam(team);
       const prevHex = v.teamColorHex;
       v.tm = team >= 0 ? team : 0;
       if (prevHex === nextHex && v.faction === nextFaction) return;
@@ -7072,7 +7273,9 @@
     function exitVehicle() {
       const v = P.veh;
       if (!v) return;
-      P.p.set(v.p.x + 4.5, v.p.y + 0.5, v.p.z);
+      const exitX = v.p.x + 4.5;
+      const exitZ = v.p.z;
+      P.p.set(exitX, Math.max(v.p.y + 0.5, getTerrainHeight(exitX, exitZ)), exitZ);
       P.vy = 0;
       P.yaw = v.yaw + Math.PI;
       if (P.isPassenger) {
@@ -7084,6 +7287,9 @@
         v.driver = null;
       }
       P.veh = null;
+      rm = 0;
+      mobileAimPointer = null;
+      syncMobileAimButton();
     }
 
     function updatePlayerFoot(dt) {
@@ -7427,7 +7633,7 @@
       let d = target.clone().sub(o).normalize();
       d.x += rnd(-spread, spread);
       d.y += rnd(-spread, spread);
-      raycastBullet(o, d.normalize(), dmg, v, true);
+      raycastBullet(o, d.normalize(), dmg, v, true, 440);
     }
 
     function fireTankCoaxMG(v) {
@@ -7437,7 +7643,7 @@
       let d = target.clone().sub(o).normalize();
       d.x += rnd(-0.012, 0.012);
       d.y += rnd(-0.012, 0.012);
-      raycastBullet(o, d.normalize(), 16, v, true);
+      raycastBullet(o, d.normalize(), 16, v, true, 410);
     }
 
     function fireSAMCIWS(v) {
@@ -7447,8 +7653,8 @@
       let d = target.clone().sub(o).normalize();
       d.x += rnd(-0.012, 0.012);
       d.y += rnd(-0.012, 0.012);
-      raycastBullet(o.clone().add(new V3(-0.9, 0, 0)), d.normalize(), 20, v, true);
-      raycastBullet(o.clone().add(new V3(0.9, 0, 0)), d.normalize(), 20, v, true);
+      raycastBullet(o.clone().add(new V3(-0.9, 0, 0)), d.normalize(), 20, v, true, 460);
+      raycastBullet(o.clone().add(new V3(0.9, 0, 0)), d.normalize(), 20, v, true, 460);
     }
 
     /* -------------------------------------------------------------------------
@@ -7477,6 +7683,7 @@
       v.rs = 0;
       v.m.visible = true;
       v.m.position.copy(v.p);
+      if (v.homeOwner === 0) setVehicleTeamColor(v, -1);
       if (Number.isFinite(v.mag)) { v.ammo = v.mag; v.reloading = 0; v.cd = 0; }
       if (Number.isFinite(v.mgMag)) { v.mgAmmo = v.mgMag; v.mgReloading = 0; v.mgCd = 0; }
       if (Number.isFinite(v.mMag)) { v.mAmmo = v.mMag; v.mReloading = 0; }
@@ -7517,10 +7724,12 @@
     let selectedDiff = 1;
 
     function hasLineOfSight(a, b) {
-      const d = new V3(b.x - a.x, 0, b.z - a.z);
+      const ay = getTerrainHeight(a.x, a.z) + 1.6;
+      const by = getTerrainHeight(b.x, b.z) + 1.6;
+      const d = new V3(b.x - a.x, by - ay, b.z - a.z);
       const l = d.length();
       if (l < 1) return 1;
-      RC.set(new V3(a.x, 1.6, a.z), d.normalize());
+      RC.set(new V3(a.x, ay, a.z), d.normalize());
       RC.far = l;
       return RC.intersectObjects(OM).length === 0;
     }
@@ -7554,6 +7763,7 @@
     const BOT_PATROL_COORDINATES = [-260, -186, -112, -38, 38, 112, 186, 260];
 
     function claimNearestTeamVehicle(bot) {
+      if (currentMode === 'br' || brState.active) return null;
       let bestVehicle = null;
       let bestDistance = Infinity;
       E.forEach(vehicle => {
@@ -7583,7 +7793,7 @@
       const patrolCount = BOT_PATROL_COORDINATES.length ** 2;
       const allies = E.filter(other => other !== e && other.type === 'inf' && !other.dead
         && !other.drivingVeh && !other.remote && other.team
-        && (currentMode === 'ffa' || other.tm === e.tm || currentMode === 'br'));
+        && ((currentMode === 'ffa' || currentMode === 'br') || other.tm === e.tm));
       let bestPoint = null, bestScore = -Infinity;
       e.patrolVisit = visit + 1;
       const index = (slot * 17 + visit * 13) % patrolCount;
@@ -7847,7 +8057,7 @@
           const veh = e.targetVeh;
           const committedVehicle = e.aiState === 'board_veh' && veh
             && !veh.dead && !veh.driver && P.veh !== veh
-            && (currentMode === 'ffa' || veh.tm === e.tm || currentMode === 'br');
+            && ((currentMode === 'ffa' || currentMode === 'br') || veh.tm === e.tm);
           if (!committedVehicle) {
             if (e.targetVeh?.boardingBot === e) e.targetVeh.boardingBot = null;
             e.targetVeh = null;
@@ -7956,7 +8166,7 @@
       // Distribute infantry around contacts instead of sending the squad to one point.
       else if (isInf && (e.aiState === 'flank' || e.aiState === 'assault') && tp) {
         const slot = Math.max(0, e.patrolSlot ?? E.indexOf(e));
-        const squadSize = currentMode === 'ffa' ? 12 : 7;
+        const squadSize = (currentMode === 'ffa' || currentMode === 'br') ? 12 : 7;
         const teamOffset = (currentMode === 'ffa' || currentMode === 'br') ? 0 : e.tm * Math.PI / 7;
         const angle = slot * (Math.PI * 2 / squadSize) + teamOffset;
         const radius = e.aiState === 'flank' ? 34 : 24;
@@ -7981,7 +8191,7 @@
             const orbitDist = 65;
             targetX = tp.x + Math.cos(e.a) * orbitDist;
             targetZ = tp.z + Math.sin(e.a) * orbitDist;
-            e.p.y = THREE.MathUtils.lerp(e.p.y, cruiseAlt + Math.sin(e.a) * 3.5, dt * 2.0);
+            e.p.y = THREE.MathUtils.lerp(e.p.y, Math.max(getTerrainHeight(e.p.x, e.p.z) + 4, cruiseAlt + Math.sin(e.a) * 3.5), dt * 2.0);
           }
         } else {
           if (!e.wp || Math.hypot(e.wp[0] - e.p.x, e.wp[1] - e.p.z) < 12) {
@@ -7989,8 +8199,9 @@
           }
           targetX = e.wp[0];
           targetZ = e.wp[1];
-          e.p.y = THREE.MathUtils.lerp(e.p.y, cruiseAlt, dt * 1.5);
+          e.p.y = THREE.MathUtils.lerp(e.p.y, Math.max(getTerrainHeight(e.p.x, e.p.z) + 4, cruiseAlt), dt * 1.5);
         }
+        e.p.y = Math.max(getTerrainHeight(e.p.x, e.p.z) + 2.4, e.p.y);
 
         // CRITICAL FIX: Mutual Helicopter Repulsion (Prevents helis from colliding or clipping!)
         E.concat(P.veh && P.veh.type === 'heli' ? [P.veh] : []).forEach(other => {
@@ -8053,6 +8264,24 @@
           targetX = tp ? tp.x : 0;
           targetZ = tp ? tp.z : 0;
         }
+      } else if (brState.active && isInf && e.unarmed) {
+        let bestCrate = null, bestCrateDist = 1e9;
+        for (const c of brState.crates) {
+          if (c.opened || c.falling) continue;
+          const d = Math.hypot(c.x - e.p.x, c.z - e.p.z);
+          if (d < bestCrateDist) { bestCrateDist = d; bestCrate = c; }
+        }
+        if (bestCrate) {
+          targetX = bestCrate.x;
+          targetZ = bestCrate.z;
+        } else {
+          if (!e.wp || Math.hypot(e.wp[0] - e.p.x, e.wp[1] - e.p.z) < 6) e.wp = getBotPatrolWaypoint(e);
+          targetX = e.wp[0];
+          targetZ = e.wp[1];
+        }
+      } else if (brState.active && isInf && Math.hypot(e.p.x, e.p.z) > Math.max(12, brState.zoneRadius - 12)) {
+        targetX = 0;
+        targetZ = 0;
       } else if (tg) {
         targetX = tp.x;
         targetZ = tp.z;
@@ -8270,7 +8499,7 @@
             launchMissile('sam', origin.addScaledVector(dir, 3), dir, tg);
             playSnd(120, 0.5, 0.35, 'sawtooth');
           } else {
-            fireBotBullet(e, tg, origin, 14, 190, spread * 1.35, 0.3);
+            fireBotBullet(e, tg, origin, 14, 380, spread * 1.35, 0.3);
             playSnd(360, 0.045, 0.14, 'sawtooth');
           }
         } else if (isTank) {
@@ -8282,20 +8511,24 @@
           launchMissile('at', origin.addScaledVector(dir, 3), dir, null);
           playSnd(90, 0.6, 0.35, 'sawtooth');
           if (tg.type === 'inf') {
-            fireBotBullet(e, tg, origin, 16, 180, spread * 1.35, 0.18);
+            fireBotBullet(e, tg, origin, 16, 360, spread * 1.35, 0.18);
             playSnd(320, 0.06, 0.16, 'sawtooth');
           }
         } else if (e.type === 'car') {
-          fireBotBullet(e, tg, origin, 22, 210, spread, 0.4);
+          fireBotBullet(e, tg, origin, 22, 380, spread, 0.4);
           if (dist < 120) playSnd(340, 0.07, 0.08, 'sawtooth');
         } else {
-          fireBotBullet(e, tg, origin, isInf ? 11 : 6, isInf ? 145 : 190, spread, 0.18);
+          fireBotBullet(e, tg, origin, isInf ? 11 : 6, isInf ? 260 : 380, spread, 0.18);
           if (dist < 90) playSnd(280, 0.06, 0.06);
         }
       }
     }
 
     function respawnEntity(e) {
+      if ((currentMode === 'br' || brState.active) && e.type === 'inf') {
+        e.rs = 1e9;
+        return;
+      }
       if (isVehicleEntity(e)) {
         restoreVehicleAtBase(e);
         if (e.lastPos) e.lastPos.copy(e.p);
@@ -8328,7 +8561,7 @@
       e.navTimer = 0;
       if (e.type === 'inf' && e.team) {
         const pt = getSpawnPoint(e.tm);
-        e.p.set(pt[0], 0, pt[1]);
+        e.p.set(pt[0], getTerrainHeight(pt[0], pt[1]), pt[1]);
         claimNearestTeamVehicle(e);
       } else {
         e.team = 0;
@@ -8348,138 +8581,124 @@
       if (inLobby) return;
 
       const camPos = camera.position;
-      const totalEntities = E.length;
+      const vehicles = E.filter(e => !e.dead && (e.type === 'tank' || e.type === 'car' || e.type === 'heli' || e.type === 'sam'));
 
-      for (let i = 0; i < totalEntities; i++) {
-        const ent = E[i];
-        if (!ent || ent.dead || ent.localPlayerProxy || ent === P.veh) continue;
-        if (ent.m && ent.m.visible === false) continue;
+      vehicles.forEach(v => {
+        if (P.veh === v) return; // Don't draw overhead bar on player's own vehicle
+        const dist = camPos.distanceTo(v.p);
+        if (dist > 150) return; // Distance culling
 
-        const isRemoteVeh = ent.remote && ent.displayType && ent.displayType !== 'inf';
-        const isWorldVeh = ent.type === 'tank' || ent.type === 'car' || ent.type === 'heli' || ent.type === 'sam';
+        // Position directly above vehicle
+        projVec.set(v.p.x, v.p.y + (v.type === 'heli' ? 3.5 : 4.8), v.p.z);
+        projVec.project(camera);
 
-        if (isWorldVeh || isRemoteVeh) {
-          const vehType = isRemoteVeh ? ent.displayType : ent.type;
-          const dist = camPos.distanceTo(ent.p);
-          if (dist > 160) continue; // Distance culling
+        // Behind camera check
+        if (projVec.z >= 1.0) return;
 
-          // Position directly above vehicle
-          projVec.set(ent.p.x, ent.p.y + (vehType === 'heli' ? 3.8 : 4.8), ent.p.z);
-          projVec.project(camera);
-          if (projVec.z >= 1.0) continue;
+        const sx = (projVec.x + 1) * 0.5 * innerWidth;
+        const sy = (1 - projVec.y) * 0.5 * innerHeight;
 
-          const sx = (projVec.x + 1) * 0.5 * innerWidth;
-          const sy = (1 - projVec.y) * 0.5 * innerHeight;
+        // Size scaling based on distance
+        const scale = Math.max(0.65, Math.min(1.2, 70 / dist));
+        const barW = 120 * scale;
+        const barH = 10 * scale;
+        const hpPercent = Math.max(0, Math.min(1, v.hp / v.mhp));
 
-          const scale = Math.max(0.65, Math.min(1.2, 70 / dist));
-          const barW = 124 * scale;
-          const barH = 10 * scale;
-          const maxHp = ent.mhp || (vehType === 'tank' ? 2400 : vehType === 'car' ? 1100 : vehType === 'heli' ? 600 : 850);
-          const curHp = Number.isFinite(ent.hp) ? ent.hp : maxHp;
-          const hpPercent = Math.max(0, Math.min(1, curHp / maxHp));
+        // Team Badge & Color
+        const isEnemy = v.team && v.tm !== P.tm;
+        const teamColor = v.team ? (isEnemy ? '#f43f5e' : '#38bdf8') : '#10b981';
+        const teamLabel = v.team ? (isEnemy ? 'ENEMY' : 'ALLY') : 'NEUTRAL';
+        const isUssr = v.faction ? v.faction === 'ussr' : v.tm === 1;
+        const nameLabel = isUssr
+          ? (v.type === 'tank' ? 'T-80 TANK' : v.type === 'heli' ? 'MI-24 HIND' : v.type === 'sam' ? '2K12 KUB SAM' : 'BTR-80 APC')
+          : (v.type === 'tank' ? 'M1A2 TANK' : v.type === 'heli' ? 'AH-64 HELI' : v.type === 'sam' ? 'M901 SAM TRUCK' : 'COMMAND APC');
 
-          const isEnemy = ent.team && ent.tm !== P.tm;
-          const teamColor = ent.team ? (isEnemy ? '#f43f5e' : '#38bdf8') : '#10b981';
-          const factionLabel = ent.team ? (ent.tm === 1 ? 'USSR' : 'USA') : 'NEUTRAL';
-          const isUssr = ent.tm === 1;
-          const vehName = isUssr
-            ? (vehType === 'tank' ? 'T-80 TANK' : vehType === 'heli' ? 'MI-24 HIND' : vehType === 'sam' ? '2K12 KUB SAM' : 'BTR-80 APC')
-            : (vehType === 'tank' ? 'M1A2 TANK' : vehType === 'heli' ? 'AH-64 HELI' : vehType === 'sam' ? 'M901 SAM TRUCK' : 'COMMAND APC');
-          const driverName = ent.nm || ent.driver?.nm;
-          const labelText = driverName
-            ? `${factionLabel} ${vehName} · ${driverName.toUpperCase()} [${Math.round(hpPercent * 100)}%]`
-            : `${factionLabel} ${vehName} [${Math.round(hpPercent * 100)}%]`;
+        const titleText = `${teamLabel} ${nameLabel} [${Math.round(hpPercent * 100)}%]`;
+        hwCtx.font = `700 ${Math.round(10 * scale)}px "Chakra Petch", sans-serif`;
+        const boxW = Math.max(barW + 16, Math.ceil(hwCtx.measureText(titleText).width) + 16);
 
-          // Dark Glass Container Background
-          hwCtx.fillStyle = 'rgba(10, 16, 26, 0.88)';
-          hwCtx.strokeStyle = teamColor;
-          hwCtx.lineWidth = 1.5;
+        // Dark Glass Container Background
+        hwCtx.fillStyle = 'rgba(10, 16, 26, 0.85)';
+        hwCtx.strokeStyle = teamColor;
+        hwCtx.lineWidth = 1.5;
+        hwCtx.beginPath();
+        hwCtx.roundRect(sx - boxW / 2, sy - 28 * scale, boxW, 36 * scale, 4);
+        hwCtx.fill();
+        hwCtx.stroke();
+
+        // Title Text
+        hwCtx.fillStyle = teamColor;
+        hwCtx.textAlign = 'center';
+        hwCtx.fillText(titleText, sx, sy - 14 * scale);
+
+        // Health Bar Track
+        hwCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW, barH);
+
+        // Health Bar Fill
+        const hpColor = hpPercent > 0.5 ? '#10b981' : hpPercent > 0.25 ? '#f59e0b' : '#ef4444';
+        hwCtx.fillStyle = hpColor;
+        hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW * hpPercent, barH);
+
+        const boardingTime = v.boardingBot?.boardTimer || v.boardingTime || 0;
+        if (boardingTime > 0) {
+          const bTime = boardingTime.toFixed(1);
+          hwCtx.fillStyle = 'rgba(239, 68, 68, 0.95)';
+          hwCtx.strokeStyle = '#fff';
+          hwCtx.lineWidth = 1;
           hwCtx.beginPath();
-          hwCtx.roundRect(sx - barW / 2 - 8, sy - 28 * scale, barW + 16, 36 * scale, 4);
+          hwCtx.roundRect(sx - 75 * scale, sy + 10 * scale, 150 * scale, 20 * scale, 3);
           hwCtx.fill();
           hwCtx.stroke();
 
-          // Title Text
-          hwCtx.font = `700 ${Math.round(10 * scale)}px "Chakra Petch", sans-serif`;
-          hwCtx.fillStyle = teamColor;
-          hwCtx.textAlign = 'center';
-          hwCtx.fillText(labelText, sx, sy - 14 * scale);
-
-          // Health Bar Track
-          hwCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-          hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW, barH);
-
-          // Health Bar Fill
-          const hpColor = hpPercent > 0.5 ? '#10b981' : hpPercent > 0.25 ? '#f59e0b' : '#ef4444';
-          hwCtx.fillStyle = hpColor;
-          hwCtx.fillRect(sx - barW / 2, sy - 8 * scale, barW * hpPercent, barH);
-
-          const boardingTime = ent.boardingBot?.boardTimer || ent.boardingTime || 0;
-          if (boardingTime > 0) {
-            const bTime = boardingTime.toFixed(1);
-            hwCtx.fillStyle = 'rgba(239, 68, 68, 0.95)';
-            hwCtx.strokeStyle = '#fff';
-            hwCtx.lineWidth = 1;
-            hwCtx.beginPath();
-            hwCtx.roundRect(sx - 75 * scale, sy + 10 * scale, 150 * scale, 20 * scale, 3);
-            hwCtx.fill();
-            hwCtx.stroke();
-
-            hwCtx.fillStyle = '#fff';
-            hwCtx.font = `700 ${Math.round(10 * scale)}px "JetBrains Mono", monospace`;
-            hwCtx.fillText(`⚠ ${bTime}s TILL BOT BOARDING`, sx, sy + 24 * scale);
-          }
-        } else if (ent.type === 'inf' && (ent.remote || ent.nm)) {
-          // Infantry / Soldier Health Bar (Players & Bots)
-          const dist = camPos.distanceTo(ent.p);
-          if (dist > 110) continue;
-
-          projVec.set(ent.p.x, ent.p.y + 2.35, ent.p.z);
-          projVec.project(camera);
-          if (projVec.z >= 1.0 || Math.abs(projVec.x) > 1.15 || Math.abs(projVec.y) > 1.15) continue;
-
-          const sx = (projVec.x + 1) * 0.5 * innerWidth;
-          const sy = (1 - projVec.y) * 0.5 * innerHeight;
-          const scale = Math.max(0.72, Math.min(1.0, 64 / dist));
-
-          const isEnemy = ent.tm !== P.tm;
-          const teamColor = isEnemy ? '#f43f5e' : '#38bdf8';
-          const teamTag = ent.tm === 1 ? 'USSR' : 'USA';
-          const name = ent.nm || 'OPERATOR';
-          const label = `${teamTag} · ${name.toUpperCase().slice(0, 16)}`;
-
-          const barW = 86 * scale;
-          const barH = 5 * scale;
-          const boxH = 28 * scale;
+          hwCtx.fillStyle = '#fff';
           hwCtx.font = `700 ${Math.round(10 * scale)}px "JetBrains Mono", monospace`;
-          const boxW = Math.max(barW + 16 * scale, hwCtx.measureText(label).width + 16 * scale);
-
-          // Container
-          hwCtx.fillStyle = 'rgba(5, 10, 18, 0.86)';
-          hwCtx.strokeStyle = teamColor;
-          hwCtx.lineWidth = 1.2;
-          hwCtx.beginPath();
-          hwCtx.roundRect(sx - boxW / 2, sy - boxH / 2, boxW, boxH, 4 * scale);
-          hwCtx.fill();
-          hwCtx.stroke();
-
-          // Text label
-          hwCtx.fillStyle = teamColor;
-          hwCtx.textAlign = 'center';
-          hwCtx.textBaseline = 'top';
-          hwCtx.fillText(label, sx, sy - boxH / 2 + 4 * scale);
-
-          // Health bar track
-          hwCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-          hwCtx.fillRect(sx - barW / 2, sy + 4 * scale, barW, barH);
-
-          // Health bar fill
-          const hpMax = ent.mhp || 100;
-          const hpPercent = Math.max(0, Math.min(1, (ent.hp || 0) / hpMax));
-          const hpColor = hpPercent > 0.5 ? '#10b981' : hpPercent > 0.25 ? '#f59e0b' : '#ef4444';
-          hwCtx.fillStyle = hpColor;
-          hwCtx.fillRect(sx - barW / 2, sy + 4 * scale, barW * hpPercent, barH);
+          hwCtx.fillText(`⚠ ${bTime}s TILL BOT BOARDING`, sx, sy + 24 * scale);
         }
+      });
+
+      for (let i = 0; i < E.length; i++) {
+        const entity = E[i];
+        if (entity.dead || entity.localPlayerProxy || (!entity.remote && (entity.type !== 'inf' || !entity.nm))) continue;
+        const name = entity.nm || 'OPERATOR';
+        const distance = camera.position.distanceTo(entity.p);
+        if (distance > 110) continue;
+        projVec.set(entity.p.x, entity.p.y + (entity.displayType === 'heli' ? 4.8 : entity.remote && entity.displayType && entity.displayType !== 'inf' ? 3.4 : 2.5), entity.p.z);
+        projVec.project(camera);
+        if (projVec.z >= 1 || Math.abs(projVec.x) > 1.15 || Math.abs(projVec.y) > 1.15) continue;
+
+        const x = (projVec.x + 1) * 0.5 * innerWidth;
+        const y = (1 - projVec.y) * 0.5 * innerHeight;
+        const scale = Math.max(0.72, Math.min(1, 64 / distance));
+        const color = entity.remote
+          ? getAppearance(entity.appearance).color
+          : entity.tm === P.tm ? '#7dd3fc' : '#fda4af';
+        const label = name.toUpperCase().slice(0, 20);
+        hwCtx.font = `700 ${Math.round(11 * scale)}px "JetBrains Mono", monospace`;
+        const labelWidth = Math.max(76 * scale, Math.min(180 * scale, hwCtx.measureText(label).width + 18 * scale));
+        const boxHeight = 31 * scale;
+        const maxHp = Math.max(1, entity.mhp || 100);
+        const hpRatio = Math.max(0, Math.min(1, (entity.hp ?? maxHp) / maxHp));
+        hwCtx.fillStyle = 'rgba(5, 10, 18, 0.84)';
+        hwCtx.strokeStyle = color;
+        hwCtx.lineWidth = 1;
+        hwCtx.beginPath();
+        hwCtx.roundRect(x - labelWidth / 2, y - boxHeight / 2, labelWidth, boxHeight, 5 * scale);
+        hwCtx.fill();
+        hwCtx.stroke();
+        hwCtx.fillStyle = color;
+        hwCtx.textAlign = 'center';
+        hwCtx.textBaseline = 'middle';
+        hwCtx.fillText(label, x, y - 4 * scale, labelWidth - 10 * scale);
+
+        const barW = labelWidth - 14 * scale;
+        const barH = 4 * scale;
+        const barX = x - barW / 2;
+        const barY = y + 6 * scale;
+        hwCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        hwCtx.fillRect(barX, barY, barW, barH);
+        hwCtx.fillStyle = hpRatio > 0.5 ? '#10b981' : hpRatio > 0.25 ? '#f59e0b' : '#ef4444';
+        hwCtx.fillRect(barX, barY, barW * hpRatio, barH);
       }
 
       // Render Dedicated High-Tech Air Reticles for Current Vehicle
@@ -9062,11 +9281,20 @@
        GAME MODES, SCORING & TEAMS
        ------------------------------------------------------------------------- */
     const MODES = {
-      tdm: { name: 'TEAM DEATHMATCH', desc: 'USA vs USSR. First team to 30 combat kills.', target: 30 },
-      ffa: { name: 'FREE FOR ALL', desc: 'Every operator for themselves. First soldier to 15 kills.', target: 15 },
+      tdm: { name: 'TEAM DEATHMATCH', desc: 'USA Coalition vs USSR Syndicate. First team to 30 combat kills.', target: 30 },
+      ffa: { name: 'FREE FOR ALL', desc: 'Every operator for themselves. First soldier to 15 kills.', target: 15, ffa: true },
       ctf: { name: 'CAPTURE THE FLAG', desc: 'Infiltrate enemy base, secure the intelligence flag, and return home.', target: 3 },
-      br: { name: 'BATTLE ROYALE', desc: 'Drop from a C-17 with no weapons. Loot weapon crates & survive the shrinking zone.', target: 1 }
+      br: { name: 'BATTLE ROYALE', desc: 'Drop from a C-17 with no weapons. Loot weapon crates & survive the shrinking zone.', target: 1, br: true }
     };
+    function isTeamFactionMode(mode = currentMode) {
+      return mode !== 'ffa' && mode !== 'br';
+    }
+    function getSoloNetworkTeam(playerId) {
+      if (!playerId || !networkRoster || !networkRoster.size) return 0;
+      const ids = [...networkRoster.keys()].sort();
+      const idx = ids.indexOf(playerId);
+      return idx >= 0 ? 200 + idx : 0;
+    }
     const BOT_NAMES = ['Viper', 'Ghost', 'Rook', 'Anvil', 'Bishop', 'Cobra', 'Dagger', 'Falcon', 'Havoc', 'Grizzly', 'Echo', 'Titan'];
     const PLAYER_APPEARANCES = [
       { id: 'cobalt', name: 'COBALT', color: '#38bdf8' },
@@ -9207,13 +9435,22 @@
       }
     }
 
+    let selectedLobbyTeam = 0;
+    function getActiveLobbyMode() {
+      const isPublicSession = sessionMode === 'public' || sessionMode === 'public-bots';
+      return isPublicSession ? (networkMatchConfig?.mode || currentMode || 'tdm') : currentMode;
+    }
     function buildLobbyUI() {
+      const activeLobbyMode = getActiveLobbyMode();
+      const showTeamSelector = isTeamFactionMode(activeLobbyMode);
       if ($('team-selector')) {
+        $('team-selector').style.display = showTeamSelector ? 'grid' : 'none';
         $('team-selector').querySelectorAll('.tactical-card').forEach(card => {
           card.onclick = () => {
             $('team-selector').querySelectorAll('.tactical-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
-            P.tm = Number(card.dataset.team) || 0;
+            selectedLobbyTeam = Number(card.dataset.team) || 0;
+            P.tm = selectedLobbyTeam;
           };
         });
       }
@@ -9297,11 +9534,13 @@
       const list = $('room-player-list');
       list.replaceChildren();
       if (!networked) return;
+      const showTeamNames = isTeamFactionMode(getActiveLobbyMode());
       [...networkRoster.values()].forEach(player => {
         const chip = document.createElement('span');
         const isPrivateHost = networkRoomKind === 'private' && player.id === networkHostId;
+        const teamLabel = !showTeamNames ? 'SOLO' : (player.team === 0 ? 'USA' : player.team === 1 ? 'USSR' : 'SOLO');
         chip.className = `room-player-chip${isPrivateHost ? ' host' : ''}`;
-        chip.textContent = `${player.name || 'Operator'} · ${player.team === 0 ? 'USA' : player.team === 1 ? 'USSR' : 'FREE'}${isPrivateHost ? ' · HOST' : ''}`;
+        chip.textContent = `${player.name || 'Operator'} · ${teamLabel}${isPrivateHost ? ' · HOST' : ''}`;
         list.appendChild(chip);
       });
     }
@@ -9497,10 +9736,15 @@
       const beamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.42 });
       const ringMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.75, side: THREE.DoubleSide });
       for (let i = 0; i < count; i++) {
-        const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
-        const dist = 30 + Math.random() * 165;
-        const x = Math.cos(angle) * dist;
-        const z = Math.sin(angle) * dist;
+        let x = 0, z = 0;
+        for (let attempt = 0; attempt < 15; attempt++) {
+          const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.35;
+          const dist = 28 + Math.random() * 175;
+          x = Math.cos(angle) * dist;
+          z = Math.sin(angle) * dist;
+          if (!OB.some(o => Math.abs(x - o.x) < o.hw + 2.5 && Math.abs(z - o.z) < o.hd + 2.5)) break;
+        }
+        const groundY = getTerrainHeight(x, z);
         const weaponIndex = Math.floor(Math.random() * W.length);
         const grp = new THREE.Group();
         const box = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.25, 1.6), crateMat);
@@ -9519,7 +9763,7 @@
 
         const isAirdrop = i < 8;
         let chute = null;
-        const startY = isAirdrop ? 75 + Math.random() * 45 : 0;
+        const startY = isAirdrop ? groundY + 75 + Math.random() * 45 : groundY;
         if (isAirdrop) {
           chute = new THREE.Group();
           const canopy = new THREE.Mesh(
@@ -9533,7 +9777,7 @@
 
         grp.position.set(x, startY, z);
         scene.add(grp);
-        brState.crates.push({ id: i, x, y: startY, z, weaponIndex, opened: false, m: grp, chute, falling: isAirdrop });
+        brState.crates.push({ id: i, x, y: startY, groundY, z, weaponIndex, opened: false, m: grp, chute, falling: isAirdrop });
       }
     }
 
@@ -9558,6 +9802,17 @@
       MISSILES.length = 0;
       BULLETS.forEach(bullet => scene.remove(bullet.m));
       BULLETS.length = 0;
+      TRACERS.forEach(t => {
+        scene.remove(t.m);
+        t.m.material.dispose();
+      });
+      TRACERS.length = 0;
+      WRECKS.forEach(w => {
+        scene.remove(w.m);
+        const idx = OB.indexOf(w.obs);
+        if (idx >= 0) OB.splice(idx, 1);
+      });
+      WRECKS.length = 0;
       FX.forEach(f => scene.remove(f.m));
       FX.length = 0;
       if (FLAGS) FLAGS.forEach(f => scene.remove(f.m));
@@ -9579,13 +9834,43 @@
       P.sp = 0;
       P.hp = 100;
       P.veh = null;
-      P.tm = networked ? networkTeam : (P.tm === 1 ? 1 : 0);
+      P.isPassenger = false;
+      P.deathCamActive = false;
+      P.deathCamTimer = 0;
+      P.deathCamKiller = null;
+      rm = 0;
+      lm = 0;
+      lc = 0;
+      mobileAimPointer = null;
+      mobileFirePointer = null;
+      syncMobileAimButton();
+      updateMobileVehicleControls(null);
+      ['vitals-card', 'weapon-card', 'mobile-controls'].forEach(id => {
+        if ($(id)) delete $(id).dataset.vehicle;
+      });
+      if ($('vehicle-ammo-panel')) $('vehicle-ammo-panel').style.display = 'none';
+      if ($('veh-hint')) $('veh-hint').style.display = 'none';
+      if ($('sniper-scope')) $('sniper-scope').style.display = 'none';
+      if ($('mobile-apc-board-btn')) $('mobile-apc-board-btn').style.display = 'none';
+      if ($('ammo-counter')) $('ammo-counter').style.display = 'block';
+      if ($('weapon-slots')) $('weapon-slots').style.display = 'flex';
+      if ($('weapon-sec-info')) {
+        $('weapon-sec-info').style.display = 'block';
+        $('weapon-sec-info').textContent = '';
+      }
+      if ($('lock-alert')) $('lock-alert').textContent = '';
+      if ($('controls-dock')) delete $('controls-dock').dataset.markup;
+      const isTeamMode = isTeamFactionMode(currentMode);
+      P.tm = !isTeamMode
+        ? (networked ? getSoloNetworkTeam(networkPlayerId) : 0)
+        : (networked ? networkTeam : (selectedLobbyTeam === 1 ? 1 : 0));
       P.vy = 0;
       P.pit = 0;
       scores = {};
       matchEnded = 0;
       inLobby = 0;
       document.body.classList.add('in-mission');
+      document.body.dataset.state = 'playing';
       $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'none';
       const bgMusic = $('bg-music');
@@ -9598,11 +9883,24 @@
       if (isBR) {
         brState.active = true;
         brState.peaceTimer = 150;
+        brState.stormTick = 0;
         brState.phase = 'plane';
         brState.planePos.set(-220, 95, -220);
         brState.planeDir.set(1, 0, 1).normalize();
         brState.parachuteOpen = false;
         brState.zoneRadius = 240;
+        const zoneGeo = new THREE.CylinderGeometry(1, 1, 180, 48, 1, true);
+        const zoneMat = new THREE.MeshBasicMaterial({
+          color: 0xef4444,
+          transparent: true,
+          opacity: 0.16,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+        brState.zoneMesh = new THREE.Mesh(zoneGeo, zoneMat);
+        brState.zoneMesh.position.set(0, 60, 0);
+        brState.zoneMesh.scale.set(brState.zoneRadius, 1, brState.zoneRadius);
+        scene.add(brState.zoneMesh);
         brState.c17Mesh = mkC17();
         brState.c17Mesh.position.copy(brState.planePos);
         brState.c17Mesh.lookAt(brState.planePos.clone().add(brState.planeDir));
@@ -9617,9 +9915,12 @@
 
       const isFFA = currentMode === 'ffa' || currentMode === 'br';
       const pSpawn = getSpawnPoint(P.tm);
-      P.p.set(pSpawn[0], 0, pSpawn[1]);
-      P.yaw = isFFA ? 0 : P.tm ? 0.785 : -2.35;
+      if (!isBR) {
+        P.p.set(pSpawn[0], getTerrainHeight(pSpawn[0], pSpawn[1]), pSpawn[1]);
+        P.yaw = isFFA ? 0 : P.tm ? 0.785 : -2.35;
+      }
 
+      const rollWhiteFaction = () => (Math.random() < 0.5 ? 'ussr' : 'usa');
       const spawnVehicleFleet = (team, spawns, color) => {
         const vehicleTypes = [
           ['car', 1100, mkAPC],
@@ -9633,37 +9934,41 @@
           const [x, z] = rooftopHelipad
             ? [B[team][0] + sign * 18, B[team][1] - sign * 18]
             : spawns[index];
-          const faction = getFactionForTeam(team);
-          const entity = addEntity(type, makeMesh(0xf8fafc, faction), x, z, hp, team, rooftopHelipad ? 8 : type === 'heli' ? 0.5 : 0, 0);
+          const faction = isFFA ? rollWhiteFaction() : getFactionForTeam(team);
+          const yPos = rooftopHelipad ? 8 : getTerrainHeight(x, z) + (type === 'heli' ? 0.5 : 0);
+          const entity = addEntity(type, makeMesh(0xf8fafc, faction), x, z, hp, team, yPos, 0);
           entity.teamColorHex = 0xf8fafc;
           entity.faction = faction;
+          entity.spawnFaction = faction;
           entity.heliSlot = index;
         });
       };
 
-      if (isFFA) {
-        const vehicleSpawns = isBR
-          ? [[-185, -185], [185, -185], [-185, 185], [185, 185]]
-          : [
-              [pSpawn[0] + 8, pSpawn[1] + 10],
-              [pSpawn[0] - 14, pSpawn[1] + 12],
-              [pSpawn[0] + 20, pSpawn[1] - 8],
-              [pSpawn[0] - 8, pSpawn[1] - 16]
-            ];
+      if (isFFA && !isBR) {
+        const vehicleSpawns = [
+          [pSpawn[0] + 8, pSpawn[1] + 10],
+          [pSpawn[0] - 14, pSpawn[1] + 12],
+          [pSpawn[0] + 20, pSpawn[1] - 8],
+          [pSpawn[0] - 8, pSpawn[1] - 16]
+        ];
         spawnVehicleFleet(P.tm, vehicleSpawns, TC[P.tm] ?? TC[0]);
-      } else {
+      } else if (!isBR) {
         [0, 1].forEach(team => {
           spawnVehicleFleet(team, [0, 1, 2, 3].map(index => bayPos(team, index)), TC[team]);
         });
-        // Neutral white vehicle spawns at opposite map corners away from Red/Blue bases
+        // Neutral white vehicle spawns at opposite map corners away from USA/USSR bases
         [
           ['tank', 2400, mkTank, -205, 205],
           ['car', 1100, mkAPC, -193, 205],
           ['heli', 600, mkHeli, 205, -205],
           ['sam', 850, mkSAMTruck, 193, -205]
         ].forEach(([type, hp, makeMesh, x, z]) => {
-          const entity = addEntity(type, makeMesh(0xf8fafc), x, z, hp, -1, type === 'heli' ? 0.5 : 0, 0);
+          const faction = rollWhiteFaction();
+          const yPos = getTerrainHeight(x, z) + (type === 'heli' ? 0.5 : 0);
+          const entity = addEntity(type, makeMesh(0xf8fafc, faction), x, z, hp, -1, yPos, 0);
           entity.teamColorHex = 0xf8fafc;
+          entity.faction = faction;
+          entity.spawnFaction = faction;
         });
       }
 
@@ -9672,21 +9977,25 @@
         for (let i = 0; i < (isFFA ? 12 : 14); i++) {
           const tm = isFFA ? 10 + i : (i < 7 ? 0 : 1);
           const s = getSpawnPoint(tm);
-          const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm], getFactionForTeam(tm)), s[0], s[1], 100, tm);
+          const bot = addEntity('inf', mkInf(isFFA ? 0x94a3b8 : TC[tm], getFactionForTeam(tm)), s[0], s[1], 100, tm, getTerrainHeight(s[0], s[1]));
           bot.role = i % 2;
           bot.patrolSlot = isFFA ? i : i % 7;
           if (isBR) bot.unarmed = true;
           bot.nm = BOT_NAMES[i % BOT_NAMES.length];
-          claimNearestTeamVehicle(bot);
+          if (!isBR) claimNearestTeamVehicle(bot);
         }
       }
 
-      if (matchBotsEnabled && isFFA) {
+      if (matchBotsEnabled && isFFA && !isBR) {
         [['heli', 600], ['tank', 2400], ['sam', 850]].forEach(([type, hp], index) => {
           const team = 20 + index;
           const [x, z] = getSpawnPoint(team);
           const makeMesh = type === 'heli' ? mkHeli : type === 'tank' ? mkTank : mkSAMTruck;
-          const entity = addEntity(type, makeMesh(0x64748b), x, z, hp, team, type === 'heli' ? 0.5 : 0, 0);
+          const faction = rollWhiteFaction();
+          const yPos = getTerrainHeight(x, z) + (type === 'heli' ? 0.5 : 0);
+          const entity = addEntity(type, makeMesh(0x64748b, faction), x, z, hp, team, yPos, 0);
+          entity.faction = faction;
+          entity.spawnFaction = faction;
           entity.heliSlot = index;
         });
       }
@@ -9705,7 +10014,8 @@
           emblem.position.set(1.15, 5.6, 0.12);
           g.add(emblem);
           scene.add(g);
-          const homeV3 = new V3(B[t][0], 0, B[t][1]);
+          const fy = getTerrainHeight(B[t][0], B[t][1]);
+          const homeV3 = new V3(B[t][0], fy, B[t][1]);
           return { m: g, home: homeV3, p: homeV3.clone(), carrier: null };
         });
       }
@@ -9726,8 +10036,11 @@
     }
 
     function networkProxyMesh(type, team, appearanceId) {
-      const color = type === 'inf' ? Number.parseInt(getAppearance(appearanceId).color.slice(1), 16) : team ? TC[1] : TC[0];
-      const faction = getFactionForTeam(team);
+      const isSolo = !isTeamFactionMode(currentMode);
+      const color = type === 'inf'
+        ? Number.parseInt(getAppearance(appearanceId).color.slice(1), 16)
+        : (isSolo ? 0xf8fafc : (team ? TC[1] : TC[0]));
+      const faction = isSolo ? (Math.random() < 0.5 ? 'ussr' : 'usa') : getFactionForTeam(team);
       if (type === 'heli') return mkHeli(color, faction);
       if (type === 'tank') return mkTank(color, faction);
       if (type === 'sam') return mkSAMTruck(color, faction);
@@ -9736,7 +10049,7 @@
     }
 
     function setNetworkProxyDisplay(entity, displayType, appearanceId = entity.appearance) {
-      if (entity.displayType === displayType && entity.renderAppearance === appearanceId) return;
+      if (entity.displayType === displayType && entity.renderAppearance === appearanceId && entity.renderTm === entity.tm) return;
       scene.remove(entity.m);
       const colorId = entity.localPlayerProxy ? operatorProfile.appearance : appearanceId;
       entity.m = networkProxyMesh(displayType, entity.tm, colorId);
@@ -9752,15 +10065,17 @@
       scene.add(entity.m);
       entity.displayType = displayType;
       entity.renderAppearance = appearanceId;
+      entity.renderTm = entity.tm;
     }
 
     function upsertNetworkPlayer(player) {
       if (!player || !player.id) return null;
       networkRoster.set(player.id, player);
       const state = player.state || player;
+      const effectiveTeam = isTeamFactionMode(currentMode) ? player.team : getSoloNetworkTeam(player.id);
       let entity = remotePlayers.get(player.id);
       if (!entity) {
-        entity = addEntity('inf', networkProxyMesh('inf', player.team, player.appearance), state.x || 0, state.z || 0, 100, player.team, state.y || 0);
+        entity = addEntity('inf', networkProxyMesh('inf', effectiveTeam, player.appearance), state.x || 0, state.z || 0, 100, effectiveTeam, state.y || 0);
         entity.remote = true;
         entity.playerProxy = player.id === networkPlayerId;
         entity.localPlayerProxy = entity.playerProxy;
@@ -9771,30 +10086,57 @@
       }
       entity.nm = player.name || entity.nm;
       entity.appearance = getAppearance(player.appearance).id;
-      entity.tm = player.team;
+      entity.tm = effectiveTeam;
       entity.team = 1;
       entity.dead = Number.isFinite(state.health) && state.health <= 0 ? 1 : 0;
-      entity.p.set(state.x || 0, state.y || 0, state.z || 0);
-      entity.yaw = state.vehicle ? (state.vehicleYaw || 0) : (state.yaw || 0);
-      entity.hp = Number.isFinite(state.health) ? state.health : entity.hp;
-      entity.mhp = state.maxHealth || (state.vehicle ? (state.vehicle === 'tank' ? 2400 : state.vehicle === 'car' ? 1100 : state.vehicle === 'heli' ? 600 : 850) : 100);
-      const displayType = ['heli', 'tank', 'sam', 'car'].includes(state.vehicle) ? state.vehicle : 'inf';
-      setNetworkProxyDisplay(entity, displayType, entity.appearance);
-      // Remote player vehicle mesh must remain visible to all other screens
-      if (entity.localPlayerProxy) {
-        entity.m.visible = false;
+      const sx = state.x || 0, sy = state.y || 0, sz = state.z || 0;
+      const syaw = state.vehicle ? (state.vehicleYaw || 0) : (state.yaw || 0);
+      if (!entity.netTargetPos) {
+        entity.netTargetPos = new V3(sx, sy, sz);
+        entity.p.set(sx, sy, sz);
+        entity.yaw = syaw;
       } else {
-        entity.m.visible = !entity.dead;
+        entity.netTargetPos.set(sx, sy, sz);
+        if (entity.p.distanceTo(entity.netTargetPos) > 18) entity.p.copy(entity.netTargetPos);
       }
-      entity.m.position.copy(entity.p);
-      entity.m.rotation.y = entity.yaw;
+      entity.netTargetYaw = syaw;
+      entity.hp = Number.isFinite(state.health) ? state.health : entity.hp;
+      const displayType = ['heli', 'tank', 'sam', 'car'].includes(state.vehicle) ? state.vehicle : 'inf';
+      entity.mhp = Number.isFinite(state.maxHealth)
+        ? state.maxHealth
+        : (displayType === 'tank' ? 2400 : displayType === 'car' ? 1100 : displayType === 'sam' ? 850 : displayType === 'heli' ? 600 : 100);
+      setNetworkProxyDisplay(entity, displayType, entity.appearance);
+
+      // Sync the driven local vehicle entity if it exists on this client; otherwise keep the proxy visible with the vehicle mesh.
+      const drivenVehicle = state.vehicleId && !entity.localPlayerProxy
+        ? E.find(candidate => candidate.nid === state.vehicleId && !candidate.remote && !candidate.dead)
+        : null;
+      if (drivenVehicle && drivenVehicle !== P.veh) {
+        if (!state.isPassenger) {
+          drivenVehicle.driver = entity;
+          drivenVehicle.team = 1;
+          setVehicleTeamColor(drivenVehicle, isTeamFactionMode(currentMode) ? player.team : -1);
+          if (!drivenVehicle.netTargetPos) drivenVehicle.netTargetPos = new V3(sx, sy, sz);
+          else drivenVehicle.netTargetPos.set(sx, sy, sz);
+          if (drivenVehicle.p.distanceTo(drivenVehicle.netTargetPos) > 18) drivenVehicle.p.copy(drivenVehicle.netTargetPos);
+          drivenVehicle.netTargetYaw = state.vehicleYaw || 0;
+          drivenVehicle.hp = Number.isFinite(state.health) ? state.health : drivenVehicle.hp;
+          drivenVehicle.m.visible = !entity.dead;
+        }
+      }
+      entity.m.visible = !entity.dead && !drivenVehicle;
+      if (entity.localPlayerProxy) {
+        entity.p.set(sx, sy, sz);
+        entity.yaw = syaw;
+        entity.m.position.copy(entity.p);
+        entity.m.rotation.y = entity.yaw;
+      }
       return entity;
     }
 
     function ensureLocalNetworkPlayer() {
       if (!networkPlayerId) return;
       let entity = remotePlayers.get(networkPlayerId);
-      const targetDisplay = P.veh ? P.veh.type : 'inf';
       if (!entity) {
         entity = addEntity('inf', networkProxyMesh('inf', P.tm, operatorProfile.appearance), P.p.x, P.p.z, 100, P.tm, P.p.y);
         entity.remote = true;
@@ -9804,21 +10146,34 @@
         entity.nid = `player:${networkPlayerId}`;
         entity.nm = $('player-name').value.trim() || 'Operator';
         entity.displayType = 'inf';
-        entity.m.visible = false;
+        entity.m.traverse(object => {
+          if (!object.material) return;
+          object.material = object.material.clone();
+          object.material.transparent = true;
+          object.material.opacity = 0;
+        });
         remotePlayers.set(networkPlayerId, entity);
       }
       entity.tm = P.tm;
       entity.hp = P.veh ? P.veh.hp : P.hp;
       entity.dead = entity.hp <= 0 ? 1 : 0;
+      entity.m.visible = !entity.dead;
       entity.p.copy(P.veh ? P.veh.p : P.p);
       entity.yaw = P.veh ? P.veh.yaw : P.yaw;
       entity.appearance = operatorProfile.appearance;
-      if (entity.displayType !== targetDisplay) {
-        setNetworkProxyDisplay(entity, targetDisplay, operatorProfile.appearance);
-      }
-      entity.m.visible = false;
+      setNetworkProxyDisplay(entity, P.veh ? P.veh.type : 'inf', operatorProfile.appearance);
       entity.m.position.copy(entity.p);
       entity.m.rotation.y = entity.yaw;
+      upsertNetworkPlayer({
+        id: networkPlayerId,
+        name: entity.nm,
+        team: P.tm,
+        state: {
+          x: entity.p.x, y: entity.p.y, z: entity.p.z,
+          yaw: P.yaw, vehicle: P.veh ? P.veh.type : null,
+          vehicleYaw: entity.yaw, health: entity.hp
+        }
+      });
     }
 
     function removeNetworkPlayer(id) {
@@ -10002,12 +10357,33 @@
 
     function applyNetworkGameState(state) {
       if (!networked || !state) return;
+      const entityByNid = new Map();
+      for (let i = 0; i < E.length; i++) {
+        if (E[i].nid) entityByNid.set(E[i].nid, E[i]);
+      }
       (state.entities || []).forEach(item => {
-        const entity = E.find(candidate => candidate.nid === item.id);
+        let entity = entityByNid.get(item.id);
+        if (!entity && ['tank', 'car', 'heli', 'sam'].includes(item.type)) {
+          const makeMesh = item.type === 'heli' ? mkHeli : item.type === 'tank' ? mkTank : item.type === 'car' ? mkAPC : mkSAMTruck;
+          const faction = getFactionForTeam(item.tm ?? 0);
+          entity = addEntity(item.type, makeMesh(0xf8fafc, faction), item.x, item.z, item.mhp || 1000, item.tm ?? 0, item.y || 0, item.team ?? 0);
+          entity.nid = item.id;
+          entity.teamColorHex = 0xf8fafc;
+          entity.faction = faction;
+          entityByNid.set(entity.nid, entity);
+        }
         if (!entity || entity.remote || entity === P.veh) return;
         const becameDead = !entity.dead && item.dead;
-        entity.p.set(item.x, item.y, item.z);
-        entity.yaw = item.yaw;
+        const drivenByRemote = entity.driver && entity.driver.remote && !entity.driver.localPlayerProxy;
+        if (!drivenByRemote) {
+          if (!entity.netTargetPos) entity.netTargetPos = new V3(item.x, item.y, item.z);
+          else entity.netTargetPos.set(item.x, item.y, item.z);
+          if (entity.p.distanceTo(entity.netTargetPos) > 18 || becameDead) {
+            entity.p.set(item.x, item.y, item.z);
+            entity.yaw = item.yaw;
+          }
+          entity.netTargetYaw = item.yaw;
+        }
         entity.hp = item.hp;
         entity.dead = item.dead;
         if (becameDead && isVehicleEntity(entity)) {
@@ -10015,10 +10391,13 @@
         }
         if (Number.isInteger(item.team)) entity.team = item.team;
         if (Number.isInteger(item.tm)) entity.tm = item.tm;
+        if (isVehicleEntity(entity) && !drivenByRemote) {
+          setVehicleTeamColor(entity, entity.team ? entity.tm : -1);
+        }
         entity.boardingTime = Number.isFinite(item.boardingTime)
           ? Math.max(0, Math.min(BOT_BOARDING_DELAY, item.boardingTime))
           : 0;
-        entity.m.visible = !item.dead && !entity.driver;
+        entity.m.visible = !item.dead;
         entity.v = item.v || 0;
       });
       if (state.scores) scores = state.scores;
@@ -10046,19 +10425,20 @@
           flag.m.position.copy(flag.p);
           flag.carrier = item.carrierId === `player:${networkPlayerId}`
             ? P
-            : E.find(entity => entity.nid === item.carrierId) || null;
+            : entityByNid.get(item.carrierId) || null;
         });
       }
       networkRoster.forEach(player => {
         if (player.id !== networkPlayerId) upsertNetworkPlayer(player);
       });
+      const missileById = new Map(MISSILES.map(m => [m.id, m]));
       const incomingMissiles = new Set((state.missiles || []).map(missile => missile.id));
       (state.missiles || []).forEach(missile => {
-        let current = MISSILES.find(candidate => candidate.id === missile.id);
-        const target = E.find(entity => entity.nid === missile.targetId) || null;
+        let current = missileById.get(missile.id);
+        const target = entityByNid.get(missile.targetId) || null;
         if (!current) {
           launchMissile(missile.type, new V3(missile.x, missile.y, missile.z), new V3(missile.dx, missile.dy, missile.dz), target, missile.team, 1, missile.id, true);
-          current = MISSILES.find(candidate => candidate.id === missile.id);
+          current = MISSILES[MISSILES.length - 1];
         }
         if (current) {
           current.p.set(missile.x, missile.y, missile.z);
@@ -10077,9 +10457,10 @@
           }
         }
       }
+      const bulletById = new Map(BULLETS.map(b => [b.id, b]));
       const incomingBullets = new Set((state.bullets || []).map(bullet => bullet.id));
       (state.bullets || []).forEach(bullet => {
-        let current = BULLETS.find(candidate => candidate.id === bullet.id);
+        let current = bulletById.get(bullet.id);
         if (!current) {
           current = spawnBullet(
             new V3(bullet.x, bullet.y, bullet.z),
@@ -10105,7 +10486,7 @@
     function updateNetwork(dt) {
       if (!networked || !netSocket.connected) return;
       networkSendTimer += dt;
-      if (networkSendTimer >= 0.05) {
+      if (networkSendTimer >= 0.033) {
         networkSendTimer = 0;
         const position = P.veh ? P.veh.p : P.p;
         netSocket.emit('player:state', {
@@ -10116,6 +10497,7 @@
           vehicle: P.veh ? P.veh.type : null,
           vehicleId: P.veh ? P.veh.nid : null,
           vehicleYaw: P.veh ? P.veh.yaw : 0,
+          isPassenger: !!P.isPassenger,
           maxHealth: P.veh ? P.veh.mhp : 100,
           hasAmmo: W.some(weapon => weapon.a < weapon.mag),
           boostActive: P.sp > 0
@@ -10124,11 +10506,13 @@
       }
       if (!networkHost) return;
       networkSnapshotTimer += dt;
-      if (networkSnapshotTimer < 0.1) return;
+      if (networkSnapshotTimer < 0.05) return;
       networkSnapshotTimer = 0;
       netSocket.emit('game:state', {
         entities: E.filter(entity => !entity.remote).map(entity => ({
           id: entity.nid,
+          type: entity.type,
+          mhp: entity.mhp,
           x: entity.p.x, y: entity.p.y, z: entity.p.z,
           yaw: entity.yaw, hp: entity.hp, dead: entity.dead, v: entity.v,
           team: entity.team, tm: entity.tm,
@@ -10248,38 +10632,24 @@
       if (!inLobby) upsertNetworkPlayer(player);
     });
     netSocket.on('player:state', state => {
-      const player = networkRoster.get(state.id) || { id: state.id, name: 'Operator', team: state.team || 1 };
+      const player = networkRoster.get(state.id) || { id: state.id, name: 'Operator', team: state.team || 0 };
       const previousVehicleId = player.state && player.state.vehicleId;
       player.state = state;
       networkRoster.set(state.id, player);
       if (!inLobby) {
         const proxy = upsertNetworkPlayer(player);
         if (previousVehicleId && previousVehicleId !== state.vehicleId) {
-          const previousVehicle = E.find(entity => entity.nid === previousVehicleId);
-          if (previousVehicle) {
+          const previousVehicle = E.find(entity => entity.nid === previousVehicleId && !entity.remote);
+          if (previousVehicle && previousVehicle.driver === proxy) {
             previousVehicle.driver = null;
             previousVehicle.team = 0;
-            previousVehicle.tm = 0;
-            previousVehicle.p.set(state.x || (proxy ? proxy.p.x : 0), state.y || (proxy ? proxy.p.y : 0), state.z || (proxy ? proxy.p.z : 0));
-            previousVehicle.m.position.copy(previousVehicle.p);
-            previousVehicle.m.visible = true;
             setVehicleTeamColor(previousVehicle, -1);
           }
         }
-        if (state.vehicleId) {
-          const vehicle = E.find(entity => entity.nid === state.vehicleId);
-          if (vehicle) {
-            if (networkHost && vehicle.driver && vehicle.driver !== proxy) {
-              netSocket.emit('player:vehicle-denied', state.id);
-            } else {
-              vehicle.driver = proxy;
-              vehicle.team = 1;
-              vehicle.tm = player.team;
-              vehicle.p.set(state.x, state.y, state.z);
-              vehicle.yaw = state.vehicleYaw || 0;
-              vehicle.hp = state.health;
-              vehicle.m.visible = false; // Remote player proxy mesh displays active vehicle!
-            }
+        if (networkHost && !state.isPassenger) {
+          const vehicle = state.vehicleId && E.find(entity => entity.nid === state.vehicleId && !entity.remote);
+          if (vehicle && vehicle.driver && vehicle.driver !== proxy) {
+            netSocket.emit('player:vehicle-denied', state.id);
           }
         }
       }
@@ -10354,7 +10724,8 @@
       const origin = new V3(action.x, action.y, action.z);
       const direction = new V3(action.dx, action.dy, action.dz).normalize();
       if (action.kind === 'shot') {
-        raycastBullet(origin, direction, action.damage, attacker);
+        const shotSpeed = Math.max(120, Math.min(700, Number(action.speed) || 380));
+        raycastBullet(origin, direction, action.damage, attacker, Boolean(action.aimed), shotSpeed);
       } else {
         const target = E.find(entity => entity.nid === action.targetId) || null;
         launchMissile(action.missileType, origin, direction, target, attacker.tm, attacker, action.actionId);
@@ -10429,7 +10800,7 @@
       const isPlayer = attacker === 1 || attacker === 'P';
       if (isPlayer) operatorStats.kills++;
       if (victim.type === 'pl') operatorStats.deaths++;
-      const killerName = isPlayer ? 'YOU' : (attacker && attacker.nm) || (attacker && attacker.type ? attacker.type.toUpperCase() : 'BOT');
+      const killerName = isPlayer ? 'YOU' : (attacker && attacker.nm) || (attacker && attacker.type ? attacker.type.toUpperCase() : (brState.active ? 'ZONE STORM' : 'BOT'));
       const victimName = victim.nm || (victim.type === 'pl' ? 'YOU' : victim.type.toUpperCase());
 
       pushKillFeed(`${killerName} ▸ ${victimName}`);
@@ -10470,6 +10841,15 @@
 
     function endMatch(winnerTeam) {
       if (matchEnded) return;
+      clearBRWorld();
+      P.veh = null;
+      P.isPassenger = false;
+      updateMobileVehicleControls(null);
+      ['vitals-card', 'weapon-card', 'mobile-controls'].forEach(id => {
+        if ($(id)) delete $(id).dataset.vehicle;
+      });
+      if ($('vehicle-ammo-panel')) $('vehicle-ammo-panel').style.display = 'none';
+      if ($('sniper-scope')) $('sniper-scope').style.display = 'none';
       matchEnded = 1;
       inLobby = 1;
       leaveGameplayControls();
@@ -10487,15 +10867,27 @@
       saveOperatorStats();
       $('match-result').textContent = winnerTeam === P.tm ? 'VICTORY — MISSION ACCOMPLISHED' : 'DEFEAT — MISSION FAILED';
       $('match-result').style.color = winnerTeam === P.tm ? 'var(--color-primary)' : 'var(--color-red)';
-      $('match-result-detail').textContent = currentMode === 'ffa'
+      $('match-result-detail').textContent = currentMode === 'br'
+        ? `${MODES[currentMode].name} · ${won ? 'LAST OPERATOR STANDING' : 'ELIMINATED'}`
+        : currentMode === 'ffa'
         ? `${MODES[currentMode].name} · WINNING SCORE ${scores[winnerTeam] || 0}`
         : `${MODES[currentMode].name} · USA ${scores[0] || 0} — USSR ${scores[1] || 0}`;
       $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'flex';
       document.body.classList.remove('in-mission');
+      document.body.dataset.state = 'title';
     }
 
     function quitToLobby() {
+      clearBRWorld();
+      P.veh = null;
+      P.isPassenger = false;
+      updateMobileVehicleControls(null);
+      ['vitals-card', 'weapon-card', 'mobile-controls'].forEach(id => {
+        if ($(id)) delete $(id).dataset.vehicle;
+      });
+      if ($('vehicle-ammo-panel')) $('vehicle-ammo-panel').style.display = 'none';
+      if ($('sniper-scope')) $('sniper-scope').style.display = 'none';
       matchEnded = 1;
       inLobby = 1;
       leaveGameplayControls();
@@ -10505,6 +10897,7 @@
       $('main-menu-modal').style.display = 'none';
       $('lobby-modal').style.display = 'flex';
       document.body.classList.remove('in-mission');
+      document.body.dataset.state = 'title';
       saveOperatorStats();
       buildLobbyUI();
     }
@@ -10529,7 +10922,7 @@
 
         if (c) {
           const carrierPos = c === P && P.veh ? P.veh.p : c.p;
-          f.p.set(carrierPos.x, 0, carrierPos.z);
+          f.p.set(carrierPos.x, Math.max(getTerrainHeight(carrierPos.x, carrierPos.z), carrierPos.y), carrierPos.z);
           const ownFlag = FLAGS[c.tm];
           if (ownFlag.carrier == null && ownFlag.p.distanceTo(ownFlag.home) < 2 && carrierPos.distanceTo(ownFlag.home) < 6) {
             scores[c.tm] = (scores[c.tm] || 0) + 1;
@@ -10599,6 +10992,7 @@
       $('loadout-modal').style.display = 'none';
       if (!loadoutOpenedFromLobby) {
         inLobby = 0;
+        document.body.dataset.state = 'playing';
         if (!P.veh) P.w = L[P.sl];
         enterGameplayControls();
       }
@@ -10619,9 +11013,9 @@
        ------------------------------------------------------------------------- */
     const radarCanvas = $('radar-canvas');
     const rCtx = radarCanvas.getContext('2d');
+    const _tmpCamDir = new V3();
+    const _tmpRadarV3 = new V3();
     let radarSweep = 0;
-    const _radarCamDir = new V3();
-    const _radarBaseV3 = new V3();
 
     function drawTacticalRadar() {
       const w = 140, h = 140, cx = 70, cy = 70, radius = 64;
@@ -10650,9 +11044,9 @@
       rCtx.arc(cx, cy, radius, radarSweep, radarSweep + 0.4);
       rCtx.fill();
 
-      _radarCamDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
-      const fl = Math.hypot(_radarCamDir.x, _radarCamDir.z) || 1;
-      const fa = _radarCamDir.x / fl, fb = _radarCamDir.z / fl;
+      const camDir = _tmpCamDir.set(0, 0, -1).applyQuaternion(camera.quaternion);
+      const fl = Math.hypot(camDir.x, camDir.z) || 1;
+      const fa = camDir.x / fl, fb = camDir.z / fl;
 
       const plotBlip = (worldPos, color, size = 3) => {
         const dx = worldPos.x - pp.x, dz = worldPos.z - pp.z;
@@ -10667,8 +11061,8 @@
         rCtx.fillRect(cx + rx - size / 2, cy + ry - size / 2, size, size);
       };
 
-      if (currentMode !== 'ffa') {
-        B.forEach((b, t) => plotBlip(_radarBaseV3.set(b[0], 0, b[1]), t ? '#f43f5e' : '#38bdf8', 7));
+      if (isTeamFactionMode(currentMode)) {
+        B.forEach((b, t) => plotBlip(_tmpRadarV3.set(b[0], 0, b[1]), t ? 'var(--color-red)' : 'var(--color-blue)', 7));
       }
       E.forEach(e => {
         if (e.dead) return;
@@ -10731,30 +11125,21 @@
     }
 
     function updateHUD() {
-      if (currentMode === 'br') {
+      const brTargetText = () => {
         const aliveBots = E.filter(e => e.type === 'inf' && !e.dead).length;
         const aliveTotal = aliveBots + (P.hp > 0 ? 1 : 0);
         const peaceSec = Math.ceil(brState.peaceTimer || 0);
         const peaceLabel = peaceSec > 0
           ? ` · PEACE ${Math.floor(peaceSec / 60)}:${String(peaceSec % 60).padStart(2, '0')}`
           : '';
-        if ($('match-target')) $('match-target').textContent = `BATTLE ROYALE · ALIVE: ${aliveTotal}${peaceLabel}`;
-      }
-      const w = P.w >= 0 ? W[P.w] : null;
-      if (!w) {
-        weaponModels.forEach(m => { m.visible = false; });
-        $('weapon-name').textContent = brState.active && brState.phase === 'plane' ? 'C-17 DROP BAY' : 'UNARMED';
-        $('weapon-class').textContent = brState.active && brState.phase === 'plane' ? 'PRESS [SPACE] TO JUMP' : 'LOOT A WEAPON CRATE';
-        $('ammo-cur').textContent = '--';
-        $('ammo-mag').textContent = '--';
-        $('slot-pri').textContent = L[0] >= 0 && W[L[0]] ? `[1] ${W[L[0]].n}` : '[1] EMPTY';
-        $('slot-sec').textContent = L[1] >= 0 && W[L[1]] ? `[2] ${W[L[1]].n}` : '[2] EMPTY';
-        return;
-      }
+        return `BATTLE ROYALE · ALIVE: ${aliveTotal} · ZONE: ${Math.round(brState.zoneRadius)}M${peaceLabel}`;
+      };
       const v = P.veh;
+      const w = P.w >= 0 ? W[P.w] : null;
       const isSc = scoped();
       mobileMissileButton.disabled = !v || v.type !== 'heli';
       updateMobileVehicleControls(v);
+      syncMobileAimButton();
       const mobileUseBtn = $('mobile-action-pad')?.querySelector('[data-mobile-action="use"]');
       if (mobileUseBtn) {
         if (v) {
@@ -10780,9 +11165,14 @@
       });
 
       const s = teamId => scores[teamId] || 0;
-      if (currentMode === 'ffa') {
-        $('score-blue').textContent = `YOU: ${s(0)}`;
-        $('score-red').textContent = `TOP: ${Math.max(0, ...Object.keys(scores).filter(k => k !== '0').map(k => scores[k]))}`;
+      if (currentMode === 'br') {
+        const aliveBots = E.filter(e => e.type === 'inf' && !e.dead).length;
+        $('score-blue').textContent = `ALIVE: ${aliveBots + (P.hp > 0 ? 1 : 0)}`;
+        $('score-red').textContent = `ZONE: ${Math.round(brState.zoneRadius)}M`;
+        if ($('match-target')) $('match-target').textContent = brTargetText();
+      } else if (currentMode === 'ffa') {
+        $('score-blue').textContent = `YOU: ${s(P.tm)}`;
+        $('score-red').textContent = `TOP: ${Math.max(0, ...Object.keys(scores).filter(k => String(k) !== String(P.tm)).map(k => scores[k]))}`;
         $('match-target').textContent = `FFA · TARGET ${MODES.ffa.target}`;
       } else {
         $('score-blue').textContent = `USA ${s(0)}`;
@@ -10790,6 +11180,7 @@
         $('match-target').textContent = `${currentMode.toUpperCase()} · TARGET ${MODES[currentMode].target}`;
       }
 
+      const isUssrVeh = v ? (v.faction ? v.faction === 'ussr' : v.tm === 1) : false;
       if (v) {
         $('health-label').textContent = `${v.type.toUpperCase()} INTEGRITY`;
         $('health-val').textContent = `${Math.max(0, Math.round((v.hp / v.mhp) * 100))}%`;
@@ -10798,12 +11189,12 @@
         $('sh-bar').style.width = '0%';
         $('veh-hint').style.display = 'block';
         $('veh-hint').innerHTML = v.type === 'tank'
-          ? `M1A2 · [WASD] DRIVE · [LMB] 120MM · [RMB] COAX · [${keyLabel(keyBindings.interact)}] EXIT`
+          ? `${isUssrVeh ? 'T-80' : 'M1A2'} · [WASD] DRIVE · [LMB] ${isUssrVeh ? '125MM' : '120MM'} · [RMB] COAX · [${keyLabel(keyBindings.interact)}] EXIT`
           : v.type === 'heli'
-          ? `AH-64 · [WASD] FLY · [${keyLabel(keyBindings.jump)}/${keyLabel(keyBindings.sprint)}] ALTITUDE · [${keyLabel(keyBindings.missile)}] AIR/GROUND AGM · [${keyLabel(keyBindings.interact)}] EXIT`
+          ? `${isUssrVeh ? 'MI-24' : 'AH-64'} · [WASD] FLY · [${keyLabel(keyBindings.jump)}/${keyLabel(keyBindings.sprint)}] ALTITUDE · [${keyLabel(keyBindings.missile)}] AIR/GROUND AGM · [${keyLabel(keyBindings.interact)}] EXIT`
           : v.type === 'sam'
-          ? `${P.veh.tm === 1 ? '2K12 KUB' : 'M901'} · [WASD] DRIVE · [LMB] SAM · [RMB] CIWS · [${keyLabel(keyBindings.interact)}] EXIT`
-          : `${P.veh.tm === 1 ? 'BTR-80' : 'COMMAND APC'} · [WASD] DRIVE · [LMB] ${P.veh.tm === 1 ? '14.5MM' : '25MM'} · [${keyLabel(keyBindings.reload)}] RELOAD · [${keyLabel(keyBindings.interact)}] EXIT`;
+          ? `${isUssrVeh ? '2K12 KUB' : 'M901'} · [WASD] DRIVE · [LMB] SAM · [RMB] CIWS · [${keyLabel(keyBindings.interact)}] EXIT`
+          : `${isUssrVeh ? 'BTR-80' : 'COMMAND APC'} · [WASD] DRIVE · [LMB] ${isUssrVeh ? '14.5MM' : '25MM'} · [${keyLabel(keyBindings.reload)}] RELOAD · [${keyLabel(keyBindings.interact)}] EXIT`;
       } else {
         $('health-label').textContent = 'VITAL INTEGRITY';
         $('health-val').textContent = `${Math.max(0, Math.round(P.hp))}`;
@@ -10847,7 +11238,7 @@
         const missileBtn = $('mobile-action-pad')?.querySelector('[data-mobile-action="missile"]');
 
         if (v.type === 'sam') {
-          $('weapon-name').textContent = P.veh.tm === 1 ? '2K12 KUB SAM' : 'M901 SAM TRUCK';
+          $('weapon-name').textContent = isUssrVeh ? '2K12 KUB SAM' : 'M901 SAM TRUCK';
           $('weapon-class').textContent = 'AIR DEFENSE · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.mAmmo;
           $('ammo-mag').textContent = v.mMag;
@@ -10860,6 +11251,7 @@
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.mReloading.toFixed(1)}s</span>`
               : `<span class="veh-ammo-cur">${v.mAmmo}</span><small>/ ${v.mMag}</small>`;
           }
+          updateVehAmmoBar(vehW1Fill, v.mAmmo, v.mMag, v.mReloading, v.mReloadTime);
           if (vehW2Row) vehW2Row.style.display = 'flex';
           if (vehW2Bind) vehW2Bind.textContent = '[RMB]';
           if (vehW2Name) vehW2Name.textContent = '20MM CIWS';
@@ -10868,23 +11260,25 @@
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
               : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
           }
+          updateVehAmmoBar(vehW2Fill, v.ammo, v.mag, v.reloading, v.reloadTime);
           if (fireBtn) fireBtn.textContent = `SAM (${v.mReloading > 0 ? 'RLD' : v.mAmmo})`;
           if (aimBtn) aimBtn.textContent = `CIWS (${v.reloading > 0 ? 'RLD' : v.ammo})`;
 
         } else if (v.type === 'tank') {
-          $('weapon-name').textContent = P.veh.tm === 1 ? 'T-80 MBT' : 'M1A2 ABRAMS TANK';
+          $('weapon-name').textContent = isUssrVeh ? 'T-80 MBT' : 'M1A2 ABRAMS TANK';
           $('weapon-class').textContent = 'HEAVY ARMOR · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = `[RMB] COAX MG ${v.mgAmmo} / ${v.mgMag}${v.mgReloading > 0 ? ` · RELOAD ${v.mgReloading.toFixed(1)}s` : ''}`;
 
           if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
-          if (vehW1Name) vehW1Name.textContent = P.veh.tm === 1 ? '125MM CANNON' : '120MM CANNON';
+          if (vehW1Name) vehW1Name.textContent = isUssrVeh ? '125MM CANNON' : '120MM CANNON';
           if (vehW1Ammo) {
             vehW1Ammo.innerHTML = v.reloading > 0
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
               : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
           }
+          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, v.reloadTime);
           if (vehW2Row) vehW2Row.style.display = 'flex';
           if (vehW2Bind) vehW2Bind.textContent = '[RMB]';
           if (vehW2Name) vehW2Name.textContent = 'COAXIAL MG';
@@ -10893,23 +11287,25 @@
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.mgReloading.toFixed(1)}s</span>`
               : `<span class="veh-ammo-cur">${v.mgAmmo}</span><small>/ ${v.mgMag}</small>`;
           }
-          if (fireBtn) fireBtn.textContent = `120MM (${v.reloading > 0 ? 'RLD' : v.ammo})`;
+          updateVehAmmoBar(vehW2Fill, v.mgAmmo, v.mgMag, v.mgReloading, v.mgReloadTime);
+          if (fireBtn) fireBtn.textContent = `${isUssrVeh ? '125MM' : '120MM'} (${v.reloading > 0 ? 'RLD' : v.ammo})`;
           if (aimBtn) aimBtn.textContent = `COAX (${v.mgReloading > 0 ? 'RLD' : v.mgAmmo})`;
 
         } else if (v.type === 'heli') {
-          $('weapon-name').textContent = P.veh.tm === 1 ? 'MI-24 HIND' : 'AH-64 APACHE';
+          $('weapon-name').textContent = isUssrVeh ? 'MI-24 HIND' : 'AH-64 APACHE';
           $('weapon-class').textContent = 'AIR CAVALRY · DUAL WEAPON SYSTEM';
           $('ammo-cur').textContent = v.ammo;
           $('ammo-mag').textContent = v.mag;
           $('weapon-sec-info').textContent = `[${keyLabel(keyBindings.missile)}] MISSILES ${v.mAmmo} / ${v.mMag}${v.mReloading > 0 ? ` · RELOAD ${v.mReloading.toFixed(1)}s` : ''}`;
 
           if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
-          if (vehW1Name) vehW1Name.textContent = P.veh.tm === 1 ? '12.7MM YAK-B' : '30MM CHAIN GUN';
+          if (vehW1Name) vehW1Name.textContent = isUssrVeh ? '12.7MM YAK-B' : '30MM CHAIN GUN';
           if (vehW1Ammo) {
             vehW1Ammo.innerHTML = v.reloading > 0
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
               : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
           }
+          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, v.reloadTime);
           if (vehW2Row) vehW2Row.style.display = 'flex';
           if (vehW2Bind) vehW2Bind.textContent = `[${keyLabel(keyBindings.missile)}]`;
           if (vehW2Name) vehW2Name.textContent = 'AGM MISSILES';
@@ -10918,29 +11314,51 @@
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.mReloading.toFixed(1)}s</span>`
               : `<span class="veh-ammo-cur">${v.mAmmo}</span><small>/ ${v.mMag}</small>`;
           }
+          updateVehAmmoBar(vehW2Fill, v.mAmmo, v.mMag, v.mReloading, v.mReloadTime);
           if (fireBtn) fireBtn.textContent = `CHAIN (${v.reloading > 0 ? 'RLD' : v.ammo})`;
           if (missileBtn) missileBtn.textContent = `AGM (${v.mReloading > 0 ? 'RLD' : v.mAmmo})`;
         } else {
-          $('weapon-name').textContent = P.veh.tm === 1 ? 'BTR-80 APC' : 'COMMAND APC';
+          $('weapon-name').textContent = isUssrVeh ? 'BTR-80 APC' : 'COMMAND APC';
           $('weapon-class').textContent = 'GROUND · ARMORED CARRIER';
           $('ammo-cur').textContent = v.reloading > 0 ? 'RELOAD' : v.ammo;
           $('ammo-mag').textContent = v.mag;
-          $('weapon-sec-info').textContent = `25MM AUTOCANNON`;
+          $('weapon-sec-info').textContent = isUssrVeh ? '14.5MM KPVT' : '25MM AUTOCANNON';
 
           if (vehW1Bind) vehW1Bind.textContent = '[LMB]';
-          if (vehW1Name) vehW1Name.textContent = '25MM AUTOCANNON';
+          if (vehW1Name) vehW1Name.textContent = isUssrVeh ? '14.5MM KPVT' : '25MM AUTOCANNON';
           if (vehW1Ammo) {
             vehW1Ammo.innerHTML = v.reloading > 0
               ? `<span class="veh-w-ammo reloading">RELOAD ${v.reloading.toFixed(1)}s</span>`
               : `<span class="veh-ammo-cur">${v.ammo}</span><small>/ ${v.mag}</small>`;
           }
+          updateVehAmmoBar(vehW1Fill, v.ammo, v.mag, v.reloading, v.reloadTime);
           if (vehW2Row) vehW2Row.style.display = 'none';
+          if (fireBtn) fireBtn.textContent = `${isUssrVeh ? '14.5MM' : '25MM'} (${v.reloading > 0 ? 'RLD' : v.ammo})`;
         }
       } else {
         if (vehPanel) vehPanel.style.display = 'none';
         $('ammo-counter').style.display = 'block';
         $('weapon-slots').style.display = 'flex';
         $('weapon-sec-info').style.display = 'block';
+        if (!w) {
+          weaponModels.forEach(m => { m.visible = false; });
+          $('weapon-name').textContent = brState.active && brState.phase === 'plane' ? 'C-17 DROP BAY' : 'UNARMED';
+          $('weapon-class').textContent = brState.active && brState.phase === 'plane' ? 'PRESS [SPACE] TO JUMP' : 'LOOT A WEAPON CRATE';
+          $('ammo-cur').textContent = '--';
+          $('ammo-mag').textContent = '--';
+          $('weapon-sec-info').textContent = '';
+          $('slot-pri').textContent = L[0] >= 0 && W[L[0]] ? `[1] ${W[L[0]].n}` : '[1] EMPTY';
+          $('slot-sec').textContent = L[1] >= 0 && W[L[1]] ? `[2] ${W[L[1]].n}` : '[2] EMPTY';
+          $('slot-pri').classList.toggle('active', P.sl === 0);
+          $('slot-sec').classList.toggle('active', P.sl === 1);
+          fpGunRig.visible = false;
+          $('sniper-scope').style.display = 'none';
+          $('crosshair').style.display = 'block';
+          $('crosshair').style.opacity = '1';
+          const dockUnarmed = $('controls-dock');
+          if (dockUnarmed) dockUnarmed.dataset.vehicle = 'inf';
+          return;
+        }
         $('weapon-name').textContent = w.n;
         $('weapon-class').textContent = w.cls;
         $('ammo-cur').textContent = w.rl > 0 ? 'RELOAD' : w.a;
@@ -11047,6 +11465,7 @@
        ------------------------------------------------------------------------- */
     let lastTime = performance.now();
     let lastMenuRenderAt = 0;
+    let hudUpdateTimer = 0;
 
     function gameLoop(now) {
       requestAnimationFrame(gameLoop);
@@ -11082,7 +11501,23 @@
         if (brState.active) {
           if (brState.peaceTimer > 0) {
             brState.peaceTimer = Math.max(0, brState.peaceTimer - dt);
-            if (brState.peaceTimer === 0) bannerMsg('LOOT PEACE ENDED — COMBAT ACTIVE!');
+            if (brState.peaceTimer === 0) bannerMsg('LOOT PEACE ENDED — SAFE ZONE CLOSING!');
+          } else {
+            brState.zoneRadius = Math.max(25, brState.zoneRadius - 1.6 * dt);
+            if (brState.zoneMesh) brState.zoneMesh.scale.set(brState.zoneRadius, 1, brState.zoneRadius);
+            brState.stormTick = (brState.stormTick || 0) + dt;
+            if (brState.stormTick >= 0.75) {
+              brState.stormTick = 0;
+              if (brState.phase === 'ground' && P.hp > 0 && Math.hypot(P.p.x, P.p.z) > brState.zoneRadius) {
+                hurtPlayer(6, null);
+                bannerMsg('OUTSIDE SAFE ZONE — MOVE INWARD!');
+              }
+              E.forEach(bot => {
+                if (bot.type === 'inf' && !bot.dead && Math.hypot(bot.p.x, bot.p.z) > brState.zoneRadius) {
+                  applyDamage(bot, 6, null);
+                }
+              });
+            }
           }
           brState.planePos.addScaledVector(brState.planeDir, brState.planeSpeed * dt);
           if (brState.c17Mesh) brState.c17Mesh.position.copy(brState.planePos);
@@ -11096,15 +11531,16 @@
               playSnd(420, 0.2, 0.25, 'sine');
             }
           } else if (brState.phase === 'freefall') {
-            if (P.p.y <= 35 && !brState.parachuteOpen) {
+            const landY = getTerrainHeight(P.p.x, P.p.z);
+            if (P.p.y - landY <= 35 && !brState.parachuteOpen) {
               brState.parachuteOpen = true;
               bannerMsg('PARACHUTE DEPLOYED');
               playSnd(520, 0.15, 0.2, 'triangle');
             }
             P.vy = brState.parachuteOpen ? Math.max(P.vy - 18 * dt, -7) : Math.max(P.vy - 28 * dt, -26);
             P.p.y += P.vy * dt;
-            if (P.p.y <= 0) {
-              P.p.y = 0;
+            if (P.p.y <= landY) {
+              P.p.y = landY;
               P.vy = 0;
               brState.phase = 'ground';
               brState.parachuteOpen = false;
@@ -11114,9 +11550,10 @@
           for (const crate of brState.crates) {
             if (crate.opened) continue;
             if (crate.falling) {
+              const crateGroundY = crate.groundY ?? getTerrainHeight(crate.x, crate.z);
               crate.y -= 9 * dt;
-              if (crate.y <= 0) {
-                crate.y = 0;
+              if (crate.y <= crateGroundY) {
+                crate.y = crateGroundY;
                 crate.falling = false;
                 if (crate.chute) crate.chute.visible = false;
               }
@@ -11185,13 +11622,21 @@
           }
 
           if (e.remote) {
-            if (e.playerProxy) {
-              e.p.copy(P.veh ? P.veh.p : P.p);
-              e.yaw = P.veh ? P.veh.yaw : P.yaw;
-              e.hp = P.veh ? P.veh.hp : P.hp;
+            if (e.playerProxy) ensureLocalNetworkPlayer();
+            else if (e.netTargetPos) {
+              const lerpAlpha = Math.min(1, dt * 16);
+              e.p.lerp(e.netTargetPos, lerpAlpha);
+              if (Number.isFinite(e.netTargetYaw)) {
+                let dYaw = ((e.netTargetYaw - e.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+                e.yaw += dYaw * lerpAlpha;
+              }
             }
             e.m.position.copy(e.p);
             e.m.rotation.y = e.yaw;
+            if (e.displayType === 'heli' && e.m.rot && e.m.tailRot) {
+              e.m.rot.rotation.y += dt * 28;
+              e.m.tailRot.rotation.x += dt * 35;
+            }
             return;
           }
 
@@ -11206,7 +11651,16 @@
             if ((!networked || networkHost) && !playerDriven) updateBotAI(e, dt);
           } else if (P.veh !== e && !e.driver) {
             e.v = 0;
-            if (e.type === 'heli') e.p.y = Math.max(e.sp.y, e.p.y - 8 * dt);
+            if (e.type === 'heli' && (!networked || networkHost)) e.p.y = Math.max(e.sp.y, e.p.y - 8 * dt);
+          }
+
+          if (networked && (!networkHost || (e.driver && e.driver.remote && !e.driver.localPlayerProxy)) && e !== P.veh && e.netTargetPos) {
+            const lerpAlpha = Math.min(1, dt * 16);
+            e.p.lerp(e.netTargetPos, lerpAlpha);
+            if (Number.isFinite(e.netTargetYaw)) {
+              let dYaw = ((e.netTargetYaw - e.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+              e.yaw += dYaw * lerpAlpha;
+            }
           }
 
           e.m.position.copy(e.p);
@@ -11248,7 +11702,7 @@
 
           if (
             k.life <= 0 ||
-            k.p.y < 0.4 ||
+            k.p.y < getTerrainHeight(k.p.x, k.p.z) + 0.35 ||
             OB.some(o => Math.abs(k.p.x - o.x) < o.hw && Math.abs(k.p.z - o.z) < o.hd && k.p.y < o.h) ||
             E.some(e => e.team && !e.dead && e.tm !== k.team && e.p.distanceTo(k.p) < ((k.type === 'sam' || k.type === 'aa' || k.type === 'agm') ? 6.5 : (e.type === 'heli' || e.displayType === 'heli' ? 5.5 : 3.5)))
           ) {
@@ -11261,8 +11715,8 @@
 
         // Supply Pickups
         const playerPos = P.veh ? P.veh.p : P.p;
-        // Anti-Spawncamp: Enemy Base Defense Zone
-        if (B && B[1 - P.tm] && P.hp > 0) {
+        // Anti-Spawncamp: Enemy Base Defense Zone (Team modes only — disabled in FFA and Battle Royale)
+        if (currentMode !== 'ffa' && currentMode !== 'br' && !brState.active && B && B[1 - P.tm] && P.hp > 0) {
           const eb = B[1 - P.tm];
           const dx = playerPos.x - eb[0];
           const dz = playerPos.z - eb[1];
@@ -11309,7 +11763,7 @@
           k.m.children[0].position.y = 1.2 + Math.sin(now * 0.003) * 0.2;
 
           if (networked && !networkHost) {
-            const inRange = P.hp > 0 && playerPos.y <= 6
+            const inRange = P.hp > 0 && Math.abs(playerPos.y - k.p.y) <= 6
               && Math.hypot(playerPos.x - k.p.x, playerPos.z - k.p.z) <= (P.veh ? 4.5 : 2.5);
             const lastRequest = networkPickupRequests.get(pickupIndex) || 0;
             if (inRange && Date.now() - lastRequest > 1000) {
@@ -11319,7 +11773,7 @@
             return;
           }
 
-          if (P.hp <= 0 || playerPos.y > 6 || Math.hypot(playerPos.x - k.p.x, playerPos.z - k.p.z) > (P.veh ? 4.5 : 2.5)) return;
+          if (P.hp <= 0 || Math.abs(playerPos.y - k.p.y) > 6 || Math.hypot(playerPos.x - k.p.x, playerPos.z - k.p.z) > (P.veh ? 4.5 : 2.5)) return;
           let collected = 0;
           if (k.type === 'med' && !P.veh && P.hp < 100) { P.hp = Math.min(100, P.hp + 60); collected = 1; }
           else if (k.type === 'shield' && !P.veh && P.sh < 50) { P.sh = 50; collected = 1; }
@@ -11366,12 +11820,16 @@
           if (P.deathCamTimer <= 0) {
             P.deathCamActive = false;
             P.deathCamKiller = null;
-            const spawnPt = getSpawnPoint(P.tm);
-            P.p.set(spawnPt[0], 0, spawnPt[1]);
-            P.hp = 100;
-            P.sh = 0;
-            P.veh = null;
-            bannerMsg('TACTICAL REDEPLOYMENT');
+            if (currentMode === 'br' || brState.active) {
+              endMatch(-1);
+            } else {
+              const spawnPt = getSpawnPoint(P.tm);
+              P.p.set(spawnPt[0], getTerrainHeight(spawnPt[0], spawnPt[1]), spawnPt[1]);
+              P.hp = 100;
+              P.sh = 0;
+              P.veh = null;
+              bannerMsg('TACTICAL REDEPLOYMENT');
+            }
           }
         }
         updateNetwork(dt);
@@ -11427,14 +11885,19 @@
       for (let i = TRACERS.length - 1; i >= 0; i--) {
         const t = TRACERS[i];
         t.life -= dt;
-        t.m.material.opacity = Math.max(0, t.life * 8);
+        t.m.material.opacity = Math.max(0, (t.life / (t.maxLife || 0.085)) * 0.9);
         if (t.life <= 0) {
           scene.remove(t.m);
+          t.m.material.dispose();
           TRACERS.splice(i, 1);
         }
       }
 
-      updateHUD();
+      hudUpdateTimer += dt;
+      if (hudUpdateTimer >= 0.05) {
+        hudUpdateTimer = 0;
+        updateHUD();
+      }
       if (introActive) renderer.render(introScene, introCamera);
       else renderer.render(showMainMenu ? menuScene : scene, showMainMenu ? menuCamera : camera);
       if (!inLobby) {
@@ -11446,6 +11909,16 @@
     buildLobbyUI();
     renderLoadoutUI();
     updateControlReferences();
+    document.body.dataset.state = 'title';
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('autostart') === '1') {
+      const requestedMode = urlParams.get('mode');
+      if (requestedMode && MODES[requestedMode]) currentMode = requestedMode;
+      finishLoadingIntro();
+      startMatch();
+      if (supportsTouchControls) enterGameplayControls();
+      else isLocked = true;
+    }
     requestAnimationFrame(gameLoop);
   </script>
 </body>

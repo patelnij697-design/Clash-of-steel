@@ -253,6 +253,18 @@ test('public rooms synchronize match state, combat actions, chat, and presence',
     const worldState = once(guest, 'game:state');
     host.emit('game:state', { entities: [], missiles: [], scores: { 0: 1 } });
     assert.deepEqual(await worldState, { entities: [], missiles: [], scores: { 0: 1 } });
+
+    const tankState = once(host, 'player:state');
+    guest.emit('player:state', {
+      x: 42, y: 0, z: -18, yaw: 1.2, pitch: 0,
+      health: 2400, maxHealth: 2400, vehicle: 'tank', vehicleId: 'entity-2', vehicleYaw: 0.75
+    });
+    const relayedTank = await tankState;
+    assert.equal(relayedTank.id, guest.id);
+    assert.equal(relayedTank.vehicle, 'tank');
+    assert.equal(relayedTank.vehicleId, 'entity-2');
+    assert.equal(relayedTank.health, 2400);
+    assert.equal(relayedTank.maxHealth, 2400);
   } finally {
     host.disconnect();
     guest.disconnect();
